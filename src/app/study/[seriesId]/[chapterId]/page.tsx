@@ -484,7 +484,7 @@ export default function SmartStudyViewerPage() {
                 }`}
               >
                 <Clock className="w-3 h-3 text-amber-600" />
-                <span>수강 기한 D-{accessStatus.daysRemainingInCourse}일 남음</span>
+                <span>수강 기한 D-{accessStatus.daysRemainingInCourse}일 (복습 2X 보장)</span>
               </span>
             )}
 
@@ -518,7 +518,7 @@ export default function SmartStudyViewerPage() {
               <div className="flex flex-wrap items-center justify-between gap-1">
                 <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                  <span>순차 오픈 커리큘럼 (2주 완성 코스 • 적정 복습 주기 오픈):</span>
+                  <span>순차 오픈 커리큘럼 (2주 코스 • 복습 2X 보장 28일 수강):</span>
                 </span>
                 <span className="text-[11px] text-slate-400 font-medium">
                   🔒 선수 회차 완료 + 예정일 도달 시 자동 잠금 해제
@@ -643,7 +643,7 @@ export default function SmartStudyViewerPage() {
 
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
               {accessStatus.lockReason === 'course_expired' &&
-                '해당 코스의 14일 수강 유효기간이 종료되었습니다. 계속해서 복습하거나 추가 AI 실시간 첨삭 및 음운 클리닉을 이용하시려면 수강권을 갱신해 주세요.'}
+                '해당 코스의 28일(정규 커리큘럼의 2배 여유 보장) 수강 유효기간이 종료되었습니다. 계속해서 복습하거나 추가 AI 실시간 첨삭 및 음운 클리닉을 이용하시려면 수강권을 갱신해 주세요.'}
               {accessStatus.lockReason === 'prerequisite_incomplete' &&
                 `한업의 체계적인 학습 설계를 위해, 이전 회차(제${chapterIndex}회)의 핵심 개념과 미니 쓰기 과제를 먼저 완료하셔야 본 회차가 열립니다.`}
               {accessStatus.lockReason === 'drip_date_not_reached' &&

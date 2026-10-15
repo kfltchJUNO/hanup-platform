@@ -303,7 +303,7 @@ export default function HomePage() {
                   <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
                     <div className="flex items-center gap-1.5 text-slate-600">
                       <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{series.durationWeeks}주 완성 • {series.schedulePace}</span>
+                      <span>{series.durationWeeks}주 완성 (복습 2X 보장: {series.durationWeeks * 2}주 제공) • {series.schedulePace}</span>
                     </div>
 
                     <div className="flex items-center justify-between pt-1">

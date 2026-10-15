@@ -163,18 +163,18 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   };
   const closeLegalModal = () => setIsLegalModalOpen(false);
 
-  // Default Initial Enrollments (Prep series Day 2, 14 days valid)
+  // Default Initial Enrollments (2X Duration Guarantee: 2-week course = 28 days valid, 4-week course = 60 days valid)
   const [enrollments, setEnrollments] = useState<Record<string, SeriesEnrollment>>({
     hanup_topik_prep: {
       seriesId: 'hanup_topik_prep',
       enrolledAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-      expiresAt: new Date(Date.now() + 12 * 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 26 * 86400000).toISOString(), // 28 days total (2 weeks * 2), 26 days remaining
       completedChapterIds: ['ch_prep_01'],
     },
     hanup_topik_challenge: {
       seriesId: 'hanup_topik_challenge',
       enrolledAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-      expiresAt: new Date(Date.now() + 25 * 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 55 * 86400000).toISOString(), // 60 days total (4 weeks * 2), 55 days remaining
       completedChapterIds: ['ch_writing_04'],
     },
   });
@@ -220,7 +220,9 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     }
 
     const enrolledAt = enrollment ? new Date(enrollment.enrolledAt).getTime() : Date.now();
-    const expiresAt = enrollment ? new Date(enrollment.expiresAt).getTime() : Date.now() + 14 * 86400000;
+    // Default 2X validity period: 28 days for 2-week course, 60 days for 4-week course
+    const defaultValidityDays = seriesId.includes('challenge') || seriesId.includes('master') ? 60 : 28;
+    const expiresAt = enrollment ? new Date(enrollment.expiresAt).getTime() : Date.now() + defaultValidityDays * 86400000;
     const now = Date.now();
 
     // 1. Check Course Expiration (Sunset Policy)
@@ -279,11 +281,12 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markChapterCompleted = (seriesId: string, chapterId: string) => {
+    const defaultValidityDays = seriesId.includes('challenge') || seriesId.includes('master') ? 60 : 28;
     setEnrollments((prev) => {
       const existing = prev[seriesId] || {
         seriesId,
         enrolledAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 14 * 86400000).toISOString(),
+        expiresAt: new Date(Date.now() + defaultValidityDays * 86400000).toISOString(),
         completedChapterIds: [],
       };
       if (existing.completedChapterIds.includes(chapterId)) return prev;
@@ -410,6 +413,16 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser((prev) => ({
       ...prev,
       unlockedSeriesIds: Array.from(new Set([...(prev.unlockedSeriesIds || []), seriesId])),
+    }));
+    const validDays = seriesId.includes('challenge') || seriesId.includes('master') ? 60 : 28;
+    setEnrollments((prev) => ({
+      ...prev,
+      [seriesId]: {
+        seriesId,
+        enrolledAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + validDays * 86400000).toISOString(),
+        completedChapterIds: [],
+      },
     }));
   };
 
