@@ -493,3 +493,36 @@ export interface UriBanErrorTag {
   correction: string;
   explanation: string;
 }
+
+// ==========================================
+// 11. Drip Release & Course Expiration Types
+// ==========================================
+export interface SeriesEnrollment {
+  seriesId: string;
+  enrolledAt: string; // ISO date of purchase/enrollment
+  expiresAt: string; // ISO date when course closes (Sunset date)
+  isExpired?: boolean;
+  completedChapterIds: string[];
+}
+
+export interface ChapterAccessStatus {
+  chapterId: string;
+  isUnlocked: boolean;
+  isCompleted: boolean;
+  lockReason?: 'prerequisite_incomplete' | 'drip_date_not_reached' | 'course_expired' | 'unpurchased';
+  unlockDate?: string;
+  daysRemainingInCourse?: number;
+}
+
+// ==========================================
+// 12. Push & Email Notification Settings
+// ==========================================
+export interface UserNotificationSettings {
+  webPushEnabled: boolean;
+  emailReminderEnabled: boolean;
+  marketingConsent: boolean; // 깜짝 쿠폰 및 프로모션 안내 수신 동의
+  studyReminderTime: string; // e.g. "20:00"
+  reminderDays: ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun')[];
+  lastNotificationSentAt?: string;
+}
+

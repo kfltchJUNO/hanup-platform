@@ -842,6 +842,127 @@ export const MOCK_AUTHORING_BLOCKS: AuthoringBlock[] = [
     },
     updatedAt: '2024-10-15T18:00:00Z',
   },
+  {
+    blockId: 'blk_topik_prep_03',
+    seriesId: 'hanup_topik_prep',
+    chapterId: 'ch_prep_03',
+    chapterTitle: '제3장: 교통·길 찾기와 여행 계획',
+    orderIndex: 3,
+    blockType: 'concept_note',
+    title: 'TOPIK I 준비편 3회: 교통·길 찾기와 여행 계획',
+    koContent: `[상황 1: 지하철 환승 및 길 묻기]
+지우: 실례합니다, 경복궁에 가려면 몇 호선으로 갈아타야 하나요?
+시민: 여기서 3호선으로 갈아타신 후 경복궁역 5번 출구로 나가시면 바로 앞에 보입니다. 약 15분 정도 걸려요.
+지우: 감사합니다! 교통카드로 버스 환승 할인도 되나요?
+시민: 네, 지하철에서 하차하신 후 30분 이내에 버스를 타시면 환승 할인이 적용됩니다.
+
+[상황 2: 제주도 여행 일정 계획하기]
+민지: 이번 휴가에 제주도로 2박 3일 여행을 가기로 했어요.
+친구: 와, 정말 부러워요! 비행기 표와 숙소 예약은 이미 끝냈나요?
+민지: 네, 첫날에는 해안 도로를 드라이브하고 둘째 날에는 한라산 성판악 코스를 등산할 계획이에요.
+
+[핵심 문법 클리닉: 수단·방법의 조사 '-(으)로' vs 이동의 '-(으)로']
+1. 도구 및 수단: 지하철로 가다, 연필로 쓰다, 카드로 결제하다
+2. 방향 및 목적지: 오른쪽으로 돌다, 서울역으로 향하다`,
+    zhExplanation: '【TOPIK I 准备篇 第3课：交通换乘与旅行计划】掌握交通高频词汇（환승/갈아타다换乘，하차하다下车）与多功能助词“-(으)로”（工具手段 vs 方向）。',
+    multilingualExplanations: {
+      ko: "【TOPIK I 준비편 3회: 교통·길 찾기와 여행】 대중교통 환승 및 길 묻기 표현과 조사 '-(으)로'의 수단 및 방향 용법을 마스터합니다.",
+      en: '【TOPIK I Prep Unit 3: Transit, Directions & Travel Plans】 Master public transportation transfers and the versatile particle "-(으)로" for means/methods and directions.',
+      ja: '【TOPIK I 準備編 第3回：交通・道案内と旅行計画】 公共交通の乗り換え表現と助詞「-(으)로」の手段・方向の使い分けを学びます。',
+      zh: '【TOPIK I 准备篇 第3课：交通换乘与旅行计划】掌握交通高频词汇（환승/갈아타다换乘，하차하다下车）与多功能助词“-(으)로”（工具手段 vs 方向）。',
+      vi: '【TOPIK I Chuẩn bị Bài 3: Giao thông & Kế hoạch du lịch】 Làm quen với các từ vựng chuyển tuyến phương tiện công cộng và tiểu từ "-(으)로".',
+      my: '【TOPIK I အခြေခံ အဆင့် ၃- သွားလာရေးနှင့် ခရီးသွားအစီအစဉ်】 အများသုံး သယ်ယူပို့ဆောင်ရေးနှင့် နေရာညွှန်သဒ္ဒါ "-(으)로" ကို လေ့လာပါ။',
+    },
+    vocabAnnotations: [
+      {
+        word: '갈아타다 / 환승하다',
+        zhMeaning: '换乘、倒车',
+        enMeaning: 'to transfer / switch lines',
+        jaMeaning: '乗り換える',
+        viMeaning: 'chuyển tuyến, đổi xe',
+        myMeaning: 'လိုင်းပြောင်းစီးသည်',
+        topikLevel: 1,
+        commonChineseErrorNote: '‘갈아타다’는 고유어 표현이고, ‘환승하다(換乘)’는 한자어 격식 표현입니다.',
+      },
+      {
+        word: '길을 묻다',
+        zhMeaning: '问路',
+        enMeaning: 'to ask for directions',
+        jaMeaning: '道を尋ねる',
+        viMeaning: 'hỏi đường',
+        myMeaning: 'လမ်းမေးသည်',
+        topikLevel: 1,
+        commonChineseErrorNote: '‘묻다’의 ㄷ불규칙 활용에 주의하세요: 물어보다, 물으니.',
+      },
+    ],
+    audioConfig: {
+      voiceId: 'eleven_ko_pro_kr',
+      mp3Url: 'https://cdn.hanup.ai/audio/prep_03_traffic.mp3',
+      dictationBlanks: ['갈아타야', '하차하신', '환승 할인'],
+      durationSec: 40,
+    },
+    writingRubric: {
+      targetChars: [15, 60],
+      requiredKeywords: ['지하철로'],
+      rhetoricStructureGuide: '수단/방법을 나타내는 조사 -(으)로를 활용하여 이동 방법을 서술하십시오.',
+      modelAnswer: '경복궁까지는 지하철 3호선으로 이동하는 것이 가장 빠릅니다.',
+    },
+    qrBridgeUrl: 'https://hanup.ai/study/hanup_topik_prep/ch_prep_03?qr=prep_traffic',
+    updatedAt: '2024-10-15T18:00:00Z',
+  },
+  {
+    blockId: 'blk_topik_prep_04',
+    seriesId: 'hanup_topik_prep',
+    chapterId: 'ch_prep_04',
+    chapterTitle: '제4장: 일상 대화 총정리 & 모의평가',
+    orderIndex: 4,
+    blockType: 'concept_note',
+    title: 'TOPIK I 준비편 4회: 일상 대화 총정리 & 실전 모의평가',
+    koContent: `[상황 1: 한국 생활 총정리 종합 인터뷰]
+교수: 지난 2주 동안 배운 한국어 표현 중 가장 유익했던 표현은 무엇이었나요?
+학생: 약속을 미룰 때 쓰는 '급한 일이 생겨서요'와 쇼핑할 때 쓰는 '사이즈 교환' 표현이었습니다.
+교수: 훌륭합니다. 초급 과정의 핵심은 실생활에서 주저 없이 자신의 생각과 상황을 전달하는 것입니다.
+
+[상황 2: TOPIK I 시험 당일 유의사항]
+1. 컴퓨터용 사인펜과 수험표, 신분증을 반드시 지참하십시오.
+2. 듣기 평가는 한 번만 방송되므로(일부 문항 제외), 방송 전에 미리 보기 지문을 빠르게 훑어보아야 합니다.
+3. 모르는 문제가 나오더라도 빈칸으로 남겨두지 말고 가장 가능성 높은 보기를 마킹하세요.`,
+    zhExplanation: '【TOPIK I 准备篇 第4课：初级考前总复习与真题冲刺】全面串讲1~3课核心句型，并掌握实战考场时间管理策略。',
+    multilingualExplanations: {
+      ko: '【TOPIK I 준비편 4회: 실전 총정리】 1~3회차에서 학습한 일과, 약속, 쇼핑, 교통 표현을 총망라하고 TOPIK I 실전 시험 대응 팁을 정리합니다.',
+      en: '【TOPIK I Prep Unit 4: Comprehensive Review & Real Exam Prep】 Review Units 1-3 core vocabulary and practice exam day time management strategies.',
+      ja: '【TOPIK I 準備編 第4回：総復習と実戦模擬テスト】 1〜3回で学んだ表現を総復習し、本番試験での注意点を確認します。',
+      zh: '【TOPIK I 准备篇 第4课：初级考前总复习与真题冲刺】全面串讲1~3课核心句型，并掌握实战考场时间管理策略。',
+      vi: '【TOPIK I Chuẩn bị Bài 4: Tổng ôn tập & Đề thi thử】 Tổng hợp kiến thức 3 bài trước và hướng dẫn kỹ năng làm bài thi TOPIK I.',
+      my: '【TOPIK I အခြေခံ အဆင့် ၄- ပြည့်စုံသော ပြန်လည်သုံးသပ်ခြင်းနှင့် စာမေးပွဲ အထောက်အကူပြု လမ်းညွှန်】',
+    },
+    vocabAnnotations: [
+      {
+        word: '신분증을 지참하다',
+        zhMeaning: '携带身份证件',
+        enMeaning: 'to bring identification',
+        jaMeaning: '身分証を持参する',
+        viMeaning: 'mang theo giấy tờ tùy thân',
+        myMeaning: 'မှတ်ပုံတင် ယူဆောင်လာသည်',
+        topikLevel: 2,
+        commonChineseErrorNote: '‘지참하다(持參)’는 공공장소나 시험장에서 물건을 가지고 오는 것을 뜻하는 격식체 어휘입니다.',
+      },
+    ],
+    audioConfig: {
+      voiceId: 'eleven_ko_pro_kr',
+      mp3Url: 'https://cdn.hanup.ai/audio/prep_04_review.mp3',
+      dictationBlanks: ['유익했던', '신분증을', '지참하십시오'],
+      durationSec: 45,
+    },
+    writingRubric: {
+      targetChars: [20, 70],
+      requiredKeywords: ['신분증을 지참해야'],
+      rhetoricStructureGuide: '의무/필수를 나타내는 어미 -아/어야 하다를 사용하여 문장을 완성하십시오.',
+      modelAnswer: '시험 당일에는 반드시 본인의 신분증과 수험표를 지참해야 합니다.',
+    },
+    qrBridgeUrl: 'https://hanup.ai/study/hanup_topik_prep/ch_prep_04?qr=prep_review',
+    updatedAt: '2024-10-15T18:00:00Z',
+  },
 ];
 
 // ==========================================

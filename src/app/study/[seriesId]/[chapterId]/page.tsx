@@ -38,6 +38,9 @@ import {
   UploadCloud,
   ScanLine,
   Mic,
+  Bell,
+  Lock,
+  Calendar,
 } from 'lucide-react';
 import { useHanUp } from '../../../../context/HanUpContext';
 import { VocabAnnotation, WritingSubmission } from '../../../../types/hanup';
@@ -70,10 +73,30 @@ export default function SmartStudyViewerPage() {
     consumeOcrQuota,
     openPaywallModal,
     openSurveyModal,
+    enrollments,
+    checkChapterAccess,
+    markChapterCompleted,
+    openNotificationModal,
+    notificationSettings,
   } = useHanUp();
 
   const currentSeries =
     MOCK_SERIES.find((s) => s.seriesId === seriesId) || MOCK_SERIES[2];
+
+  // Prep Curriculum Schedule (2-week drip: Day 1, 3, 7, 10)
+  const prepChapterList = [
+    { id: 'ch_prep_01', num: 1, title: '제1회: 하루 일과와 약속 정하기', day: 1 },
+    { id: 'ch_prep_02', num: 2, title: '제2회: 쇼핑·교환과 건강 챙기기', day: 3 },
+    { id: 'ch_prep_03', num: 3, title: '제3회: 교통·길 찾기와 여행 계획', day: 7 },
+    { id: 'ch_prep_04', num: 4, title: '제4회: 일상 총정리 & 모의평가', day: 10 },
+  ];
+
+  const chapterIndex =
+    seriesId === 'hanup_topik_prep' || chapterId.startsWith('ch_prep_')
+      ? Math.max(0, prepChapterList.findIndex((c) => c.id === chapterId))
+      : 0;
+
+  const accessStatus = checkChapterAccess(seriesId, chapterId, chapterIndex);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'concept' | 'listening' | 'writing'>('concept');
@@ -422,6 +445,7 @@ export default function SmartStudyViewerPage() {
       };
 
       addSubmission(newSub);
+      markChapterCompleted(seriesId, chapterId);
     } catch (err) {
       setIsSubmittingAi(false);
       console.error('AI analysis error:', err);
@@ -440,94 +464,243 @@ export default function SmartStudyViewerPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* 1. Chapter Title & Global Header Bar */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="space-y-2 flex-1 w-full">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-700">
-              한업 토픽 (HanUp TOPIK)
+              {currentSeries.titleKo}
             </span>
             <span className="text-xs text-slate-400">|</span>
             <span className="text-xs font-bold text-slate-500">
               {currentBlock.chapterTitle || '제4장: 논술 54번 인공지능 발전과 윤리적 과제'}
             </span>
+
+            {/* Course Expiry Badge */}
+            {accessStatus.daysRemainingInCourse !== undefined && (
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black ${
+                  accessStatus.daysRemainingInCourse <= 3
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200 animate-pulse'
+                    : 'bg-amber-100 text-amber-800 border border-amber-200'
+                }`}
+              >
+                <Clock className="w-3 h-3 text-amber-600" />
+                <span>수강 기한 D-{accessStatus.daysRemainingInCourse}일 남음</span>
+              </span>
+            )}
+
+            {/* Notification Settings CTA Pill */}
+            <button
+              onClick={openNotificationModal}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all hover:scale-105"
+              title="다음 챕터 오픈 및 복습 알림 설정"
+            >
+              <Bell className="w-3 h-3 text-blue-600" />
+              <span>알림 {notificationSettings.webPushEnabled ? '🟢 ON' : '설정'}</span>
+              {notificationSettings.marketingConsent && (
+                <span className="text-[10px] text-emerald-600 font-extrabold">•쿠폰동의</span>
+              )}
+            </button>
           </div>
+
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
             {currentBlock.title}
           </h1>
+
           <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
             <QrCode className="w-3.5 h-3.5 text-slate-500" />
             <span>QR Bridge DeepLink:</span>
             <span className="font-mono text-blue-600 font-semibold">{currentBlock.qrBridgeUrl}</span>
           </div>
 
-          {/* Chapter Quick Switcher for TOPIK Prep */}
+          {/* Drip Release & Sequential Unlock Chapter Bar for TOPIK Prep */}
           {(seriesId === 'hanup_topik_prep' || chapterId.startsWith('ch_prep_')) && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              <span className="text-[11px] font-bold text-slate-400">체험 회차:</span>
-              <Link
-                href="/study/hanup_topik_prep/ch_prep_01"
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                  chapterId === 'ch_prep_01'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                제1회: 하루 일과와 약속 정하기
-              </Link>
-              <Link
-                href="/study/hanup_topik_prep/ch_prep_02"
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                  chapterId === 'ch_prep_02'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                제2회: 쇼핑·교환과 건강 챙기기
-              </Link>
+            <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-slate-100">
+              <div className="flex flex-wrap items-center justify-between gap-1">
+                <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                  <span>순차 오픈 커리큘럼 (2주 완성 코스 • 적정 복습 주기 오픈):</span>
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  🔒 선수 회차 완료 + 예정일 도달 시 자동 잠금 해제
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                {prepChapterList.map((ch, idx) => {
+                  const chStatus = checkChapterAccess(seriesId, ch.id, idx);
+                  const isCurrent = chapterId === ch.id;
+
+                  return (
+                    <Link
+                      key={ch.id}
+                      href={`/study/hanup_topik_prep/${ch.id}`}
+                      className={`p-2.5 rounded-2xl border text-xs font-bold transition-all flex flex-col justify-between gap-1.5 ${
+                        isCurrent
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-400/30'
+                          : chStatus.isUnlocked
+                          ? 'bg-slate-50 hover:bg-blue-50 border-slate-200 text-slate-800 hover:border-blue-300'
+                          : 'bg-slate-100/70 border-slate-200/60 text-slate-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
+                            isCurrent
+                              ? 'bg-white/20 text-white'
+                              : chStatus.isUnlocked
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-slate-200 text-slate-600'
+                          }`}
+                        >
+                          Day {ch.day}
+                        </span>
+                        <span>
+                          {chStatus.isCompleted ? (
+                            <span className={`flex items-center gap-0.5 font-extrabold text-[11px] ${isCurrent ? 'text-emerald-200' : 'text-emerald-600'}`}>
+                              <CheckCircle2 className="w-3.5 h-3.5" /> 완료
+                            </span>
+                          ) : chStatus.isUnlocked ? (
+                            <span className={`text-[11px] font-bold ${isCurrent ? 'text-blue-100' : 'text-blue-600'}`}>
+                              학습 가능
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5 text-slate-400 text-[11px]">
+                              <Lock className="w-3 h-3" /> 잠김
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="font-extrabold truncate">{ch.title}</div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
 
         {/* 3 Interactive Tabs */}
-        <div className="inline-flex rounded-2xl p-1 bg-slate-100 border border-slate-200/80 shadow-inner">
-          <button
-            onClick={() => setActiveTab('concept')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'concept'
-                ? 'bg-white text-blue-700 shadow-sm font-black'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>{UI_TRANSLATIONS[lang]?.conceptTab || 'Tab 1. 개념 & 읽기'}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('listening')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'listening'
-                ? 'bg-white text-blue-700 shadow-sm font-black'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Headphones className="w-4 h-4" />
-            <span>{UI_TRANSLATIONS[lang]?.listeningTab || 'Tab 2. 듣기 & 딕테이션'}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('writing')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'writing'
-                ? 'bg-white text-blue-700 shadow-sm font-black'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <PenTool className="w-4 h-4" />
-            <span>{UI_TRANSLATIONS[lang]?.writingTab || 'Tab 3. 쓰기 53·54 AI 튜터'}</span>
-          </button>
-        </div>
+        {accessStatus.isUnlocked && (
+          <div className="inline-flex rounded-2xl p-1 bg-slate-100 border border-slate-200/80 shadow-inner self-start lg:self-center shrink-0">
+            <button
+              onClick={() => setActiveTab('concept')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeTab === 'concept'
+                  ? 'bg-white text-blue-700 shadow-sm font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>{UI_TRANSLATIONS[lang]?.conceptTab || 'Tab 1. 개념 & 읽기'}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('listening')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeTab === 'listening'
+                  ? 'bg-white text-blue-700 shadow-sm font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Headphones className="w-4 h-4" />
+              <span>{UI_TRANSLATIONS[lang]?.listeningTab || 'Tab 2. 듣기 & 딕테이션'}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('writing')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                activeTab === 'writing'
+                  ? 'bg-white text-blue-700 shadow-sm font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <PenTool className="w-4 h-4" />
+              <span>{UI_TRANSLATIONS[lang]?.writingTab || 'Tab 3. 쓰기 53·54 AI 튜터'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* =========================================================================
-          TAB 1: CONCEPT & MULTI-LINGUAL VOCAB TOOLTIP (INTERACTIVE WEB-BOOK)
-      ========================================================================= */}
+      {/* 2. Main Study Content Area or Locked Gate View */}
+      {!accessStatus.isUnlocked ? (
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-dashed border-slate-200 shadow-sm text-center max-w-2xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-20 h-20 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+            <Lock className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900">
+              {accessStatus.lockReason === 'course_expired' && '⌛ 수강 기한 만료'}
+              {accessStatus.lockReason === 'prerequisite_incomplete' && '🔒 선수 회차 미완료'}
+              {accessStatus.lockReason === 'drip_date_not_reached' && '🔒 순차 오픈 예정'}
+              {accessStatus.lockReason === 'unpurchased' && '🔒 미등록 강좌'}
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+              {accessStatus.lockReason === 'course_expired' && '본 강좌의 수강 유효기간이 만료되었습니다'}
+              {accessStatus.lockReason === 'prerequisite_incomplete' && `제${chapterIndex}회차 선수 학습을 먼저 완료해 주세요`}
+              {accessStatus.lockReason === 'drip_date_not_reached' && `${accessStatus.unlockDate || '예정일'}에 자동으로 열립니다`}
+              {accessStatus.lockReason === 'unpurchased' && '수강 신청이 필요한 강좌입니다'}
+            </h2>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+              {accessStatus.lockReason === 'course_expired' &&
+                '해당 코스의 14일 수강 유효기간이 종료되었습니다. 계속해서 복습하거나 추가 AI 실시간 첨삭 및 음운 클리닉을 이용하시려면 수강권을 갱신해 주세요.'}
+              {accessStatus.lockReason === 'prerequisite_incomplete' &&
+                `한업의 체계적인 학습 설계를 위해, 이전 회차(제${chapterIndex}회)의 핵심 개념과 미니 쓰기 과제를 먼저 완료하셔야 본 회차가 열립니다.`}
+              {accessStatus.lockReason === 'drip_date_not_reached' &&
+                `학습자의 망각 곡선과 최적의 복습 주기를 고려하여 본 챕터는 ${accessStatus.unlockDate || '예정일'}에 오픈됩니다. 오픈 당일 모바일 푸시 알림과 이메일로 즉시 알려드릴게요!`}
+              {accessStatus.lockReason === 'unpurchased' &&
+                '한업 정규 패스를 구독하거나 단품 교재를 구매하시면 전체 회차와 무제한 AI 튜터링을 즉시 이용하실 수 있습니다.'}
+            </p>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            {accessStatus.lockReason === 'course_expired' && (
+              <button
+                onClick={openPaywallModal}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs sm:text-sm shadow-md transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <span>⚡ 수강권 갱신 및 기간 연장하기</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+
+            {accessStatus.lockReason === 'prerequisite_incomplete' && (
+              <Link
+                href={`/study/hanup_topik_prep/${prepChapterList[Math.max(0, chapterIndex - 1)].id}`}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-md transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <span>제{chapterIndex}회 학습하러 가기</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
+
+            {accessStatus.lockReason === 'drip_date_not_reached' && (
+              <button
+                onClick={openNotificationModal}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-md transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <Bell className="w-4 h-4" />
+                <span>🔔 오픈 알림 받기 설정 (푸시 & 이메일)</span>
+              </button>
+            )}
+
+            {accessStatus.lockReason === 'unpurchased' && (
+              <button
+                onClick={openPaywallModal}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-md transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <span>수강 신청 및 결제하기</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* =========================================================================
+              TAB 1: CONCEPT & MULTI-LINGUAL VOCAB TOOLTIP (INTERACTIVE WEB-BOOK)
+          ========================================================================= */}
       {activeTab === 'concept' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Reading Passage (8 cols) */}
@@ -1100,7 +1273,10 @@ export default function SmartStudyViewerPage() {
                   : '정답 예시: 비약적, 편향성, 선결 과제'}
               </span>
               <button
-                onClick={() => setDictationResultChecked(true)}
+                onClick={() => {
+                  setDictationResultChecked(true);
+                  markChapterCompleted(seriesId, chapterId);
+                }}
                 className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all hover:scale-105"
               >
                 딕테이션 채점하기
@@ -1362,6 +1538,9 @@ export default function SmartStudyViewerPage() {
                           ? '정답입니다! 👏 상대방의 의견을 묻거나 정중하게 제안할 때는 동사 어간에 "-(으)ㄹ까요?"를 붙여 "만날까요?"라고 합니다.'
                           : '다시 한번 생각해 보세요! 💡 힌트: "만나다" + 상대방에게 제안하는 어미 "-(으)ㄹ까요?" -> "만날까요"',
                       });
+                      if (isOk) {
+                        markChapterCompleted(seriesId, 'ch_prep_01');
+                      }
                     } else {
                       const isOk = trimmed.includes('준비했으니까') || trimmed.includes('만들었으니까') || trimmed.includes('준비하니까') || trimmed.includes('있으니까');
                       setMiniWritingFeedback({
@@ -1372,6 +1551,7 @@ export default function SmartStudyViewerPage() {
                       });
                       if (isOk) {
                         setHasCompletedChapter2(true);
+                        markChapterCompleted(seriesId, 'ch_prep_02');
                       }
                     }
                   }}
@@ -2064,6 +2244,8 @@ export default function SmartStudyViewerPage() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* WTP Survey Trigger Banner (체험판 2회분 완료 시 또는 수험생 설문 유도) */}

@@ -14,6 +14,9 @@ import {
   AiEducationSurveyResponse,
   HomeworkTask,
   HomeworkCreditPack,
+  SeriesEnrollment,
+  ChapterAccessStatus,
+  UserNotificationSettings,
 } from '../types/hanup';
 import {
   MOCK_USERS,
@@ -126,6 +129,22 @@ interface HanUpContextType {
   legalModalTab: 'refund' | 'terms' | 'privacy' | 'support';
   openLegalModal: (tab?: 'refund' | 'terms' | 'privacy' | 'support') => void;
   closeLegalModal: () => void;
+
+  // Drip Release & Course Expiration
+  enrollments: Record<string, SeriesEnrollment>;
+  checkChapterAccess: (
+    seriesId: string,
+    chapterId: string,
+    chapterIndex: number
+  ) => ChapterAccessStatus;
+  markChapterCompleted: (seriesId: string, chapterId: string) => void;
+
+  // Push & Email Notifications
+  notificationSettings: UserNotificationSettings;
+  isNotificationModalOpen: boolean;
+  openNotificationModal: () => void;
+  closeNotificationModal: () => void;
+  updateNotificationSettings: (newSettings: Partial<UserNotificationSettings>) => void;
 }
 
 const HanUpContext = createContext<HanUpContextType | undefined>(undefined);
@@ -143,6 +162,140 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     setIsLegalModalOpen(true);
   };
   const closeLegalModal = () => setIsLegalModalOpen(false);
+
+  // Default Initial Enrollments (Prep series Day 2, 14 days valid)
+  const [enrollments, setEnrollments] = useState<Record<string, SeriesEnrollment>>({
+    hanup_topik_prep: {
+      seriesId: 'hanup_topik_prep',
+      enrolledAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 12 * 86400000).toISOString(),
+      completedChapterIds: ['ch_prep_01'],
+    },
+    hanup_topik_challenge: {
+      seriesId: 'hanup_topik_challenge',
+      enrolledAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 25 * 86400000).toISOString(),
+      completedChapterIds: ['ch_writing_04'],
+    },
+  });
+
+  // Notification Settings State (Push, Email, Marketing/Surprise Coupon Consent)
+  const [notificationSettings, setNotificationSettings] = useState<UserNotificationSettings>({
+    webPushEnabled: false,
+    emailReminderEnabled: true,
+    marketingConsent: true,
+    studyReminderTime: '20:00',
+    reminderDays: ['mon', 'wed', 'fri'],
+  });
+
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const openNotificationModal = () => setIsNotificationModalOpen(true);
+  const closeNotificationModal = () => setIsNotificationModalOpen(false);
+
+  const updateNotificationSettings = (newSettings: Partial<UserNotificationSettings>) => {
+    setNotificationSettings((prev) => ({ ...prev, ...newSettings }));
+  };
+
+  const getRequiredDripDay = (seriesId: string, index: number) => {
+    if (index === 0) return 1;
+    if (seriesId === 'hanup_topik_prep') {
+      const schedule = [1, 3, 7, 10];
+      return schedule[index] || index * 3 + 1;
+    }
+    return Math.floor(index * 2.3) + 1;
+  };
+
+  const checkChapterAccess = (
+    seriesId: string,
+    chapterId: string,
+    chapterIndex: number
+  ): ChapterAccessStatus => {
+    if (currentRole === 'super_admin' || currentRole === 'instructor' || currentRole === 'org_admin') {
+      return { chapterId, isUnlocked: true, isCompleted: true, daysRemainingInCourse: 999 };
+    }
+
+    const enrollment = enrollments[seriesId];
+    if (!enrollment && seriesId !== 'hanup_topik_prep' && seriesId !== 'hanup_life_step1') {
+      return { chapterId, isUnlocked: false, isCompleted: false, lockReason: 'unpurchased' };
+    }
+
+    const enrolledAt = enrollment ? new Date(enrollment.enrolledAt).getTime() : Date.now();
+    const expiresAt = enrollment ? new Date(enrollment.expiresAt).getTime() : Date.now() + 14 * 86400000;
+    const now = Date.now();
+
+    // 1. Check Course Expiration (Sunset Policy)
+    if (now > expiresAt) {
+      return {
+        chapterId,
+        isUnlocked: false,
+        isCompleted: false,
+        lockReason: 'course_expired',
+        daysRemainingInCourse: 0,
+      };
+    }
+
+    const daysRemaining = Math.max(0, Math.ceil((expiresAt - now) / 86400000));
+    const completedList = enrollment ? enrollment.completedChapterIds : [];
+    const isCompleted = completedList.includes(chapterId);
+
+    // First chapter is always unlocked
+    if (chapterIndex === 0) {
+      return { chapterId, isUnlocked: true, isCompleted, daysRemainingInCourse: daysRemaining };
+    }
+
+    // 2. Condition 1: Prerequisite Chapter Completed
+    const hasCompletedPrereq = completedList.length >= chapterIndex;
+    if (!hasCompletedPrereq) {
+      return {
+        chapterId,
+        isUnlocked: false,
+        isCompleted: false,
+        lockReason: 'prerequisite_incomplete',
+        daysRemainingInCourse: daysRemaining,
+      };
+    }
+
+    // 3. Condition 2: Drip Release Date Reached
+    const daysPassed = Math.floor((now - enrolledAt) / 86400000) + 1;
+    const requiredDay = getRequiredDripDay(seriesId, chapterIndex);
+    if (daysPassed < requiredDay) {
+      const unlockDate = new Date(enrolledAt + (requiredDay - 1) * 86400000).toLocaleDateString('ko-KR');
+      return {
+        chapterId,
+        isUnlocked: false,
+        isCompleted: false,
+        lockReason: 'drip_date_not_reached',
+        unlockDate,
+        daysRemainingInCourse: daysRemaining,
+      };
+    }
+
+    return {
+      chapterId,
+      isUnlocked: true,
+      isCompleted,
+      daysRemainingInCourse: daysRemaining,
+    };
+  };
+
+  const markChapterCompleted = (seriesId: string, chapterId: string) => {
+    setEnrollments((prev) => {
+      const existing = prev[seriesId] || {
+        seriesId,
+        enrolledAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 14 * 86400000).toISOString(),
+        completedChapterIds: [],
+      };
+      if (existing.completedChapterIds.includes(chapterId)) return prev;
+      return {
+        ...prev,
+        [seriesId]: {
+          ...existing,
+          completedChapterIds: [...existing.completedChapterIds, chapterId],
+        },
+      };
+    });
+  };
 
   // In-memory Master Stores
   const [organizations] = useState<Organization[]>(MOCK_ORGS);
@@ -544,6 +697,14 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         legalModalTab,
         openLegalModal,
         closeLegalModal,
+        enrollments,
+        checkChapterAccess,
+        markChapterCompleted,
+        notificationSettings,
+        isNotificationModalOpen,
+        openNotificationModal,
+        closeNotificationModal,
+        updateNotificationSettings,
       }}
     >
       {children}
