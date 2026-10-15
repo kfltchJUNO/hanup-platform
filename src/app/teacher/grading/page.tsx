@@ -102,10 +102,10 @@ export default function TeacherGradingQueuePage() {
           <button
             onClick={() => setIsUriBanModalOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-xs shadow-sm transition-all"
-            title="우리반(UriBan) 학급 및 작문 데이터 동기화"
+            title="우리반(Wooriban) 학급 및 작문 데이터 동기화"
           >
             <School className="w-3.5 h-3.5 text-purple-200" />
-            <span>🏫 우리반(UriBan) 연동</span>
+            <span>🏫 우리반(Wooriban) 연동</span>
           </button>
 
           <div className="flex items-center gap-2 text-xs">

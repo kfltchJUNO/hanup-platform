@@ -7,7 +7,11 @@ export const APP_CONFIG = {
   // Sori Tutor (소리튜터): AI Pronunciation & Speaking Clinic
   soriTutorUrl: process.env.NEXT_PUBLIC_SORI_TUTOR_URL || 'https://sori-tutor.vercel.app',
 
-  // UriBan (우리반): Classroom Management LMS & Essay Feedback
+  // Wooriban (우리반): Classroom Management LMS & Essay Feedback
+  wooribanUrl:
+    process.env.NEXT_PUBLIC_WOORIBAN_URL ||
+    process.env.NEXT_PUBLIC_URIBAN_URL ||
+    'https://wooriban-app.vercel.app/login',
   uribanUrl:
     process.env.NEXT_PUBLIC_WOORIBAN_URL ||
     process.env.NEXT_PUBLIC_URIBAN_URL ||

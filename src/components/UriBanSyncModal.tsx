@@ -104,7 +104,7 @@ export const UriBanSyncModal: React.FC<UriBanSyncModalProps> = ({ isOpen, onClos
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base">우리반(UriBan) 학급 & 작문 데이터 양방향 동기화</h3>
+                <h3 className="font-bold text-base">우리반(Wooriban) 학급 & 작문 데이터 양방향 동기화</h3>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/40 border border-purple-300/40 text-purple-100 font-medium">
                   Adapter v1.0
                 </span>
@@ -155,7 +155,7 @@ export const UriBanSyncModal: React.FC<UriBanSyncModalProps> = ({ isOpen, onClos
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-600">
-                  우리반(UriBan) LMS에서 내보낸 학급 및 과제 제출물 JSON을 붙여넣으세요.
+                  우리반(Wooriban) LMS에서 내보낸 학급 및 과제 제출물 JSON을 붙여넣으세요.
                 </span>
                 <button
                   onClick={handleLoadSample}

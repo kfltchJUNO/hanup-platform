@@ -342,9 +342,9 @@ export const HeaderNavbar: React.FC = () => {
                     </div>
                   </a>
 
-                  {/* App 3: UriBan */}
+                  {/* App 3: Wooriban */}
                   <a
-                    href={APP_CONFIG.uribanUrl}
+                    href={APP_CONFIG.wooribanUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsAppLauncherOpen(false)}
@@ -356,7 +356,7 @@ export const HeaderNavbar: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-900 group-hover:text-purple-700">
-                          우리반 (UriBan | 我们班)
+                          우리반 (Wooriban | 我们班)
                         </span>
                         <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600" />
                       </div>
@@ -365,7 +365,7 @@ export const HeaderNavbar: React.FC = () => {
                       </p>
                       <div className="flex items-center gap-2 mt-1.5 text-[10px] text-purple-700 font-mono">
                         <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                        <span className="truncate">{APP_CONFIG.uribanUrl}</span>
+                        <span className="truncate">{APP_CONFIG.wooribanUrl}</span>
                       </div>
                     </div>
                   </a>
@@ -480,7 +480,7 @@ export const HeaderNavbar: React.FC = () => {
             </button>
           </div>
 
-          {/* SoriTutor & UriBan External Links in Mobile Menu */}
+          {/* SoriTutor & Wooriban External Links in Mobile Menu */}
           <div className="pt-2 border-t border-slate-100 space-y-1.5">
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">
               패밀리 서비스 연동
@@ -498,14 +498,14 @@ export const HeaderNavbar: React.FC = () => {
               <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
             <a
-              href={APP_CONFIG.uribanUrl}
+              href={APP_CONFIG.wooribanUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-800 border border-slate-200 text-xs font-semibold transition-colors"
             >
               <span className="flex items-center gap-2">
                 <School className="w-4 h-4 text-purple-600" />
-                우리반 (학급 LMS & 코퍼스)
+                우리반 (Wooriban 학급 LMS & 코퍼스)
               </span>
               <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>

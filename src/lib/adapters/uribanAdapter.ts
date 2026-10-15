@@ -154,7 +154,7 @@ export function uribanToHanUp(pkg: UriBanSyncPackage): {
         rhetoricAndLogicComment:
           item.feedback?.structure ||
           item.feedback?.positive ||
-          `우리반(UriBan) AI 분석 완료. 작성 소요시간: ${Math.round(item.activeDurationMs / 60000)}분, 붙여넣기 시도: ${item.pasteAttempts}회`,
+          `우리반(Wooriban) AI 분석 완료. 작성 소요시간: ${Math.round(item.activeDurationMs / 60000)}분, 붙여넣기 시도: ${item.pasteAttempts}회`,
         analyzedAt: item.createdAt,
       },
       instructorFeedback: {
