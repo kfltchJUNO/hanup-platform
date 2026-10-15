@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     }
 
     const charCount = draftText.trim().length;
-    const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const openAiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
 
     const is53Task =
       taskType === 'topik_53_graph' ||
@@ -36,11 +37,8 @@ export async function POST(req: NextRequest) {
 
     let aiEvaluation: any = null;
 
-    // External LLM Prompt Call (OpenAI / DeepSeek compatible)
-    if (apiKey) {
-      try {
-        const systemPrompt = is53Task
-          ? `당신은 한국어능력시험(TOPIK II) 쓰기 53번(도표/자료 분석) 수석 채점관입니다.
+    const systemPrompt = is53Task
+      ? `당신은 한국어능력시험(TOPIK II) 쓰기 53번(도표/자료 분석) 수석 채점관입니다.
 수험생 모국어: ${l1Name} (${l1}), 목표 급수: ${targetLevel}급.
 [53번 채점 핵심 루브릭]:
 1. 숫자 및 단위 뒤 조사 결합 규칙 엄격 검사: '%' 뒤에는 '-로' (예: 35%로 증가했다), '원/명/건' 등 받침 있는 단위 명사 뒤에는 '-으로' (예: 6조 원으로 증가했다, 50만 명으로 감소했다).
@@ -54,7 +52,7 @@ export async function POST(req: NextRequest) {
   "chineseTranslationToneFixes": [{"awkward": string, "naturalKo": string, "tipZh": string, "tipEn": string, "tipJa": string, "tipVi": string, "tipMy": string}],
   "rhetoricAndLogicComment": string
 }`
-          : `당신은 한국어능력시험(TOPIK II) 쓰기 54번(700자 논술문) 수석 채점관이자 외국어로서의 한국어교육학 박사입니다.
+      : `당신은 한국어능력시험(TOPIK II) 쓰기 54번(700자 논술문) 수석 채점관이자 외국어로서의 한국어교육학 박사입니다.
 수험생 모국어: ${l1Name} (${l1}), 목표 급수: ${targetLevel}급.
 [54번 채점 핵심 루브릭]:
 1. 종결어미 검사: 구어체/경어체/청유형(-습니다, -어요, -합시다, -해요) 발견 즉시 감점하고 학술 해라체(-ㄴ다/-는다/-다)로 교정할 것.
@@ -69,11 +67,45 @@ export async function POST(req: NextRequest) {
   "rhetoricAndLogicComment": string
 }`;
 
+    // 1. Google Gemini 1.5 Flash Call (Free Tier Priority)
+    if (geminiKey) {
+      try {
+        const fullPrompt = `${systemPrompt}\n\n[논제]: ${promptTitle}\n[수험생 답안]:\n${draftText}`;
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: fullPrompt }] }],
+              generationConfig: {
+                temperature: 0.2,
+                responseMimeType: 'application/json',
+              },
+            }),
+          }
+        );
+
+        if (geminiRes.ok) {
+          const gData = await geminiRes.json();
+          const jsonText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            aiEvaluation = JSON.parse(jsonText);
+          }
+        }
+      } catch (err) {
+        console.warn('Gemini 1.5 Flash grading failed, checking fallback...', err);
+      }
+    }
+
+    // 2. OpenAI / DeepSeek Call (Secondary Fallback if configured)
+    if (!aiEvaluation && openAiKey) {
+      try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${openAiKey}`,
           },
           body: JSON.stringify({
             model: 'gpt-4o-mini',
