@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { executeGeminiRelay } from '../../../../lib/ai/geminiRelay';
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,35 +68,20 @@ export async function POST(req: NextRequest) {
   "rhetoricAndLogicComment": string
 }`;
 
-    // 1. Google Gemini 1.5 Flash Call (Free Tier Priority)
-    if (geminiKey) {
-      try {
-        const fullPrompt = `${systemPrompt}\n\n[논제]: ${promptTitle}\n[수험생 답안]:\n${draftText}`;
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: fullPrompt }] }],
-              generationConfig: {
-                temperature: 0.2,
-                responseMimeType: 'application/json',
-              },
-            }),
-          }
-        );
+    // 1. Google Gemini 5-Stage Model & Dual-Key Relay Call
+    try {
+      const relayResult = await executeGeminiRelay({
+        task: 'writing',
+        systemPrompt,
+        userPrompt: `[논제]: ${promptTitle}\n[수험생 답안]:\n${draftText}`,
+        responseJson: true,
+      });
 
-        if (geminiRes.ok) {
-          const gData = await geminiRes.json();
-          const jsonText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (jsonText) {
-            aiEvaluation = JSON.parse(jsonText);
-          }
-        }
-      } catch (err) {
-        console.warn('Gemini 1.5 Flash grading failed, checking fallback...', err);
+      if (relayResult?.content) {
+        aiEvaluation = JSON.parse(relayResult.content);
       }
+    } catch (err) {
+      console.warn('Gemini Relay failed, checking secondary fallback...', err);
     }
 
     // 2. OpenAI / DeepSeek Call (Secondary Fallback if configured)

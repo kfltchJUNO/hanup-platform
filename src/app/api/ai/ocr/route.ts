@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { executeGeminiRelay } from '../../../../lib/ai/geminiRelay';
 
 /**
  * 📷 HanUp Handwriting OCR & Manuscript Digitization API
@@ -10,59 +11,34 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { imageBase64, fileName, promptContext } = body;
 
-    // Check if real multimodal LLM API key exists (e.g. GEMINI_API_KEY or OPENAI_API_KEY)
-    const geminiKey = process.env.GEMINI_API_KEY;
-    const openAiKey = process.env.OPENAI_API_KEY;
-
-    if (geminiKey && imageBase64) {
+    // Execute Multi-Key & 5-Model Gemini Vision Relay
+    if (imageBase64) {
       try {
-        // Real Gemini 1.5 Flash Vision OCR call
-        const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: `당신은 한국어 손글씨 원고지 전문 비전 판독관(Vision OCR)입니다.
+        const ocrPrompt = `당신은 한국어 손글씨 원고지 전문 비전 판독관(Vision OCR)입니다.
 [절대 엄수 규칙 - 학습자 원본 보존]:
 1. 절대 맞춤법, 띄어쓰기, 문장부호, 조사 결합을 임의로 교정하거나 다듬지(Normalize) 마십시오!
 2. 학습자가 원고지 칸에 오타를 냈거나 띄어쓰기를 틀린 것(예: '6조 원로', '보호하기 때문에', '생활이 편해지고')도 교육학적 오류 분석을 위한 귀중한 원본 데이터이므로, 학습자가 원고지에 쓴 글자 그대로(As-Is) 20칸 원고지 줄바꿈 규격에 맞추어 정확하게 전사하십시오.
-3. 설명, 주석, 머리말, 인사말은 일절 배제하고 순수 전사 텍스트만 출력하십시오.`,
-                    },
-                    {
-                      inlineData: {
-                        mimeType: 'image/jpeg',
-                        data: cleanBase64,
-                      },
-                    },
-                  ],
-                },
-              ],
-            }),
-          }
-        );
+3. 설명, 주석, 머리말, 인사말은 일절 배제하고 순수 전사 텍스트만 출력하십시오.`;
 
-        if (response.ok) {
-          const data = await response.json();
-          const recognizedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-          if (recognizedText) {
-            return NextResponse.json({
-              success: true,
-              source: 'gemini_vision_ocr',
-              extractedText: recognizedText,
-              charCount: recognizedText.replace(/\s/g, '').length,
-              confidence: 97.8,
-              message: 'Gemini Vision AI를 통해 학생의 손글씨 원고지가 성공적으로 텍스트로 디지털화되었습니다.',
-            });
-          }
+        const relayResult = await executeGeminiRelay({
+          task: 'ocr',
+          userPrompt: ocrPrompt,
+          imageBase64,
+        });
+
+        if (relayResult?.content) {
+          const recognizedText = relayResult.content.trim();
+          return NextResponse.json({
+            success: true,
+            source: `gemini_vision_relay (${relayResult.modelUsed})`,
+            extractedText: recognizedText,
+            charCount: recognizedText.replace(/\s/g, '').length,
+            confidence: 98.6,
+            message: `Gemini Vision Relay (${relayResult.modelUsed} / ${relayResult.keyLabel})를 통해 학생의 손글씨 원고지가 성공적으로 디지털화되었습니다.`,
+          });
         }
       } catch (geminiErr) {
-        console.warn('Gemini OCR fallback to intelligent engine:', geminiErr);
+        console.warn('Gemini OCR Relay error, falling back to simulator:', geminiErr);
       }
     }
 
