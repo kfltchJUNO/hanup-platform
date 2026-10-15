@@ -240,22 +240,26 @@ export const HeaderNavbar: React.FC = () => {
             </div>
           )}
 
-          {/* Quick Triggers for Background Intake & WTP Survey (Desktop) */}
-          <button
-            onClick={openBackgroundModal}
-            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
-            title="학술 연구용 7대 배경변인 등록/확인"
-          >
-            <span>📋 연구 배경변인</span>
-          </button>
+          {/* Quick Triggers for Background Intake & WTP Survey (Desktop - Student Only) */}
+          {currentRole === 'student' && (
+            <>
+              <button
+                onClick={openBackgroundModal}
+                className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+                title="학술 연구용 7대 배경변인 등록/확인"
+              >
+                <span>📋 연구 배경변인</span>
+              </button>
 
-          <button
-            onClick={openSurveyModal}
-            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
-            title="AI 요구분석 설문 & 20% 할인쿠폰 받기"
-          >
-            <span>🎁 WTP 설문</span>
-          </button>
+              <button
+                onClick={openSurveyModal}
+                className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
+                title="AI 요구분석 설문 & 20% 할인쿠폰 받기"
+              >
+                <span>🎁 WTP 설문</span>
+              </button>
+            </>
+          )}
 
           {/* 3-App Suite 9-Dots Launcher (Google/Microsoft Style) */}
           <div className="relative">
@@ -458,27 +462,29 @@ export const HeaderNavbar: React.FC = () => {
             })}
           </div>
 
-          {/* Quick Triggers inside Mobile Menu */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                openBackgroundModal();
-              }}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
-            >
-              <span>📋 연구 배경변인</span>
-            </button>
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                openSurveyModal();
-              }}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
-            >
-              <span>🎁 WTP 설문 & 쿠폰</span>
-            </button>
-          </div>
+          {/* Quick Triggers inside Mobile Menu (Student Only) */}
+          {currentRole === 'student' && (
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openBackgroundModal();
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+              >
+                <span>📋 연구 배경변인</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openSurveyModal();
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
+              >
+                <span>🎁 WTP 설문 & 쿠폰</span>
+              </button>
+            </div>
+          )}
 
           {/* SoriTutor & Wooriban External Links in Mobile Menu */}
           <div className="pt-2 border-t border-slate-100 space-y-1.5">
