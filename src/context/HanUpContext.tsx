@@ -120,6 +120,12 @@ interface HanUpContextType {
   isVocabSaved: (word: string) => boolean;
   solvedItemIds: string[];
   recordSolvedItem: (itemId: string) => void;
+
+  // Legal Policies Modal (Refund, Terms, Privacy, Support)
+  isLegalModalOpen: boolean;
+  legalModalTab: 'refund' | 'terms' | 'privacy' | 'support';
+  openLegalModal: (tab?: 'refund' | 'terms' | 'privacy' | 'support') => void;
+  closeLegalModal: () => void;
 }
 
 const HanUpContext = createContext<HanUpContextType | undefined>(undefined);
@@ -129,6 +135,14 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserProfile>(MOCK_USERS.student);
   const [lang, setLang] = useState<SupportedLanguage>('ko');
   const [isPaywallModalOpen, setIsPaywallModalOpen] = useState(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'refund' | 'terms' | 'privacy' | 'support'>('refund');
+
+  const openLegalModal = (tab: 'refund' | 'terms' | 'privacy' | 'support' = 'refund') => {
+    setLegalModalTab(tab);
+    setIsLegalModalOpen(true);
+  };
+  const closeLegalModal = () => setIsLegalModalOpen(false);
 
   // In-memory Master Stores
   const [organizations] = useState<Organization[]>(MOCK_ORGS);
@@ -526,6 +540,10 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         isVocabSaved,
         solvedItemIds,
         recordSolvedItem,
+        isLegalModalOpen,
+        legalModalTab,
+        openLegalModal,
+        closeLegalModal,
       }}
     >
       {children}
