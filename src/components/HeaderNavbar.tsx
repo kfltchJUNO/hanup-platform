@@ -23,6 +23,8 @@ import {
   ExternalLink,
   Mic,
   School,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useHanUp } from '../context/HanUpContext';
 import { UserRole, ROLE_DEFINITIONS } from '../types/hanup';
@@ -43,6 +45,12 @@ export const HeaderNavbar: React.FC = () => {
   } = useHanUp();
   const [isLangMenuOpen, setIsLangMenuOpen] = React.useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   // Navigation Links filtered by Role with i18n support
   const getNavLinks = () => {
@@ -52,7 +60,7 @@ export const HeaderNavbar: React.FC = () => {
         return [
           { href: '/dashboard', label: t.dashboard, icon: GraduationCap },
           { href: '/clinic', label: t.clinic, icon: Stethoscope },
-          { href: '/study/hanup_topik/ch_writing_04', label: t.studyViewer, icon: BookOpen },
+          { href: '/study/hanup_topik_prep/ch_prep_01', label: t.studyViewer, icon: BookOpen },
         ];
       case 'instructor':
         return [
@@ -81,37 +89,44 @@ export const HeaderNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      {/* 1. Top RBAC Switcher Banner (Multi-tenancy & Testing Hub) */}
-      <div className="bg-slate-900 text-slate-200 px-4 py-1.5 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 font-semibold text-blue-400">
+      {/* 1. Top RBAC Switcher Banner (Multi-tenancy & Testing Hub) - Mobile Optimized */}
+      <div className="bg-slate-900 text-slate-200 px-3 sm:px-4 py-1.5 text-xs flex items-center justify-between gap-2 border-b border-slate-800">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <span className="flex items-center gap-1 font-semibold text-blue-400 shrink-0 text-[11px] sm:text-xs">
             <ShieldCheck className="w-3.5 h-3.5" />
-            [4-Tier RBAC Switcher]
+            <span className="hidden sm:inline">[RBAC 모드]:</span>
           </span>
-          <span className="text-slate-400 hidden sm:inline">| 실시간 테스트 권한 전환:</span>
-          <div className="inline-flex rounded-md p-0.5 bg-slate-800 border border-slate-700">
+          <div className="inline-flex rounded-lg p-0.5 bg-slate-800 border border-slate-700 shrink-0">
             {(['student', 'instructor', 'org_admin', 'super_admin'] as UserRole[]).map((r) => {
               const isActive = currentRole === r;
+              const shortLabels: Record<UserRole, string> = {
+                student: '학생',
+                instructor: '교사',
+                org_admin: '기관',
+                super_admin: '본사',
+              };
               return (
                 <button
                   key={r}
                   onClick={() => switchRole(r)}
-                  className={`px-2.5 py-0.5 rounded text-xs font-medium transition-all ${
+                  className={`px-2 sm:px-2.5 py-0.5 rounded text-[11px] sm:text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                      ? 'bg-blue-600 text-white shadow-sm font-bold'
                       : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
                   }`}
+                  title={ROLE_DEFINITIONS[r].labelKo}
                 >
-                  {ROLE_DEFINITIONS[r].labelKo}
+                  <span className="sm:hidden">{shortLabels[r]}</span>
+                  <span className="hidden sm:inline">{ROLE_DEFINITIONS[r].labelKo}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Multi-tenant Org Badge */}
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Multi-tenant Org Badge (Hidden on small phones to save space) */}
+          <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
             <Building2 className="w-3 h-3 text-emerald-400" />
             <span className="font-mono text-[11px] text-slate-400">orgId:</span>
             <span className="text-white font-medium">{currentOrg.orgName}</span>
@@ -121,12 +136,12 @@ export const HeaderNavbar: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all text-xs font-medium shadow-xs"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all text-[11px] sm:text-xs font-medium shadow-xs"
               title="언어 선택 / Select Language / 言語選択 / 语言选择 / Chọn ngôn ngữ / ဘာသာစကားရွေးပါ"
             >
-              <Globe className="w-3.5 h-3.5 text-blue-400" />
+              <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
               <span>{SUPPORTED_LANGUAGES[lang].flag}</span>
-              <span className="font-bold">{SUPPORTED_LANGUAGES[lang].label}</span>
+              <span className="font-bold hidden xs:inline">{SUPPORTED_LANGUAGES[lang].code.toUpperCase()}</span>
               <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -166,32 +181,32 @@ export const HeaderNavbar: React.FC = () => {
       </div>
 
       {/* 2. Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <span className="font-black text-lg tracking-tighter">H</span>
+        <div className="flex items-center gap-4 lg:gap-8">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
+              <span className="font-black text-base sm:text-lg tracking-tighter">H</span>
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
                   한업
                 </span>
-                <span className="text-sm font-extrabold text-blue-600 tracking-wider">
+                <span className="text-xs sm:text-sm font-extrabold text-blue-600 tracking-wider">
                   HanUp
                 </span>
-                <span className="text-xs font-medium text-slate-400 border-l border-slate-300 pl-1.5">
+                <span className="text-[10px] sm:text-xs font-medium text-slate-400 border-l border-slate-300 pl-1 sm:pl-1.5">
                   韩升
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-medium leading-none">
-                AI 글로벌 한국어 통합 SaaS
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium leading-none hidden xs:block">
+                스마트 한국어 교육 플랫폼
               </p>
             </div>
           </Link>
 
-          {/* Dynamic Navigation Links */}
+          {/* Dynamic Navigation Links (Tablet & Desktop) */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((item) => {
               const isActive = pathname === item.href;
@@ -200,7 +215,7 @@ export const HeaderNavbar: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 lg:px-3.5 lg:py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-blue-50 text-blue-700 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
@@ -214,21 +229,21 @@ export const HeaderNavbar: React.FC = () => {
           </nav>
         </div>
 
-        {/* Right Side: User Profile & Quick Actions */}
-        <div className="flex items-center gap-3">
-          {/* Student Specific Target Level Badge */}
+        {/* Right Side: Quick Actions, Profile & Mobile Hamburger */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Student Target Badge (Hidden on mobile) */}
           {currentRole === 'student' && (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium">
               <Award className="w-3.5 h-3.5 text-amber-600" />
               <span>목표: TOPIK {currentUser.targetTopikLevel}급</span>
               <span className="text-amber-500 font-bold">D-28</span>
             </div>
           )}
 
-          {/* Quick Triggers for Background Intake & WTP Survey */}
+          {/* Quick Triggers for Background Intake & WTP Survey (Desktop) */}
           <button
             onClick={openBackgroundModal}
-            className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
             title="학술 연구용 7대 배경변인 등록/확인"
           >
             <span>📋 연구 배경변인</span>
@@ -236,7 +251,7 @@ export const HeaderNavbar: React.FC = () => {
 
           <button
             onClick={openSurveyModal}
-            className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
+            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
             title="AI 요구분석 설문 & 20% 할인쿠폰 받기"
           >
             <span>🎁 WTP 설문</span>
@@ -254,11 +269,11 @@ export const HeaderNavbar: React.FC = () => {
               title="HanUp Suite 9-Dots 앱 런처 (한업 · 소리튜터 · 우리반)"
               aria-label="HanUp Suite Apps"
             >
-              <LayoutGrid className="w-5 h-5" />
+              <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {isAppLauncherOpen && (
-              <div className="absolute right-0 mt-2 w-84 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 px-1">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-black">
@@ -364,11 +379,11 @@ export const HeaderNavbar: React.FC = () => {
           </div>
 
           {/* User Mini Card */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <img
               src={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'}
               alt={currentUser.name}
-              className="w-8 h-8 rounded-full border border-slate-300 object-cover"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-300 object-cover"
             />
             <div className="hidden lg:block text-left">
               <div className="text-xs font-bold text-slate-800 leading-tight">
@@ -380,8 +395,123 @@ export const HeaderNavbar: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Mobile Hamburger Menu Toggle Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors"
+            aria-label="Toggle Mobile Navigation"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-slate-900" /> : <Menu className="w-5 h-5 text-slate-700" />}
+          </button>
         </div>
       </div>
+
+      {/* 3. Mobile Drawer Menu (Visible when isMobileMenuOpen is true) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white/98 backdrop-blur-lg px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 shadow-xl">
+          {/* User Status Bar in Mobile Menu */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center gap-2.5">
+              <img
+                src={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'}
+                alt={currentUser.name}
+                className="w-9 h-9 rounded-full border border-slate-300 object-cover"
+              />
+              <div>
+                <div className="text-sm font-bold text-slate-900">{currentUser.name}</div>
+                <div className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                  <span>{ROLE_DEFINITIONS[currentRole].labelKo}</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-amber-600 font-bold">TOPIK {currentUser.targetTopikLevel}급</span>
+                </div>
+              </div>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+              {currentOrg.orgName}
+            </span>
+          </div>
+
+          {/* Mobile Navigation Links */}
+          <div className="space-y-1">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">
+              메뉴 바로가기
+            </div>
+            {navLinks.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Quick Triggers inside Mobile Menu */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                openBackgroundModal();
+              }}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+            >
+              <span>📋 연구 배경변인</span>
+            </button>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                openSurveyModal();
+              }}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
+            >
+              <span>🎁 WTP 설문 & 쿠폰</span>
+            </button>
+          </div>
+
+          {/* SoriTutor & UriBan External Links in Mobile Menu */}
+          <div className="pt-2 border-t border-slate-100 space-y-1.5">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">
+              패밀리 서비스 연동
+            </div>
+            <a
+              href={APP_CONFIG.soriTutorUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 text-xs font-semibold transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-emerald-600" />
+                소리튜터 (발음·음운 클리닉)
+              </span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <a
+              href={APP_CONFIG.uribanUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-800 border border-slate-200 text-xs font-semibold transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <School className="w-4 h-4 text-purple-600" />
+                우리반 (학급 LMS & 코퍼스)
+              </span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
