@@ -50,7 +50,13 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
   // Listen for Sori Tutor window message
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Validate Sori Tutor evaluation event
+      // 1. Close event from Sori Tutor back button
+      if (event.data?.type === 'SORI_EMBED_CLOSE') {
+        onClose();
+        return;
+      }
+
+      // 2. Validate Sori Tutor evaluation event
       if (event.data?.type === 'SORI_EVALUATION_COMPLETE') {
         const payload: SoriEvaluationPayload = event.data.payload;
         if (!payload) return;
@@ -81,7 +87,7 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [currentUser, targetSentence, addPhonologyLog]);
+  }, [currentUser, targetSentence, addPhonologyLog, onClose]);
 
   if (!isOpen) return null;
 
