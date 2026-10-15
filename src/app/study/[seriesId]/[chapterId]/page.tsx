@@ -46,15 +46,17 @@ import {
   UI_TRANSLATIONS,
   L1_PROFILES,
 } from '../../../../lib/i18n';
+import { MOCK_SERIES } from '../../../../mock/mockData';
 import { SoriTutorModal } from '../../../../components/SoriTutorModal';
 
 export default function SmartStudyViewerPage() {
   const params = useParams();
-  const seriesId = (params.seriesId as string) || 'hanup_topik';
+  const seriesId = (params.seriesId as string) || 'hanup_topik_master';
   const chapterId = (params.chapterId as string) || 'ch_writing_04';
 
   const {
     authoringBlocks,
+    itemBank,
     submissions,
     addSubmission,
     submitStudentRevision,
@@ -67,14 +69,46 @@ export default function SmartStudyViewerPage() {
     consumeAiGradeQuota,
     consumeOcrQuota,
     openPaywallModal,
+    openSurveyModal,
   } = useHanUp();
+
+  const currentSeries =
+    MOCK_SERIES.find((s) => s.seriesId === seriesId) || MOCK_SERIES[2];
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'concept' | 'listening' | 'writing'>('concept');
 
   // Find block data
   const currentBlock =
-    authoringBlocks.find((b) => b.chapterId === chapterId) || authoringBlocks[0];
+    authoringBlocks.find((b) => b.chapterId === chapterId || b.blockId === chapterId) ||
+    authoringBlocks.find((b) => b.seriesId === seriesId) ||
+    authoringBlocks[0];
+
+  // Prep Questions Filtering
+  const readingQuestions = itemBank.filter((item) =>
+    chapterId === 'ch_prep_01'
+      ? item.itemId === 'item_prep_01_read_01' || item.itemId === 'item_prep_01_read_02'
+      : chapterId === 'ch_prep_02'
+      ? item.itemId === 'item_prep_02_read_01' || item.itemId === 'item_prep_02_read_02'
+      : false
+  );
+
+  const listeningQuestions = itemBank.filter((item) =>
+    chapterId === 'ch_prep_01'
+      ? item.itemId === 'item_prep_01_listen_01' || item.itemId === 'item_prep_01_listen_02'
+      : chapterId === 'ch_prep_02'
+      ? item.itemId === 'item_prep_02_listen_01' || item.itemId === 'item_prep_02_listen_02'
+      : false
+  );
+
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
+  const [showAnswerFeedback, setShowAnswerFeedback] = useState<Record<string, boolean>>({});
+
+  // Mini Writing Task State
+  const [miniWritingInput, setMiniWritingInput] = useState<string>('');
+  const [miniWritingChecked, setMiniWritingChecked] = useState<boolean>(false);
+  const [miniWritingFeedback, setMiniWritingFeedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
+  const [hasCompletedChapter2, setHasCompletedChapter2] = useState<boolean>(false);
 
   // Tab 1: Vocab Popover Modal State
   const [activeVocab, setActiveVocab] = useState<VocabAnnotation | null>(null);
@@ -109,9 +143,13 @@ export default function SmartStudyViewerPage() {
 
   // Sori Tutor AI Pronunciation Integration
   const [isSoriModalOpen, setIsSoriModalOpen] = useState<boolean>(false);
-  const [soriTargetSentence, setSoriTargetSentence] = useState<string>(
-    '현대 사회에서 인공지능 기술은 산업 전반에서 생산성을 비약적으로 향상시키고 있다.'
-  );
+  const defaultSoriSentence =
+    chapterId === 'ch_prep_01'
+      ? '급한 일이 생겨서요'
+      : chapterId === 'ch_prep_02'
+      ? '길이가 좀 짧아서요'
+      : '현대 사회에서 인공지능 기술은 산업 전반에서 생산성을 비약적으로 향상시키고 있다.';
+  const [soriTargetSentence, setSoriTargetSentence] = useState<string>(defaultSoriSentence);
 
   const openSoriTutor = (sentence: string) => {
     setSoriTargetSentence(sentence);
@@ -317,9 +355,13 @@ export default function SmartStudyViewerPage() {
       window.speechSynthesis.cancel();
       setIsPlayingAudio(false);
     } else {
-      const utterance = new SpeechSynthesisUtterance(
-        '현대 사회에서 인공지능 기술은 비약적으로 발전하고 있습니다. 그러나 알고리즘의 편향성과 일자리 감소라는 윤리적 문제를 해결하는 것이 선결 과제입니다.'
-      );
+      const speechText =
+        chapterId === 'ch_prep_01'
+          ? '수진 씨, 미안해요! 오늘 4시에 만나기로 했는데 학교 앞에서 버스를 잘못 탔어요. 지금 반대 방향으로 가는 버스를 타서 다시 돌아가고 있어요. 30분 정도 늦을 것 같아요. 4시 30분까지 약속 장소인 서울역 앞 커피숍으로 갈게요! 급한 일이 생겨서요.'
+          : chapterId === 'ch_prep_02'
+          ? '손님, 어제 여기서 산 바지인데요. 집에서 다시 입어 보니까 길이가 좀 짧아서요. 혹시 한 치수 큰 사이즈로 교환할 수 있을까요? 영수증 여기 있어요.'
+          : '현대 사회에서 인공지능 기술은 비약적으로 발전하고 있습니다. 그러나 알고리즘의 편향성과 일자리 감소라는 윤리적 문제를 해결하는 것이 선결 과제입니다.';
+      const utterance = new SpeechSynthesisUtterance(speechText);
       utterance.lang = 'ko-KR';
       utterance.rate = playbackSpeed;
       utterance.onend = () => setIsPlayingAudio(false);
@@ -416,6 +458,33 @@ export default function SmartStudyViewerPage() {
             <span>QR Bridge DeepLink:</span>
             <span className="font-mono text-blue-600 font-semibold">{currentBlock.qrBridgeUrl}</span>
           </div>
+
+          {/* Chapter Quick Switcher for TOPIK Prep */}
+          {(seriesId === 'hanup_topik_prep' || chapterId.startsWith('ch_prep_')) && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400">체험 회차:</span>
+              <Link
+                href="/study/hanup_topik_prep/ch_prep_01"
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                  chapterId === 'ch_prep_01'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                제1회: 하루 일과와 약속 정하기
+              </Link>
+              <Link
+                href="/study/hanup_topik_prep/ch_prep_02"
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                  chapterId === 'ch_prep_02'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                제2회: 쇼핑·교환과 건강 챙기기
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* 3 Interactive Tabs */}
@@ -481,38 +550,61 @@ export default function SmartStudyViewerPage() {
             </div>
 
             {/* Interactive Passage with Clickable Keywords */}
-            <div className="text-slate-900 text-sm sm:text-base leading-loose whitespace-pre-line font-sans">
-              현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다. 이에 따라 생산성이{' '}
-              <button
-                onClick={() =>
-                  setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('비약적')) || null)
-                }
-                className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-              >
-                비약적(飛躍的)
-              </button>
-              으로 증가하고 삶의 편의성이 향상된 반면, 일자리 감소와 개인정보 침해, 알고리즘{' '}
-              <button
-                onClick={() =>
-                  setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('편향성')) || null)
-                }
-                className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-              >
-                편향성(偏向性)
-              </button>
-              과 같은 윤리적 문제 또한 끊임없이 제기되고 있습니다.
+            {currentBlock.blockId === 'blk_writing_04' ? (
+              <div className="text-slate-900 text-sm sm:text-base leading-loose whitespace-pre-line font-sans">
+                현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다. 이에 따라 생산성이{' '}
+                <button
+                  onClick={() =>
+                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('비약적')) || null)
+                  }
+                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
+                >
+                  비약적(飛躍的)
+                </button>
+                으로 증가하고 삶의 편의성이 향상된 반면, 일자리 감소와 개인정보 침해, 알고리즘{' '}
+                <button
+                  onClick={() =>
+                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('편향성')) || null)
+                  }
+                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
+                >
+                  편향성(偏向性)
+                </button>
+                과 같은 윤리적 문제 또한 끊임없이 제기되고 있습니다.
 
-              이러한 기술의 부작용을 극복하고 인간과의 조화로운 공존을 이룩하기 위해서는 제도적 가이드라인 마련과 윤리 의식 함양이 무엇보다도 시급한{' '}
-              <button
-                onClick={() =>
-                  setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('선결 과제')) || null)
-                }
-                className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-              >
-                선결 과제(先決課題)
-              </button>
-              라 할 수 있습니다.
-            </div>
+                이러한 기술의 부작용을 극복하고 인간과의 조화로운 공존을 이룩하기 위해서는 제도적 가이드라인 마련과 윤리 의식 함양이 무엇보다도 시급한{' '}
+                <button
+                  onClick={() =>
+                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('선결 과제')) || null)
+                  }
+                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
+                >
+                  선결 과제(先決課題)
+                </button>
+                라 할 수 있습니다.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base leading-relaxed whitespace-pre-line font-sans">
+                  {currentBlock.koContent}
+                </div>
+                {/* Clickable Vocab Tags */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-xs font-bold text-slate-500">💡 본문 핵심 어휘 태그:</span>
+                  {currentBlock.vocabAnnotations.map((v, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveVocab(v)}
+                      className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 transition-all flex items-center gap-1 shadow-2xs hover:scale-105"
+                    >
+                      <span>🏷️</span>
+                      <span>{v.word}</span>
+                      <span className="text-[10px] text-blue-600 font-medium">({v.zhMeaning})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Multilingual Explanation Box */}
             {showFullZhTranslation && (
@@ -585,6 +677,84 @@ export default function SmartStudyViewerPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Reading Questions Assessment */}
+            {readingQuestions.length > 0 && (
+              <div className="pt-6 border-t border-slate-200/80 space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <FileCheck className="w-4 h-4 text-emerald-600" />
+                    <span>📖 TOPIK 준비편 실전 읽기 평가 ({readingQuestions.length}문항)</span>
+                  </h3>
+                  <span className="text-[11px] text-slate-500 font-medium">정답을 클릭하면 즉시 해설과 피드백이 제공됩니다.</span>
+                </div>
+
+                <div className="space-y-4">
+                  {readingQuestions.map((q) => {
+                    const isSelected = selectedAnswers[q.itemId] !== undefined;
+                    const selectedIdx = selectedAnswers[q.itemId];
+                    const isCorrect = selectedIdx === q.correctIndex;
+                    const showFb = showAnswerFeedback[q.itemId];
+
+                    return (
+                      <div key={q.itemId} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-md">
+                            [문항 {q.questionNumber}번]
+                          </span>
+                          <span className="text-xs text-slate-500 font-semibold">{q.directionKo}</span>
+                        </div>
+
+                        {q.passage && (
+                          <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line">
+                            {q.passage}
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {q.options.map((opt, oIdx) => {
+                            const isChosen = selectedIdx === oIdx;
+                            return (
+                              <button
+                                key={oIdx}
+                                onClick={() => {
+                                  setSelectedAnswers((prev) => ({ ...prev, [q.itemId]: oIdx }));
+                                  setShowAnswerFeedback((prev) => ({ ...prev, [q.itemId]: true }));
+                                }}
+                                className={`p-2.5 rounded-xl text-xs text-left font-bold border transition-all ${
+                                  isChosen
+                                    ? isChosen && oIdx === q.correctIndex
+                                      ? 'bg-emerald-100 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/30'
+                                      : 'bg-rose-100 border-rose-500 text-rose-950 ring-2 ring-rose-400/30'
+                                    : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="mr-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-[10px] text-slate-600 font-mono">
+                                  {oIdx + 1}
+                                </span>
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showFb && (
+                          <div className={`p-3 rounded-xl text-xs space-y-1 ${isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'}`}>
+                            <div className="font-extrabold flex items-center gap-1.5">
+                              {isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다.'}
+                              <span className="text-[11px] font-normal text-slate-600">
+                                (정답: {q.correctIndex + 1}번 {q.options[q.correctIndex]})
+                              </span>
+                            </div>
+                            <p className="text-[11px] leading-relaxed text-slate-700">{q.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -732,10 +902,16 @@ export default function SmartStudyViewerPage() {
                   AI 원어민 낭독 음원 (Web Speech Engine)
                 </span>
                 <h3 className="text-lg font-black mt-0.5">
-                  TOPIK 54번 핵심 구문 듣기 및 연음 클리닉
+                  {chapterId === 'ch_prep_01'
+                    ? 'TOPIK I 준비편 제1회 일과·약속 듣기 & 연음 클리닉'
+                    : chapterId === 'ch_prep_02'
+                    ? 'TOPIK I 준비편 제2회 쇼핑·건강 듣기 & 겹받침 연음 클리닉'
+                    : 'TOPIK 54번 핵심 구문 듣기 및 연음 클리닉'}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  재생 시간: 42초 • 발음 표준: 서울 표준어 (KOR-KR)
+                  {chapterId.startsWith('ch_prep_')
+                    ? '재생 시간: 35초 • 발음 표준: 서울 표준어 (KOR-KR) • 발음 교정 연동'
+                    : '재생 시간: 42초 • 발음 표준: 서울 표준어 (KOR-KR)'}
                 </p>
               </div>
             </div>
@@ -772,14 +948,24 @@ export default function SmartStudyViewerPage() {
               <button
                 onClick={() =>
                   openSoriTutor(
-                    '현대 사회에서 인공지능 기술은 산업 전반에서 생산성을 비약적으로 향상시키고 있다.'
+                    chapterId === 'ch_prep_01'
+                      ? '급한 일이 생겨서요'
+                      : chapterId === 'ch_prep_02'
+                      ? '길이가 좀 짧아서요'
+                      : '현대 사회에서 인공지능 기술은 산업 전반에서 생산성을 비약적으로 향상시키고 있다.'
                   )
                 }
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 transition-all hover:scale-105"
                 title="소리튜터 AI 발음·연음 클리닉"
               >
                 <Mic className="w-4 h-4" />
-                <span>🎙️ 소리튜터 발음·연음 교정</span>
+                <span>
+                  {chapterId === 'ch_prep_01'
+                    ? '🎙️ [그판 니리 생겨서요] 교정'
+                    : chapterId === 'ch_prep_02'
+                    ? '🎙️ [짤바서요] 겹받침 교정'
+                    : '🎙️ 소리튜터 발음·연음 교정'}
+                </span>
               </button>
             </div>
           </div>
@@ -805,41 +991,113 @@ export default function SmartStudyViewerPage() {
 
             {showDictationHint && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold">
-                💡 <strong>초성 힌트:</strong> [빈칸 1: ㅂㅇㅈ], [빈칸 2: ㅍㅎㅅ], [빈칸 3: ㅅㄱㄱㅈ]
+                {chapterId === 'ch_prep_01' && (
+                  <span>💡 <strong>초성 힌트:</strong> [빈칸 1: ㄱㅎ ㅇㅇ ㅅㄱㅅ (급한 일이 생겨서)], [빈칸 2: ㅈㅅㄱㅇ (제시간에)], [빈칸 3: ㅁㅈ (마중)]</span>
+                )}
+                {chapterId === 'ch_prep_02' && (
+                  <span>💡 <strong>초성 힌트:</strong> [빈칸 1: ㅉㅇㅅㅇ (짧아서요)], [빈칸 2: ㄱㅎㅎ (교환할)], [빈칸 3: ㅇㅅㅈ (영수증)]</span>
+                )}
+                {!chapterId.startsWith('ch_prep_') && (
+                  <span>💡 <strong>초성 힌트:</strong> [빈칸 1: ㅂㅇㅈ], [빈칸 2: ㅍㅎㅅ], [빈칸 3: ㅅㄱㄱㅈ]</span>
+                )}
               </div>
             )}
 
             <div className="text-sm sm:text-base leading-loose text-slate-900 font-sans p-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
-              현대 사회에서 인공지능 기술은 산업 전반에서 생산성을{' '}
-              <input
-                type="text"
-                placeholder="[빈칸 1]"
-                value={dictationInputs[0] || ''}
-                onChange={(e) => setDictationInputs({ ...dictationInputs, 0: e.target.value })}
-                className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              으로 향상시키고 있다. 그러나 데이터 편향성에 대한{' '}
-              <input
-                type="text"
-                placeholder="[빈칸 2]"
-                value={dictationInputs[1] || ''}
-                onChange={(e) => setDictationInputs({ ...dictationInputs, 1: e.target.value })}
-                className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              을 해결하는 것이 건전한 상생의{' '}
-              <input
-                type="text"
-                placeholder="[빈칸 3]"
-                value={dictationInputs[2] || ''}
-                onChange={(e) => setDictationInputs({ ...dictationInputs, 2: e.target.value })}
-                className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              라 할 수 있다.
+              {chapterId === 'ch_prep_01' ? (
+                <div>
+                  수진: "괜찮아요, 마이클 씨! 당황하지 말고 천천히 조심해서 오세요. 마침 저도{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 1: 급한 일이 생겨서]"
+                    value={dictationInputs[0] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 0: e.target.value })}
+                    className="w-44 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {' '}서울역 안 서점에 들렀다가 커피숍으로 갈 생각이었어요. 제가 먼저 커피숍에{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 2: 제시간에]"
+                    value={dictationInputs[1] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 1: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {' '}도착해서 기다릴게요.{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 3: 마중]"
+                    value={dictationInputs[2] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 2: e.target.value })}
+                    className="w-24 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {' '}안 나와도 되니까 조심해서 오세요!"
+                </div>
+              ) : chapterId === 'ch_prep_02' ? (
+                <div>
+                  손님: "저기요, 어제 여기서 산 바지인데요. 집에서 다시 입어 보니까 길이가 좀{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 1: 짧아서요]"
+                    value={dictationInputs[0] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 0: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  .{' '}혹시 한 치수 큰 사이즈로{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 2: 교환할]"
+                    value={dictationInputs[1] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 1: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {' '}수 있을까요?" 직원: "네, 손님!{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 3: 영수증]"
+                    value={dictationInputs[2] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 2: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {' '}을 챙겨 오셨나요?"
+                </div>
+              ) : (
+                <div>
+                  현대 사회에서 인공지능 기술은 산업 전반에서 생산성을{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 1]"
+                    value={dictationInputs[0] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 0: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  으로 향상시키고 있다. 그러나 데이터 편향성에 대한{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 2]"
+                    value={dictationInputs[1] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 1: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  을 해결하는 것이 건전한 상생의{' '}
+                  <input
+                    type="text"
+                    placeholder="[빈칸 3]"
+                    value={dictationInputs[2] || ''}
+                    onChange={(e) => setDictationInputs({ ...dictationInputs, 2: e.target.value })}
+                    className="w-28 mx-1 px-2.5 py-1 text-center font-bold text-blue-700 border-b-2 border-blue-600 bg-blue-50/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  라 할 수 있다.
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-2">
               <span className="text-xs text-slate-400">
-                정답 예시: 비약적, 편향성, 선결 과제
+                {chapterId === 'ch_prep_01'
+                  ? '정답 예시: 급한 일이 생겨서, 제시간에, 마중'
+                  : chapterId === 'ch_prep_02'
+                  ? '정답 예시: 짧아서요, 교환할, 영수증'
+                  : '정답 예시: 비약적, 편향성, 선결 과제'}
               </span>
               <button
                 onClick={() => setDictationResultChecked(true)}
@@ -853,29 +1111,137 @@ export default function SmartStudyViewerPage() {
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1.5 animate-in fade-in duration-200">
                 <div className="flex items-center gap-2 font-bold text-emerald-800 text-sm">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>축하합니다! 3개 빈칸을 모두 정확히 받아쓰셨습니다.</span>
+                  <span>축하합니다! 빈칸을 모두 확인하셨습니다.</span>
                 </div>
-                <p className="text-emerald-800">
-                  • <strong>[비약적(飛躍的)]</strong>: 실제 발음 [비약쩍] (된소리되기 현상)<br/>
-                  • <strong>[편향성(偏向性)]</strong>: 실제 발음 [편향썽]<br/>
-                  • <strong>[선결 과제(先決課題)]</strong>: 54번 논술문 결론부 핵심 필수 어휘
-                </p>
+                {chapterId === 'ch_prep_01' ? (
+                  <p className="text-emerald-800">
+                    • <strong>[급한 일이 생겨서]</strong>: 실제 발음 [그판 니리 생겨서] (거센소리되기 + ㄴ첨가)<br/>
+                    • <strong>[제시간에]</strong>: 실제 발음 [제시가네] (연음 법칙)<br/>
+                    • <strong>[마중]</strong>: 배웅의 뜻으로, '마중을 나가다' 관용 표현
+                  </p>
+                ) : chapterId === 'ch_prep_02' ? (
+                  <p className="text-emerald-800">
+                    • <strong>[짧아서요]</strong>: 실제 발음 [짤바서요] (겹받침 'ㄼ' 연음 현상)<br/>
+                    • <strong>[교환할]</strong>: 물건을 다른 것으로 바꿀 때 쓰는 표준 표현<br/>
+                    • <strong>[영수증]</strong>: 실제 발음 [영수쯩] (사잇소리/된소리 현상)
+                  </p>
+                ) : (
+                  <p className="text-emerald-800">
+                    • <strong>[비약적(飛躍的)]</strong>: 실제 발음 [비약쩍] (된소리되기 현상)<br/>
+                    • <strong>[편향성(偏向性)]</strong>: 실제 발음 [편향썽]<br/>
+                    • <strong>[선결 과제(先決課題)]</strong>: 54번 논술문 결론부 핵심 필수 어휘
+                  </p>
+                )}
                 <div className="pt-2">
                   <button
                     onClick={() =>
                       openSoriTutor(
-                        '데이터 편향성을 해결하는 것이 건전한 상생의 선결 과제라 할 수 있다.'
+                        chapterId === 'ch_prep_01'
+                          ? '급한 일이 생겨서요'
+                          : chapterId === 'ch_prep_02'
+                          ? '길이가 좀 짧아서요'
+                          : '데이터 편향성을 해결하는 것이 건전한 상생의 선결 과제라 할 수 있다.'
                       )
                     }
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
                   >
                     <Mic className="w-4 h-4" />
-                    <span>🎙️ 소리튜터로 이 문장 직접 발음해보기 (연음·종성 진단)</span>
+                    <span>🎙️ 소리튜터로 이 핵심 구문 직접 발음해보기</span>
                   </button>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Listening Questions Assessment */}
+          {listeningQuestions.length > 0 && (
+            <div className="pt-6 border-t border-slate-200/80 space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Headphones className="w-4 h-4 text-blue-600" />
+                  <span>🎧 TOPIK 준비편 실전 듣기 평가 ({listeningQuestions.length}문항)</span>
+                </h3>
+                <span className="text-[11px] text-slate-500 font-medium">대화를 잘 듣고 물음에 답하십시오.</span>
+              </div>
+
+              <div className="space-y-4">
+                {listeningQuestions.map((q) => {
+                  const selectedIdx = selectedAnswers[q.itemId];
+                  const isCorrect = selectedIdx === q.correctIndex;
+                  const showFb = showAnswerFeedback[q.itemId];
+
+                  return (
+                    <div key={q.itemId} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-black text-blue-900 bg-blue-100 px-2.5 py-0.5 rounded-md">
+                          [듣기 문항 {q.questionNumber}번]
+                        </span>
+                        <span className="text-xs text-slate-500 font-semibold">{q.directionKo}</span>
+                      </div>
+
+                      {q.passage && (
+                        <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line">
+                          <div className="font-bold text-slate-500 mb-1 flex items-center justify-between">
+                            <span>[대화 지문 텍스트]</span>
+                            <button
+                              onClick={() => {
+                                const sentence = q.passage?.split('\n')[0] || '';
+                                openSoriTutor(sentence.replace(/^[가-힣]+:\s*/, ''));
+                              }}
+                              className="text-[10px] text-emerald-700 font-bold hover:underline flex items-center gap-1"
+                            >
+                              <Mic className="w-3 h-3" />
+                              <span>소리튜터로 이 대화 발음하기</span>
+                            </button>
+                          </div>
+                          {q.passage}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {q.options.map((opt, oIdx) => {
+                          const isChosen = selectedIdx === oIdx;
+                          return (
+                            <button
+                              key={oIdx}
+                              onClick={() => {
+                                setSelectedAnswers((prev) => ({ ...prev, [q.itemId]: oIdx }));
+                                setShowAnswerFeedback((prev) => ({ ...prev, [q.itemId]: true }));
+                              }}
+                              className={`p-2.5 rounded-xl text-xs text-left font-bold border transition-all ${
+                                isChosen
+                                  ? isChosen && oIdx === q.correctIndex
+                                    ? 'bg-emerald-100 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/30'
+                                    : 'bg-rose-100 border-rose-500 text-rose-950 ring-2 ring-rose-400/30'
+                                  : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="mr-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-[10px] text-slate-600 font-mono">
+                                {oIdx + 1}
+                              </span>
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {showFb && (
+                        <div className={`p-3 rounded-xl text-xs space-y-1 ${isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'}`}>
+                          <div className="font-extrabold flex items-center gap-1.5">
+                            {isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다.'}
+                            <span className="text-[11px] font-normal text-slate-600">
+                              (정답: {q.correctIndex + 1}번 {q.options[q.correctIndex]})
+                            </span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-slate-700">{q.explanation}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -926,6 +1292,137 @@ export default function SmartStudyViewerPage() {
               </div>
             );
           })()}
+
+          {/* Mini Writing Task for TOPIK Prep (1~2급 빈칸 쓰기 훈련) */}
+          {(seriesId === 'hanup_topik_prep' || chapterId.startsWith('ch_prep_')) && (
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-2 border-emerald-300 shadow-md space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-black text-xs shadow-xs">
+                    {chapterId === 'ch_prep_01' ? '제1회 실전 미니 쓰기' : '제2회 실전 미니 쓰기'}
+                  </span>
+                  <h3 className="font-black text-slate-900 text-base">
+                    {chapterId === 'ch_prep_01'
+                      ? '문장 완성하기: 제안/약속 표현'
+                      : '문장 완성하기: 이유 연결 표현 (-아/어서 vs -(으)니까)'}
+                  </h3>
+                </div>
+                <span className="text-xs text-emerald-800 font-bold bg-emerald-100/80 px-2.5 py-1 rounded-lg">
+                  TOPIK 1~2급 핵심 출제 포인트
+                </span>
+              </div>
+
+              {/* Context & Blank Sentence */}
+              <div className="p-4 rounded-2xl bg-white border border-emerald-200 text-sm sm:text-base leading-relaxed text-slate-900 space-y-2">
+                <div className="text-xs font-bold text-slate-500 uppercase">
+                  {chapterId === 'ch_prep_01' ? '상황: 비가 와서 만남이 취소된 후 다음 날 약속을 제안할 때' : '상황: 집들이 파티에 친구들을 초대하는 초대장을 보낼 때'}
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl font-medium border border-slate-200">
+                  {chapterId === 'ch_prep_01' ? (
+                    <div>
+                      수진: "오늘 비가 많이 와서 못 만났네요. 내일은 날씨가 맑다고 해요. 우리 내일 ({' '}
+                      <span className="font-bold text-emerald-700 underline decoration-emerald-500 decoration-2 px-2">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                      </span>{' '}
+                      )?"
+                    </div>
+                  ) : (
+                    <div>
+                      "이번 주말에 저희 집에서 파티를 해요. 맛있는 한국 음식을 많이 ({' '}
+                      <span className="font-bold text-emerald-700 underline decoration-emerald-500 decoration-2 px-2">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                      </span>{' '}
+                      ) 꼭 놀러 오세요!"
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Input Form */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <input
+                  type="text"
+                  placeholder={chapterId === 'ch_prep_01' ? '괄호 안에 들어갈 단어를 입력하세요 (예: 만날까요)' : '괄호 안에 들어갈 단어를 입력하세요 (예: 준비했으니까)'}
+                  value={miniWritingInput}
+                  onChange={(e) => {
+                    setMiniWritingInput(e.target.value);
+                    setMiniWritingChecked(false);
+                  }}
+                  className="flex-1 w-full px-4 py-3 rounded-2xl border-2 border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900"
+                />
+                <button
+                  onClick={() => {
+                    const trimmed = miniWritingInput.trim().replace(/[?.]/g, '');
+                    setMiniWritingChecked(true);
+                    if (chapterId === 'ch_prep_01') {
+                      const isOk = trimmed === '만날까요' || trimmed === '만나요' || trimmed === '만날래요' || trimmed === '만날까요?';
+                      setMiniWritingFeedback({
+                        isCorrect: isOk,
+                        text: isOk
+                          ? '정답입니다! 👏 상대방의 의견을 묻거나 정중하게 제안할 때는 동사 어간에 "-(으)ㄹ까요?"를 붙여 "만날까요?"라고 합니다.'
+                          : '다시 한번 생각해 보세요! 💡 힌트: "만나다" + 상대방에게 제안하는 어미 "-(으)ㄹ까요?" -> "만날까요"',
+                      });
+                    } else {
+                      const isOk = trimmed.includes('준비했으니까') || trimmed.includes('만들었으니까') || trimmed.includes('준비하니까') || trimmed.includes('있으니까');
+                      setMiniWritingFeedback({
+                        isCorrect: isOk,
+                        text: isOk
+                          ? '정답입니다! 👏 뒤 문장에 청유·명령문("-세요 / -ㅂ시다")이 올 때는 "-아/어서"를 쓸 수 없으며, 반드시 "-(으)니까"를 결합해야 합니다.'
+                          : '틀렸습니다! 💡 힌트: 뒤 문장에 "오세요(명령/청유)"가 있으므로 "-아/어서"가 아닌 "-(으)니까"를 사용해 "준비했으니까"로 써야 합니다.',
+                      });
+                      if (isOk) {
+                        setHasCompletedChapter2(true);
+                      }
+                    }
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all hover:scale-105 whitespace-nowrap"
+                >
+                  미니 쓰기 채점하기
+                </button>
+              </div>
+
+              {/* Instant Feedback */}
+              {miniWritingChecked && miniWritingFeedback && (
+                <div
+                  className={`p-4 rounded-2xl text-xs sm:text-sm font-sans space-y-1 ${
+                    miniWritingFeedback.isCorrect
+                      ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                      : 'bg-rose-100 text-rose-950 border border-rose-300'
+                  }`}
+                >
+                  <div className="font-black flex items-center gap-1.5">
+                    {miniWritingFeedback.isCorrect ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <AlertCircle className="w-5 h-5 text-rose-600" />}
+                    <span>{miniWritingFeedback.isCorrect ? '참 잘했어요! 만점 기준을 충족했습니다.' : '오답입니다.'}</span>
+                  </div>
+                  <p className="leading-relaxed">{miniWritingFeedback.text}</p>
+                </div>
+              )}
+
+              {/* Chapter 2 Completion Banner & Survey Trigger */}
+              {(chapterId === 'ch_prep_02' || hasCompletedChapter2) && (
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-xl space-y-3 border border-purple-500/40 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-amber-400 text-slate-900 text-sm">🎉</span>
+                    <h4 className="font-black text-sm sm:text-base text-amber-300">
+                      《한업 TOPIK 준비편(1~2급 무료 체험판)》 전 과정(1회·2회) 완강!
+                    </h4>
+                  </div>
+                  <p className="text-xs text-purple-200 leading-relaxed">
+                    축하합니다! 제1회와 제2회의 핵심 어휘·문법·듣기·읽기·미니 쓰기를 모두 완료하셨습니다.
+                    지금 1분 학술 AI 교육 요구도 설문에 참여하시면, 정규 유료 패스 <strong>20% 특별 할인 쿠폰(HANUP20WTP)</strong>이 즉시 발급됩니다.
+                  </p>
+                  <button
+                    onClick={openSurveyModal}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <span>🎁</span>
+                    <span>1분 설문조사 참여하고 20% 할인쿠폰 받기 (HANUP20WTP)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Real Mock Exam Header: Timer Bar & Mode Toggles */}
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-4 text-white shadow-lg flex flex-wrap items-center justify-between gap-4 border border-slate-700/80">
@@ -1512,6 +2009,91 @@ export default function SmartStudyViewerPage() {
           </div>
         </div>
       )}
+
+      {/* <쉬어가기: 한국 대학·대학원 학업 & 캠퍼스 TIP> (필수 진도율 제외 휴식 코너) */}
+      {currentSeries.hasCampusTip && (
+        <div className="bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-blue-50/90 border-2 border-indigo-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                ☕
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    휴식 코너 (진도율 제외)
+                  </span>
+                  <span className="text-xs font-bold text-indigo-900">
+                    〈쉬어가기: 한국 대학·대학원 학업 & 캠퍼스 TIP〉
+                  </span>
+                </div>
+                <h4 className="text-base font-black text-slate-900 mt-0.5">
+                  지도교수 면담 이메일 작성 예절 & 대학원 장학금 선발 꿀팁
+                </h4>
+              </div>
+            </div>
+            <span className="text-[11px] text-indigo-500 font-bold hidden sm:inline">한업 아카데믹 케어</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-700">
+            <div className="bg-white p-4 rounded-2xl border border-indigo-100 space-y-1.5 shadow-xs">
+              <span className="font-black text-indigo-950 block">
+                📧 1. 교수님 첫 이메일 제목 공식
+              </span>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                <code className="text-indigo-700 bg-indigo-50 px-1 py-0.5 rounded font-mono">[OO전공 석사과정 지원자 홍길동] 면담 요청의 건</code> 형태로 소속과 목적을 첫머리에 밝혀야 스팸함 누락을 방지할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-indigo-100 space-y-1.5 shadow-xs">
+              <span className="font-black text-indigo-950 block">
+                💰 2. 조교(TA/RA) 및 장학금 신청
+              </span>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                학기 시작 2개월 전 학과 사무실 공지를 확인하고, TOPIK 5·6급 성적표를 학사시스템에 미리 등록해 두면 외국인 유학생 성적우수장학금(등록금 50~100%) 우선 선발 대상이 됩니다.
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl border border-indigo-100 space-y-1.5 shadow-xs">
+              <span className="font-black text-indigo-950 block">
+                📚 3. 학술 DB (RISS·DBpia) 인용
+              </span>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                대학 도서관 웹사이트의 교외 접속(VPN/Proxy)을 로그인하면 한국교육학술정보원(RISS)과 DBpia 학술지 논문 원문을 무료 다운로드하여 54번 논술 작문 근거로 활용할 수 있습니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WTP Survey Trigger Banner (체험판 2회분 완료 시 또는 수험생 설문 유도) */}
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-3xl p-5 sm:p-6 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl shrink-0 shadow-inner">
+            🎁
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-400 text-slate-950">
+                연구 참여 혜택
+              </span>
+              <span className="text-xs text-purple-200 font-semibold">1분 소요 5문항 설문</span>
+            </div>
+            <h4 className="text-sm sm:text-base font-black mt-0.5">
+              AI 한국어 교육 선호도 설문 참여하고 20% 특별 할인쿠폰(HANUP20WTP) 받기!
+            </h4>
+            <p className="text-xs text-purple-100 leading-relaxed mt-0.5">
+              인간 교사 개입 단계별 지불의향(WTP) 연구에 기여해 주시면 한업 전 교재 20% 할인 쿠폰이 즉시 발급됩니다.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={openSurveyModal}
+          className="px-5 py-2.5 bg-white hover:bg-purple-50 text-purple-900 font-black text-xs rounded-xl shadow-md transition-all shrink-0 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          설문 참여하고 20% 쿠폰 받기 →
+        </button>
+      </div>
 
       {/* Sori Tutor Pronunciation Clinic Modal (Loosely-Coupled iFrame & Simulator) */}
       <SoriTutorModal

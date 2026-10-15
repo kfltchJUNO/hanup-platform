@@ -612,6 +612,127 @@ export const SEED_AUTHORING_BLOCKS: AuthoringBlock[] = [
     },
     qrBridgeUrl: 'https://hanup.app/study/hanup_topik_writing53/special_unit_w53_master?tab=writing',
   },
+  {
+    blockId: 'blk_topik_prep_01',
+    seriesId: 'hanup_topik_prep',
+    chapterId: 'ch_prep_01',
+    orderIndex: 3,
+    blockType: 'concept_note',
+    title: 'TOPIK I 준비편 1회: 하루 일과와 약속 정하기',
+    koContent: `[상황 1: 약속 시간 조정 대화]
+민수: 수진 씨, 오늘 저녁 7시에 강남역에서 만나기로 했지요?
+수진: 민수 씨, 정말 죄송해요. 회사에 급한 일이 생겨서 제시간에 도착하기 어려울 것 같아요. 혹시 약속을 주말로 미룰 수 있을까요?
+민수: 네, 괜찮아요. 그럼 이번 주 토요일 오후 2시에 만나요. 제가 역 앞 카페에서 기다릴게요.
+
+[상황 2: 마중과 장소 안내]
+마이클: 수진 씨, 저 서울역에 도착했어요. 지금 어디에 있어요?
+수진: 저는 지금 서울역 안 2층 시계탑 앞 커피숍에서 커피를 마시며 기다리고 있어요. 천천히 오세요, 제가 입구로 마중을 나갈게요!
+
+[핵심 문법 클리닉: 장소 조사 '에' vs '에서']
+1. '에': 정적 존재(있다/없다) 및 이동의 목적지/착점 (예: 서울역에 도착하다, 집에 있다)
+2. '에서': 주어가 구체적인 동적 행위를 수행하는 장소 (예: 카페에서 커피를 마시다, 도서관에서 공부하다)`,
+    zhExplanation: '【TOPIK I 准备篇 第1课：日常与约定】掌握推迟约定(약속을 미루다)与突发用语(일이 생기다)，以及场所助词“-에(静态存在/到达目的地)”与“-에서(动作发生场所)”的核心区别。发音要点：“급한 일이 생겨서요”读作 [그판 니리 생겨서요]。',
+    vocabAnnotations: [
+      {
+        word: '약속을 미루다',
+        zhMeaning: '推迟约定、改期',
+        enMeaning: 'to postpone an appointment',
+        topikLevel: 1,
+        commonChineseErrorNote: '‘약속을 취소하다’와 구별하세요. 미루다는 연기하는 것입니다.',
+      },
+      {
+        word: '일이 생기다',
+        zhMeaning: '有急事、发生事情',
+        enMeaning: 'something came up unexpectedly',
+        topikLevel: 1,
+        commonChineseErrorNote: '돌발 상황에는 ‘일이 있다’보다 ‘일이 생기다’를 자주 씁니다.',
+      },
+      {
+        word: '마중을 나가다',
+        zhMeaning: '迎接、去接人',
+        enMeaning: 'to go meet / greet someone arriving',
+        topikLevel: 2,
+        commonChineseErrorNote: '오는 사람을 맞이하는 것은 마중, 떠나는 사람을 보내는 것은 배웅입니다.',
+      },
+      {
+        word: '제시간에 도착하다',
+        zhMeaning: '准时到达',
+        enMeaning: 'to arrive on time / punctually',
+        topikLevel: 1,
+        commonChineseErrorNote: '지각하지 않고 정시에 도착함을 의미합니다.',
+      },
+    ],
+    audioConfig: {
+      voiceId: 'eleven_ko_pro_kr',
+      mp3Url: 'https://cdn.hanup.ai/audio/prep_01_routine.mp3',
+      dictationBlanks: ['일이 생겨서', '제시간에', '미룰 수', '마중을'],
+    },
+    writingRubric: {
+      targetChars: [10, 50],
+      requiredKeywords: ['만날까요'],
+      rhetoricStructureGuide: '청유·제안형 어미 -ㄹ/을까요?를 활용하여 문장을 완성하십시오.',
+      modelAnswer: '우리 내일 만날까요?',
+    },
+    qrBridgeUrl: 'https://hanup.ai/study/hanup_topik_prep/ch_prep_01',
+  },
+  {
+    blockId: 'blk_topik_prep_02',
+    seriesId: 'hanup_topik_prep',
+    chapterId: 'ch_prep_02',
+    orderIndex: 4,
+    blockType: 'concept_note',
+    title: 'TOPIK I 준비편 2회: 쇼핑·교환과 건강 챙기기',
+    koContent: `[상황 1: 백화점 의류 교환 대화]
+직원: 손님, 어제 구매하신 바지는 마음에 드십니까?
+손님: 디자인은 정말 마음에 드는데, 입어 보니까 길이가 좀 짧아서요. 혹시 한 치수 큰 사이즈로 교환할 수 있을까요?
+직원: 네, 손님! 결제하신 영수증을 챙겨 오셨으면 바로 같은 색상 큰 사이즈로 교환해 드리겠습니다.
+
+[상황 2: 건강한 생활 습관 의사 상담]
+의사: 잠들기 전 스마트폰 사용을 줄이고 따뜻한 보리차를 한 잔 마시는 좋은 습관을 길러 보세요. 무릎이 약한 분들은 계단을 내려올 때 엘리베이터를 타는 것이 바람직합니다.
+
+[핵심 문법 클리닉: 이유 연결어미 '-아/어서' vs '-(으)니까']
+1. '-아/어서' 앞에는 과거시제(-았/었-) 결합 불가 ❌, 뒤에는 명령·청유문 결합 불가 ❌
+2. '-(으)니까' 뒤에는 명령문(-으세요) 및 청유문(-ㅂ시다) 결합 권장 ⭕`,
+    zhExplanation: '【TOPIK I 准备篇 第2课：购物退换与健康习惯】掌握换货(교환하다) vs 退款(환불하다)以及“-아/어서 vs -(으)니까”在时态与句式上的严格语法制约。发音要点：“짧아서요”读作 [짤바서요]。',
+    vocabAnnotations: [
+      {
+        word: '교환하다 / 환불하다',
+        zhMeaning: '换货 / 退款',
+        enMeaning: 'to exchange item / to get a refund',
+        topikLevel: 2,
+      },
+      {
+        word: '영수증을 챙기다',
+        zhMeaning: '收好发票、保留小票',
+        enMeaning: 'to keep the receipt',
+        topikLevel: 1,
+      },
+      {
+        word: '마음에 들다',
+        zhMeaning: '中意、合心意、喜欢',
+        enMeaning: 'to be to one’s liking',
+        topikLevel: 1,
+      },
+      {
+        word: '습관을 기르다',
+        zhMeaning: '养成习惯',
+        enMeaning: 'to build a habit',
+        topikLevel: 2,
+      },
+    ],
+    audioConfig: {
+      voiceId: 'eleven_ko_pro_kr',
+      mp3Url: 'https://cdn.hanup.ai/audio/prep_02_shopping.mp3',
+      dictationBlanks: ['마음에', '짧아서요', '영수증을', '습관을'],
+    },
+    writingRubric: {
+      targetChars: [15, 60],
+      requiredKeywords: ['준비했으니까'],
+      rhetoricStructureGuide: '이유 어미 -(으)니까의 과거형을 사용하여 문장을 완성하십시오.',
+      modelAnswer: '맛있는 한국 음식을 많이 준비했으니까 꼭 놀러 오세요.',
+    },
+    qrBridgeUrl: 'https://hanup.ai/study/hanup_topik_prep/ch_prep_02',
+  },
 ];
 
 // ============================================================================

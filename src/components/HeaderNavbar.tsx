@@ -31,7 +31,16 @@ import { APP_CONFIG } from '../lib/config';
 
 export const HeaderNavbar: React.FC = () => {
   const pathname = usePathname();
-  const { currentRole, currentUser, switchRole, currentOrg, lang, setLang } = useHanUp();
+  const {
+    currentRole,
+    currentUser,
+    switchRole,
+    currentOrg,
+    lang,
+    setLang,
+    openBackgroundModal,
+    openSurveyModal,
+  } = useHanUp();
   const [isLangMenuOpen, setIsLangMenuOpen] = React.useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = React.useState(false);
 
@@ -215,6 +224,23 @@ export const HeaderNavbar: React.FC = () => {
               <span className="text-amber-500 font-bold">D-28</span>
             </div>
           )}
+
+          {/* Quick Triggers for Background Intake & WTP Survey */}
+          <button
+            onClick={openBackgroundModal}
+            className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+            title="학술 연구용 7대 배경변인 등록/확인"
+          >
+            <span>📋 연구 배경변인</span>
+          </button>
+
+          <button
+            onClick={openSurveyModal}
+            className="hidden md:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition-colors"
+            title="AI 요구분석 설문 & 20% 할인쿠폰 받기"
+          >
+            <span>🎁 WTP 설문</span>
+          </button>
 
           {/* 3-App Suite 9-Dots Launcher (Google/Microsoft Style) */}
           <div className="relative">

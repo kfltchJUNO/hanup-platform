@@ -111,13 +111,21 @@ export interface UserProfile {
   orgId: string;
   classIds: string[];
   
-  // 학술 연구용 배경 변인 (Student 전용)
-  nativeLanguage: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'other';
+  // 학술 연구용 7대 배경 변인 (IRB 표준 연구 변인)
+  nativeLanguage: 'zh-CN' | 'zh-TW' | 'vi-VN' | 'my-MM' | 'en-US' | 'ja-JP' | 'other';
+  studyDuration?: '<6m' | '6m-1y' | '1y-2y' | '2y+';
+  studyMethod?: 'self' | 'university_center' | 'private_academy' | 'online_lecture' | 'tutoring';
+  visitKoreaExperience?: 'none' | 'short_trip' | 'exchange_program' | 'residing_student';
   currentTopikLevel: number; // 0(왕초보) ~ 6
   targetTopikLevel: number;
-  learningPurpose: 'grad_school' | 'undergrad' | 'employment' | 'hobby';
+  learningPurpose: 'grad_school' | 'undergrad' | 'employment' | 'life_hobby' | 'hobby';
   subscriptionTier: 'free' | 'clinic_pack' | 'hanup_pro_pass' | 'vip_coaching';
   researchConsent: boolean; // 연구 데이터 수집 동의 여부
+
+  // 크로스 혜택 및 숙제 생성 크레딧
+  hasSoriTutorSub?: boolean;
+  unlockedSeriesIds?: string[];
+  homeworkCredits?: number; // 교사(기본 10) 및 기관(기본 50) 숙제 AI 생성 크레딧
 
   // 시각화용 역량 지표 (0~100)
   skillRadar: SkillRadar;
@@ -226,6 +234,10 @@ export interface ItemBankQuestion {
   accessTier: 'free_daily_3' | 'paid_clinic_120';
   questionStem: string;
   passageOrAudioText?: string;
+  questionNumber?: number;
+  directionKo?: string;
+  passage?: string;
+  explanation?: string;
   options: [string, string, string, string];
   correctIndex: number; // 0 ~ 3
   explanationKo: string;
@@ -315,19 +327,100 @@ export interface WritingSubmission {
 }
 
 // ==========================================
-// 8. Series Architecture Metadata
+// 8. Series Architecture Metadata (A: TOPIK 4종, B: 생활한국어 4단계)
 // ==========================================
+export interface SeriesPrice {
+  usd: number;
+  krw: number;
+  cny: number;
+  isFree?: boolean;
+  label?: string;
+}
+
 export interface HanUpSeries {
   seriesId: string;
-  code: 'hanup_topik' | 'hanup_talk' | 'hanup_vocab' | 'hanup_pro';
+  category: 'topik' | 'life';
+  code: string;
+  stageName: string; // e.g. "준비편 (1~2급)", "도전편 (3~4급)", "완성편 (4~6급)", etc.
   titleKo: string;
   titleZh: string;
   descriptionKo: string;
   descriptionZh: string;
+  targetLevelText: string; // "1~2급", "3~4급", "4~6급", "자모/입문"
+  durationWeeks: number; // 2, 4, 6, 1
+  schedulePace: string; // "주2회 회당 40분", "주3회 회당 60분", etc.
+  sessionMinutes: number; // 40, 60, 90, 45
+  price: SeriesPrice;
   badgeText: string;
   accentColor: string;
+  themeColor: 'mint' | 'blue' | 'indigo' | 'coral';
   iconName: string;
   chaptersCount: number;
+  hasCampusTip?: boolean; // 완성편: <쉬어가기: 한국 대학·대학원 학업 & 캠퍼스 TIP>
+  surveyTriggerAfterChapters?: number; // 준비편: 2회분 완료 시 설문 팝업
+}
+
+// ==========================================
+// 8.1. AI Education Needs Analysis & WTP Survey
+// ==========================================
+export interface AiEducationSurveyResponse {
+  responseId: string;
+  studentUid: string;
+  studentName: string;
+  studentEmail: string;
+  nativeLanguage: string;
+  submittedAt: string;
+  aiPreferenceScore: number; // 1~5 Likert
+  preferenceReasons: string[]; // 즉각 피드백, 심리적 편안함, 가성비, 모국어 해설 등
+  concernFactors: string[]; // 정확도 의심, 획일성, 맥락 부족 등
+  preferredInterventionTier: 'tier1_ai_only' | 'tier2_ai_human_review' | 'tier3_ai_group_lecture' | 'tier4_human_1on1';
+  wtpTier1AiOnly: string; // "$5 미만", "$5~$10", "$10~$15", "$15 이상"
+  wtpTier2AiHumanReview: string; // "$15 미만", "$15~$30", "$30~$50", "$50 이상"
+  wtpTier3AiLiveCoaching: string; // "$30 미만", "$30~$60", "$60~$100", "$100 이상"
+  openFeedbackText: string; // 토픽 모델링용 자유 서술형
+  discountCouponCode?: string; // 20% 할인 쿠폰 (e.g. "HANUP20WTP")
+}
+
+// ==========================================
+// 8.2. A4 Studio AI Illustration Prompts
+// ==========================================
+export interface IllustrationPrompt {
+  promptKo: string;
+  promptEn: string;
+  aspectRatio: '16:9' | '4:3' | '1:1';
+  style: 'modern_vector_illustration' | 'korean_webtoon_clean' | 'academic_flat_art';
+  savedAssetPath?: string;
+  isSaved?: boolean;
+}
+
+// ==========================================
+// 8.3. Homework Tasks & Credit Packs (Lv.2/Lv.3)
+// ==========================================
+export interface HomeworkTask {
+  id: string;
+  title: string;
+  taskType: 'topik_53_graph' | 'topik_54_essay' | 'vocab_clinic' | 'reading_quiz';
+  targetLevel: number;
+  rubric: string;
+  rubricSummary?: string;
+  content?: string;
+  isOfficialVetted: boolean;
+  createdByRole: 'super_admin' | 'instructor';
+  assignedClassIds: string[];
+  dueDate?: string;
+  submissionsCount: number;
+  createdAt: string;
+}
+
+export interface HomeworkCreditPack {
+  id: string;
+  packId?: string;
+  name: string;
+  description?: string;
+  targetRole: 'instructor' | 'org_admin';
+  credits: number;
+  priceUsd: number;
+  priceKrw: number;
 }
 
 // ==========================================

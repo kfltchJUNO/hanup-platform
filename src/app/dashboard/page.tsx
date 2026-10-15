@@ -45,6 +45,7 @@ export default function StudentDashboardPage() {
   const { currentUser, lang, savedVocabs, submissions } = useHanUp();
   const [mounted, setMounted] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [seriesCategoryFilter, setSeriesCategoryFilter] = useState<'all' | 'topik' | 'life'>('all');
 
   const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ko;
   const langMeta = SUPPORTED_LANGUAGES[lang] || SUPPORTED_LANGUAGES.ko;
@@ -422,48 +423,102 @@ export default function StudentDashboardPage() {
         </div>
       </div>
 
-      {/* 3. Multi-Series Progress Bars & Quick Study Jump */}
+      {/* 3. Multi-Series Lineup & Covers (A: TOPIK 4종, B: 생활한국어 4단계) */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-blue-600" />
-              <span>{t.seriesProgressHeader}</span>
+              <span>한업 스마트 교재 라인업 (8대 시리즈)</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {t.seriesProgressSub}
+              목표 급수와 라이프스타일에 맞춘 체계적인 주차별 커리큘럼 및 단품 패키지
             </p>
           </div>
-          <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-            {t.chaptersCompleted}
-          </span>
+
+          {/* Series Category Filter Tabs */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+            {(
+              [
+                { id: 'all', label: '전체 (8종)' },
+                { id: 'topik', label: '🏆 TOPIK 4종' },
+                { id: 'life', label: '💬 생활한국어 4단계' },
+              ] as const
+            ).map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSeriesCategoryFilter(cat.id)}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  seriesCategoryFilter === cat.id
+                    ? 'bg-white text-blue-700 shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {MOCK_SERIES.map((s) => {
+          {MOCK_SERIES.filter((s) =>
+            seriesCategoryFilter === 'all' ? true : s.category === seriesCategoryFilter
+          ).map((s) => {
             const progress = currentUser.seriesProgress[s.seriesId] || 0;
+            const themeBadgeStyles = {
+              mint: 'bg-emerald-500 text-white',
+              blue: 'bg-blue-600 text-white',
+              indigo: 'bg-indigo-600 text-white',
+              coral: 'bg-rose-500 text-white',
+            }[s.themeColor || 'blue'];
+
+            const themeCardBorder = {
+              mint: 'border-emerald-200 hover:border-emerald-300',
+              blue: 'border-blue-200 hover:border-blue-300',
+              indigo: 'border-indigo-200 hover:border-indigo-300',
+              coral: 'border-rose-200 hover:border-rose-300',
+            }[s.themeColor || 'blue'];
+
+            const studyTargetChapter = s.seriesId === 'hanup_topik_prep' ? 'ch_prep_01' : 'ch_writing_04';
+
             return (
               <div
                 key={s.seriesId}
-                className="p-5 rounded-2xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-all space-y-3 flex flex-col justify-between"
+                className={`p-5 rounded-2xl border ${themeCardBorder} bg-white hover:shadow-md transition-all space-y-3 flex flex-col justify-between relative overflow-hidden`}
               >
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-xs"
-                      style={{ backgroundColor: s.accentColor }}
-                    >
-                      {s.badgeText}
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black shadow-xs ${themeBadgeStyles}`}>
+                      {s.stageName || s.badgeText}
                     </span>
                     <span className="text-xs font-black" style={{ color: s.accentColor }}>
                       {progress}%
                     </span>
                   </div>
 
-                  <h3 className="font-bold text-slate-900 text-sm mt-2">{s.titleKo}</h3>
-                  <p className="text-[11px] text-slate-500">{lang === 'zh' ? s.titleZh : s.titleKo}</p>
+                  <h3 className="font-bold text-slate-900 text-sm mt-2 leading-snug">{s.titleKo}</h3>
+                  <p className="text-[11px] text-slate-500 line-clamp-1">{s.descriptionKo}</p>
 
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-3">
+                  {/* Badges: Weeks, Pace, Single Price */}
+                  <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
+                      ⏱️ {s.durationWeeks}주 완성
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
+                      📅 {s.schedulePace}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                      🏷️ {s.price.isFree ? '무료 체험 $0' : `$${s.price.usd} (₩${s.price.krw.toLocaleString()})`}
+                    </span>
+                    {s.hasCampusTip && (
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                        🎓 캠퍼스 TIP
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3.5">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${progress}%`, backgroundColor: s.accentColor }}
@@ -471,13 +526,13 @@ export default function StudentDashboardPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 text-[11px]">총 {s.chaptersCount}강</span>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 text-[11px]">총 {s.chaptersCount}강 구성</span>
                   <Link
-                    href={`/study/${s.seriesId}/ch_writing_04`}
-                    className="font-bold inline-flex items-center gap-1 hover:underline text-blue-600"
+                    href={`/study/${s.seriesId}/${studyTargetChapter}`}
+                    className="font-bold inline-flex items-center gap-1 hover:underline text-blue-600 text-xs"
                   >
-                    <span>{t.continueStudy}</span>
+                    <span>{progress > 0 ? '이어 학습하기' : '학습 시작하기'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

@@ -3,6 +3,8 @@ import './globals.css';
 import { HanUpProvider } from '../context/HanUpContext';
 import { HeaderNavbar } from '../components/HeaderNavbar';
 import { PaywallModal } from '../components/PaywallModal';
+import AiEducationSurveyModal from '../components/AiEducationSurveyModal';
+import LearnerBackgroundModal from '../components/LearnerBackgroundModal';
 
 export const metadata: Metadata = {
   title: '한업 (HanUp | 韩升) - AI 글로벌 한국어 통합 에드테크 SaaS',
@@ -24,6 +26,8 @@ export default function RootLayout({
           </div>
           <main className="flex-1 w-full">{children}</main>
           <PaywallModal />
+          <AiEducationSurveyModal />
+          <LearnerBackgroundModal />
           <footer className="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-16 print:hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
