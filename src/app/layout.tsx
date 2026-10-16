@@ -10,9 +10,50 @@ import { NotificationSettingsModal } from '../components/NotificationSettingsMod
 import { Footer } from '../components/Footer';
 
 export const metadata: Metadata = {
-  title: '한업 (HanUp | 韩升) - AI 글로벌 한국어 통합 에드테크 SaaS',
+  metadataBase: new URL('https://hanup-platform.vercel.app'),
+  title: '한업 (HanUp) | AI와 함께하는 나만의 1:1 스마트 한국어 과외',
   description:
-    '한국어 실력 향상(Up)과 급수 상승(升)을 하나로 끝내는 멀티테넌트 B2B 에드테크 & AI 연구 플랫폼',
+    '처음부터 TOPIK 완성까지! 내 손안에서 열리는 가장 똑똑한 한국어 교재.',
+  keywords: [
+    '한업',
+    'HanUp',
+    '한국어 공부',
+    'TOPIK',
+    '토픽',
+    'AI 한국어 과외',
+    '한국어 작문 첨삭',
+    '다국어 한국어 학습',
+  ],
+  authors: [{ name: 'HanUp Team' }],
+  openGraph: {
+    title: '한업 (HanUp) | AI와 함께하는 나만의 1:1 스마트 한국어 과외',
+    description:
+      '처음부터 TOPIK 완성까지! 내 손안에서 열리는 가장 똑똑한 한국어 교재.',
+    url: 'https://hanup-platform.vercel.app',
+    siteName: '한업 (HanUp)',
+    locale: 'ko_KR',
+    type: 'website',
+    images: [
+      {
+        url: '/images/hanup-og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: '한업 (HanUp) - AI와 함께하는 나만의 1:1 스마트 한국어 과외',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '한업 (HanUp) | AI와 함께하는 나만의 1:1 스마트 한국어 과외',
+    description:
+      '처음부터 TOPIK 완성까지! 내 손안에서 열리는 가장 똑똑한 한국어 교재.',
+    images: ['/images/hanup-og-image.jpg'],
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/images/hanup-logo-square.jpg',
+  },
 };
 
 export default function RootLayout({

@@ -30,6 +30,7 @@ import { useHanUp } from '../context/HanUpContext';
 import { UserRole, ROLE_DEFINITIONS } from '../types/hanup';
 import { SUPPORTED_LANGUAGES, SupportedLanguage, UI_TRANSLATIONS } from '../lib/i18n';
 import { APP_CONFIG } from '../lib/config';
+import { HanUpLogo } from './HanUpLogo';
 
 export const HeaderNavbar: React.FC = () => {
   const pathname = usePathname();
@@ -184,26 +185,8 @@ export const HeaderNavbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-4 lg:gap-8">
-          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
-              <span className="font-black text-base sm:text-lg tracking-tighter">H</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                  한업
-                </span>
-                <span className="text-xs sm:text-sm font-extrabold text-blue-600 tracking-wider">
-                  HanUp
-                </span>
-                <span className="text-[10px] sm:text-xs font-medium text-slate-400 border-l border-slate-300 pl-1 sm:pl-1.5">
-                  韩升
-                </span>
-              </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium leading-none hidden xs:block">
-                스마트 한국어 교육 플랫폼
-              </p>
-            </div>
+          <Link href="/" className="flex items-center">
+            <HanUpLogo size="md" showText={true} />
           </Link>
 
           {/* Dynamic Navigation Links (Tablet & Desktop) */}

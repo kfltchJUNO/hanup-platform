@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useHanUp } from '../context/HanUpContext';
+import { HanUpLogo } from './HanUpLogo';
 
 export function Footer() {
   const { openLegalModal } = useHanUp();
@@ -22,7 +23,8 @@ export function Footer() {
         {/* Top Row: Brand Info & Suite Ecosystem */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
           <div className="space-y-1.5 max-w-lg">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
+              <HanUpLogo size="sm" showText={false} />
               <span className="font-extrabold text-white text-base tracking-tight">
                 한업 (HanUp | 韩升)
               </span>
