@@ -97,11 +97,11 @@ export function Footer() {
           {/* Contact Support Pill */}
           <div className="flex items-center gap-3">
             <a
-              href="mailto:support@hanup.kr"
+              href="mailto:ot.helper7@gmail.com"
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-colors"
             >
               <Mail className="w-3.5 h-3.5 text-blue-400" />
-              <span>support@hanup.kr</span>
+              <span>ot.helper7@gmail.com</span>
             </a>
             <span className="text-[11px] text-slate-500">평일 24h 이내 회신</span>
           </div>

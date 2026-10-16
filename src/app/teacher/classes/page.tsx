@@ -955,7 +955,7 @@ export default function TeacherClassesPage() {
             </div>
 
             <div className="p-3 bg-slate-100 rounded-xl text-[11px] text-slate-500 text-center">
-              소속 기관 B2B 세금계산서 발행 및 단체 계약은 <strong className="text-slate-700">billing@hanup.edu</strong>로 문의하세요.
+              소속 기관 B2B 세금계산서 발행 및 단체 계약은 <strong className="text-slate-700">ot.helper7@gmail.com</strong>으로 문의하세요.
             </div>
           </div>
         </div>
