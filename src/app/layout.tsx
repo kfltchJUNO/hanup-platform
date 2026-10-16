@@ -7,6 +7,7 @@ import AiEducationSurveyModal from '../components/AiEducationSurveyModal';
 import LearnerBackgroundModal from '../components/LearnerBackgroundModal';
 import { LegalPolicyModal } from '../components/LegalPolicyModal';
 import { NotificationSettingsModal } from '../components/NotificationSettingsModal';
+import { AuthModal } from '../components/AuthModal';
 import { Footer } from '../components/Footer';
 
 export const metadata: Metadata = {
@@ -74,6 +75,7 @@ export default function RootLayout({
           <LearnerBackgroundModal />
           <LegalPolicyModal />
           <NotificationSettingsModal />
+          <AuthModal />
           <Footer />
         </HanUpProvider>
       </body>

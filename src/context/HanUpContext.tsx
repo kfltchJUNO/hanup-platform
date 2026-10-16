@@ -31,6 +31,8 @@ import {
   MOCK_CREDIT_PACKS,
 } from '../mock/mockData';
 import { SupportedLanguage } from '../lib/i18n';
+import { getFirebaseAuth, logOut } from '../lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 interface HanUpContextType {
   // Role & Authentication State
@@ -40,6 +42,15 @@ interface HanUpContextType {
   currentOrg: Organization;
   organizations: Organization[];
   classes: ClassGroup[];
+
+  // Firebase Google & Email Auth State
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
+  firebaseUser: FirebaseUser | null;
+  isLoggedIn: boolean;
+  handleLogout: () => Promise<void>;
+  loginAsCustomUser: (userData: { email: string; name: string; targetLevel?: number }) => void;
 
   // 7 Background Variables Onboarding Modal
   isBackgroundModalOpen: boolean;
@@ -156,6 +167,54 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const [isPaywallModalOpen, setIsPaywallModalOpen] = useState(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<'refund' | 'terms' | 'privacy' | 'support'>('refund');
+
+  // Firebase Google & Email Auth State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      if (user) {
+        setIsLoggedIn(true);
+        setCurrentUser((prev) => ({
+          ...prev,
+          uid: user.uid,
+          name: user.displayName || user.email?.split('@')[0] || prev.name,
+          email: user.email || prev.email,
+          avatarUrl: user.photoURL || undefined,
+        }));
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+
+  const handleLogout = async () => {
+    await logOut();
+    setFirebaseUser(null);
+    setIsLoggedIn(false);
+    setCurrentUser(MOCK_USERS[currentRole] || MOCK_USERS.student);
+  };
+
+  const loginAsCustomUser = (userData: { email: string; name: string; targetLevel?: number }) => {
+    setIsLoggedIn(true);
+    setCurrentUser((prev) => ({
+      ...prev,
+      uid: `user_${Date.now()}`,
+      name: userData.name || userData.email.split('@')[0],
+      email: userData.email,
+      targetTopikLevel: userData.targetLevel || prev.targetTopikLevel,
+    }));
+    closeAuthModal();
+  };
 
   const openLegalModal = (tab: 'refund' | 'terms' | 'privacy' | 'support' = 'refund') => {
     setLegalModalTab(tab);
@@ -468,7 +527,13 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
     if (MOCK_USERS[role]) {
-      setCurrentUser(MOCK_USERS[role]);
+      const template = MOCK_USERS[role];
+      setCurrentUser((prev) => ({
+        ...template,
+        name: firebaseUser?.displayName || (isLoggedIn ? prev.name : template.name),
+        email: firebaseUser?.email || (isLoggedIn ? prev.email : template.email),
+        avatarUrl: firebaseUser?.photoURL || (isLoggedIn ? prev.avatarUrl : template.avatarUrl),
+      }));
     }
   };
 
@@ -718,6 +783,13 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         openNotificationModal,
         closeNotificationModal,
         updateNotificationSettings,
+        isAuthModalOpen,
+        openAuthModal,
+        closeAuthModal,
+        firebaseUser,
+        isLoggedIn,
+        handleLogout,
+        loginAsCustomUser,
       }}
     >
       {children}
