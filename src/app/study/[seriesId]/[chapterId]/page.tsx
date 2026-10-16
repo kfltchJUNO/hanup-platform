@@ -51,6 +51,9 @@ import {
 } from '../../../../lib/i18n';
 import { MOCK_SERIES } from '../../../../mock/mockData';
 import { SoriTutorModal } from '../../../../components/SoriTutorModal';
+import { SyllabusDrawer } from '../../../../components/SyllabusDrawer';
+import { Hangul40BoardModal } from '../../../../components/Hangul40BoardModal';
+import { CampusTipModal } from '../../../../components/CampusTipModal';
 import {
   maskEmail,
   generateLicenseToken,
@@ -182,6 +185,17 @@ export default function SmartStudyViewerPage() {
   const openSoriTutor = (sentence: string) => {
     setSoriTargetSentence(sentence);
     setIsSoriModalOpen(true);
+  };
+
+  // Syllabus Tree & Hangul 40-Letter & Campus Tip Modals
+  const [isSyllabusDrawerOpen, setIsSyllabusDrawerOpen] = useState<boolean>(false);
+  const [isHangulBoardOpen, setIsHangulBoardOpen] = useState<boolean>(false);
+  const [isCampusTipOpen, setIsCampusTipOpen] = useState<boolean>(false);
+  const [campusTipChapter, setCampusTipChapter] = useState<number>(1);
+
+  const handleOpenCampusTip = (chNum: number = 1) => {
+    setCampusTipChapter(chNum);
+    setIsCampusTipOpen(true);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -596,6 +610,36 @@ export default function SmartStudyViewerPage() {
               {notificationSettings.marketingConsent && (
                 <span className="text-[10px] text-emerald-600 font-extrabold">•쿠폰동의</span>
               )}
+            </button>
+
+            {/* Syllabus Tree Drawer CTA */}
+            <button
+              onClick={() => setIsSyllabusDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all hover:scale-105 shadow-2xs"
+              title="전체 8종 시리즈 82개 단원 목차 보기"
+            >
+              <BookOpen className="w-3 h-3 text-indigo-600" />
+              <span>전체 82강 커리큘럼</span>
+            </button>
+
+            {/* Hangul 40-Letter Board CTA */}
+            <button
+              onClick={() => setIsHangulBoardOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all hover:scale-105 shadow-2xs"
+              title="한글 자모 40자 음가 및 조음 팁, 따라쓰기 워크북"
+            >
+              <Sparkles className="w-3 h-3 text-rose-500" />
+              <span>자모 40자 보드</span>
+            </button>
+
+            {/* Campus Life Tip CTA */}
+            <button
+              onClick={() => handleOpenCampusTip(1)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-all hover:scale-105 shadow-2xs"
+              title="교수님 이메일, 팀플 생존법, 대학원 사전컨택 팁"
+            >
+              <span>☕</span>
+              <span>캠퍼스 학업 TIP</span>
             </button>
           </div>
 
@@ -2378,6 +2422,30 @@ export default function SmartStudyViewerPage() {
         isOpen={isSoriModalOpen}
         onClose={() => setIsSoriModalOpen(false)}
         targetSentence={soriTargetSentence}
+      />
+
+      {/* Syllabus Tree Drawer */}
+      <SyllabusDrawer
+        isOpen={isSyllabusDrawerOpen}
+        onClose={() => setIsSyllabusDrawerOpen(false)}
+        currentSeriesId={seriesId}
+        currentChapterId={chapterId}
+        onOpenHangulBoard={() => setIsHangulBoardOpen(true)}
+        onOpenCampusTip={(ch) => handleOpenCampusTip(ch || 1)}
+      />
+
+      {/* Hangul 40-Letter Interactive Board Modal */}
+      <Hangul40BoardModal
+        isOpen={isHangulBoardOpen}
+        onClose={() => setIsHangulBoardOpen(false)}
+        onOpenSoriTutor={(target) => openSoriTutor(target)}
+      />
+
+      {/* Campus Life Tip Modal (Episodes 01, 04, 10) */}
+      <CampusTipModal
+        isOpen={isCampusTipOpen}
+        onClose={() => setIsCampusTipOpen(false)}
+        initialChapter={campusTipChapter}
       />
     </div>
   );

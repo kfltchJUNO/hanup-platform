@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 import { useHanUp, isMasterEmail } from '../../../context/HanUpContext';
 import { AuthoringBlock, VocabAnnotation } from '../../../types/hanup';
+import { SyllabusDrawer } from '../../../components/SyllabusDrawer';
+import { Hangul40BoardModal } from '../../../components/Hangul40BoardModal';
+import { CampusTipModal } from '../../../components/CampusTipModal';
 import {
   extractZeroWidthWatermark,
   generateLicenseToken,
@@ -98,6 +101,12 @@ export default function AuthoringStudioPage() {
   const [forensicInput, setForensicInput] = useState('');
   const [forensicResult, setForensicResult] = useState<string | null>(null);
   const [forensicChecked, setForensicChecked] = useState(false);
+
+  // Syllabus & Modals
+  const [isSyllabusDrawerOpen, setIsSyllabusDrawerOpen] = useState(false);
+  const [isHangulBoardOpen, setIsHangulBoardOpen] = useState(false);
+  const [isCampusTipOpen, setIsCampusTipOpen] = useState(false);
+  const [campusTipChapter, setCampusTipChapter] = useState(1);
 
   // Multilingual OSMU Data Mapper
   const getLocalizedOsmuData = (block: AuthoringBlock, l: 'zh' | 'en' | 'ja' | 'vi' | 'my') => {
@@ -362,12 +371,26 @@ export default function AuthoringStudioPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {saveNotice && (
             <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
               <Check className="w-4 h-4" /> 저장 & OSMU 추출 완료!
             </span>
           )}
+          <button
+            onClick={() => setIsSyllabusDrawerOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs border border-indigo-200 transition-all hover:scale-105 shadow-2xs"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+            <span>82개 단원 커리큘럼</span>
+          </button>
+          <button
+            onClick={() => setIsHangulBoardOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs border border-rose-200 transition-all hover:scale-105 shadow-2xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+            <span>자모 40자 보드</span>
+          </button>
           <button
             disabled={isGeneratingAi}
             onClick={handleAutoGenerateOSMU}
@@ -1142,6 +1165,32 @@ export default function AuthoringStudioPage() {
           </div>
         </div>
       )}
+
+      {/* Syllabus Tree Drawer */}
+      <SyllabusDrawer
+        isOpen={isSyllabusDrawerOpen}
+        onClose={() => setIsSyllabusDrawerOpen(false)}
+        currentSeriesId={activeBlock.seriesId}
+        currentChapterId={activeBlock.chapterId}
+        onOpenHangulBoard={() => setIsHangulBoardOpen(true)}
+        onOpenCampusTip={(ch) => {
+          setCampusTipChapter(ch || 1);
+          setIsCampusTipOpen(true);
+        }}
+      />
+
+      {/* Hangul 40-Letter Interactive Board Modal */}
+      <Hangul40BoardModal
+        isOpen={isHangulBoardOpen}
+        onClose={() => setIsHangulBoardOpen(false)}
+      />
+
+      {/* Campus Life Tip Modal */}
+      <CampusTipModal
+        isOpen={isCampusTipOpen}
+        onClose={() => setIsCampusTipOpen(false)}
+        initialChapter={campusTipChapter}
+      />
     </div>
   );
 }
