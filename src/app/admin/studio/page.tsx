@@ -23,9 +23,18 @@ import {
   ExternalLink,
   Volume2,
   Lock,
+  ShieldCheck,
+  Search,
+  AlertTriangle,
 } from 'lucide-react';
 import { useHanUp, isMasterEmail } from '../../../context/HanUpContext';
 import { AuthoringBlock, VocabAnnotation } from '../../../types/hanup';
+import {
+  extractZeroWidthWatermark,
+  generateLicenseToken,
+  maskEmail,
+  injectZeroWidthWatermark,
+} from '../../../lib/security';
 
 export default function AuthoringStudioPage() {
   const { authoringBlocks, saveAuthoringBlock, lang, currentUser, openAuthModal } = useHanUp();
@@ -80,10 +89,15 @@ export default function AuthoringStudioPage() {
 
   // Studio OSMU Execution States
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration'>('illustration');
+  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic'>('illustration');
   const [osmuLang, setOsmuLang] = useState<'zh' | 'en' | 'ja' | 'vi' | 'my'>('zh');
   const [copiedText, setCopiedText] = useState(false);
   const [saveNotice, setSaveNotice] = useState(false);
+
+  // Forensic Watermark Decoder States
+  const [forensicInput, setForensicInput] = useState('');
+  const [forensicResult, setForensicResult] = useState<string | null>(null);
+  const [forensicChecked, setForensicChecked] = useState(false);
 
   // Multilingual OSMU Data Mapper
   const getLocalizedOsmuData = (block: AuthoringBlock, l: 'zh' | 'en' | 'ja' | 'vi' | 'my') => {
@@ -538,8 +552,8 @@ export default function AuthoringStudioPage() {
             </span>
           </div>
 
-          {/* OSMU Tabs (5 Tabs) */}
-          <div className="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
+          {/* OSMU Tabs (6 Tabs) */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
             <button
               onClick={() => setOsmuTab('illustration')}
               className={`py-2 rounded-xl font-black transition-all ${
@@ -579,6 +593,14 @@ export default function AuthoringStudioPage() {
               }`}
             >
               약점문항
+            </button>
+            <button
+              onClick={() => setOsmuTab('forensic')}
+              className={`py-2 rounded-xl font-black transition-all ${
+                osmuTab === 'forensic' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              🛡️ 포렌식
             </button>
           </div>
 
@@ -876,6 +898,122 @@ export default function AuthoringStudioPage() {
                   </div>
                   <div className="p-2 bg-white rounded-xl border border-amber-100">3) 날마다 좋아지다</div>
                   <div className="p-2 bg-white rounded-xl border border-amber-100">4) 엄청나게 늘어나다</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* OSMU Tab 5: Forensic Digital Rights & Leak Detector */}
+          {osmuTab === 'forensic' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-indigo-900 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                  불법 유출 텍스트 포렌식 역추적기 (Zero-Width Decoder)
+                </span>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
+                  보안 1등급
+                </span>
+              </div>
+
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                웹, 카카오톡, 텔레그램, 위챗, 블로그 등 외부로 유출된 교재 문구를 아래에 붙여넣으세요.
+                눈에 보이지 않는 유니코드 특수문자(Zero-Width)를 역추적하여 유출자의 고유 라이선스 토큰을 추출합니다.
+              </p>
+
+              <div className="space-y-2">
+                <textarea
+                  rows={4}
+                  value={forensicInput}
+                  onChange={(e) => setForensicInput(e.target.value)}
+                  placeholder="의심되는 텍스트를 여기에 붙여넣으세요..."
+                  className="w-full p-3 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
+                />
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setForensicChecked(true);
+                      const result = extractZeroWidthWatermark(forensicInput);
+                      setForensicResult(result);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-sm transition-all hover:scale-105 flex items-center gap-1.5"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>디지털 지문 역추적 분석</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const myToken = generateLicenseToken(currentUser.uid, currentUser.email);
+                      const sampleText = injectZeroWidthWatermark(
+                        '현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다.',
+                        myToken
+                      );
+                      setForensicInput(sampleText);
+                      setForensicChecked(false);
+                      setForensicResult(null);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+                  >
+                    현재 마스터 토큰 주입 샘플 불러오기
+                  </button>
+                </div>
+              </div>
+
+              {/* Forensic Result Card */}
+              {forensicChecked && (
+                <div
+                  className={`p-4 rounded-2xl border text-xs space-y-2 animate-in fade-in duration-200 ${
+                    forensicResult
+                      ? 'bg-rose-50 border-rose-200 text-rose-950'
+                      : 'bg-slate-50 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  {forensicResult ? (
+                    <>
+                      <div className="flex items-center gap-1.5 font-black text-rose-700">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        <span>[유출자 적발 성공] 비가시적 포렌식 라이선스 검출 완료!</span>
+                      </div>
+                      <div className="font-mono bg-white p-3 rounded-xl border border-rose-200 space-y-1 shadow-2xs">
+                        <div>• 적발 라이선스 코드: <span className="font-black text-rose-600 text-sm">{forensicResult}</span></div>
+                        <div>• 증거 채택 상태: <span className="font-bold text-emerald-700">유효 (Steganography Signature Verified)</span></div>
+                        <div className="text-[10px] text-slate-500 pt-1">
+                          ※ 본 라이선스 코드는 회원 DB와 대조하여 즉시 계정 정지 및 법적 조치를 취할 수 있습니다.
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-slate-600 font-medium">
+                      검출 결과: 비가시적 워터마크 지문이 발견되지 않았거나 일반 텍스트입니다.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4-Layer DRM Status Overview */}
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/90 text-xs space-y-2">
+                <span className="font-black text-slate-800 block text-[11px]">
+                  ⚙️ 실시간 가동 중인 4대 안티-유출 보안 규격
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 font-medium">
+                  <div className="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>가명 라이선스 (LIC 토큰화)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>비가시적 유니코드 지문</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>인쇄/PDF 덤프 원천 차단</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>F12 / DevTools 가드</span>
+                  </div>
                 </div>
               </div>
             </div>

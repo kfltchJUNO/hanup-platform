@@ -51,6 +51,11 @@ import {
 } from '../../../../lib/i18n';
 import { MOCK_SERIES } from '../../../../mock/mockData';
 import { SoriTutorModal } from '../../../../components/SoriTutorModal';
+import {
+  maskEmail,
+  generateLicenseToken,
+  injectZeroWidthWatermark,
+} from '../../../../lib/security';
 
 export default function SmartStudyViewerPage() {
   const params = useParams();
@@ -460,6 +465,45 @@ export default function SmartStudyViewerPage() {
     setTimeout(() => setRevisionSavedNotice(false), 3000);
   };
 
+  // 🛡️ Forensic Security & DRM Setup (Masked Email & Hashed License Token)
+  const maskedEmail = maskEmail(currentUser.email);
+  const licenseToken = generateLicenseToken(currentUser.uid, currentUser.email);
+  const [securityToast, setSecurityToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Block F12 (Inspect)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        setSecurityToast('🛡️ 디지털 저작권 보호를 위해 개발자 도구(F12)가 제한됩니다.');
+        setTimeout(() => setSecurityToast(null), 3000);
+        return;
+      }
+      // 2. Block Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (DevTools)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C', 'i', 'j', 'c'].includes(e.key)) {
+        e.preventDefault();
+        setSecurityToast('🛡️ 저작권 보호를 위해 소스 검사 단축키가 제한됩니다.');
+        setTimeout(() => setSecurityToast(null), 3000);
+        return;
+      }
+      // 3. Block Ctrl+U (View Source)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        setSecurityToast('🛡️ 소스 코드 보기가 제한됩니다.');
+        setTimeout(() => setSecurityToast(null), 3000);
+        return;
+      }
+      // 4. PrintScreen Notification
+      if (e.key === 'PrintScreen') {
+        setSecurityToast('🛡️ [화면 캡처 감지] 본 교재는 저작권 보호를 받으며 고유 라이선스가 추적됩니다.');
+        setTimeout(() => setSecurityToast(null), 3500);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div
       onContextMenu={(e) => {
@@ -468,22 +512,52 @@ export default function SmartStudyViewerPage() {
       }}
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative select-none"
     >
+      {/* 🛡️ Real-time Security Notice Toast */}
+      {securityToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/60 backdrop-blur-md flex items-center gap-3 text-xs sm:text-sm font-bold animate-in fade-in slide-in-from-top-4 duration-200">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{securityToast}</span>
+        </div>
+      )}
+
+      {/* 🛡️ Strict Anti-Print (Ctrl+P to PDF) Guard Screen */}
+      <div className="hidden print:flex flex-col items-center justify-center min-h-[85vh] p-12 text-center space-y-6">
+        <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-3xl font-black border border-rose-200">
+          ⚠️
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            디지털 저작권 보호 규정에 따른 인쇄 제한 안내
+          </h1>
+          <p className="text-sm text-slate-600 max-w-lg mx-auto">
+            본 교재 및 평가 문항은 HanUp 정품 인증 디지털 라이선스 전용 콘텐츠로, 
+            무단 인쇄 및 PDF 저장이 엄격히 금지되어 있습니다.
+          </p>
+        </div>
+        <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-slate-700 space-y-2 max-w-md mx-auto text-left shadow-2xs">
+          <div>• 발급 라이선스: <span className="font-bold text-blue-600">{licenseToken}</span></div>
+          <div>• 인가 수강생: <span className="font-bold">{maskedEmail}</span></div>
+          <div>• 식별 코드: <span className="text-slate-500 font-bold">ZW-STEG-FORENSIC-SECURED</span></div>
+          <div className="text-[11px] text-rose-600 font-sans pt-1 border-t border-slate-200">
+            ※ 저작권법 제136조에 따라 무단 복제, 전재, 배포 시 민·형사상 손해배상 청구 대상이 됩니다.
+          </div>
+        </div>
+      </div>
+
       {/* 🛡️ Dynamic Forensic Anti-Piracy Watermark (Capture & Photo Leak Deterrent) */}
       <div
-        className="pointer-events-none fixed inset-0 z-30 overflow-hidden opacity-[0.035] select-none flex flex-wrap gap-20 p-8 transform -rotate-12 items-center justify-center print:opacity-[0.07]"
+        className="pointer-events-none fixed inset-0 z-30 overflow-hidden opacity-[0.035] select-none flex flex-wrap gap-20 p-8 transform -rotate-12 items-center justify-center print:hidden"
         aria-hidden="true"
       >
         {Array.from({ length: 30 }).map((_, i) => (
           <div key={i} className="text-xs font-mono font-bold tracking-widest text-slate-900 whitespace-nowrap">
-            HanUp Secured • {currentUser.email || 'student@hanup.edu'} • UID:{currentUser.uid?.slice(-6) || '77892'}
+            HanUp Secured • {maskedEmail} • {licenseToken}
           </div>
         ))}
       </div>
 
-      {/* Print License Ownership Stamp */}
-      <div className="hidden print:block text-[10px] text-slate-500 border-b border-slate-300 pb-1 mb-2 font-mono text-center">
-        [HanUp 정품 인증] 본 교재는 수강생 ({currentUser.name} / {currentUser.email}) 전용 열람용이며 무단 복제, 전재, 배포 시 법적 처벌을 받습니다.
-      </div>
+      {/* Study Materials Screen (Strictly Hidden during Print) */}
+      <div className="space-y-6 print:hidden">
 
       {/* 1. Chapter Title & Global Header Bar */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -745,10 +819,10 @@ export default function SmartStudyViewerPage() {
               </button>
             </div>
 
-            {/* Interactive Passage with Clickable Keywords */}
+            {/* Interactive Passage with Clickable Keywords & Invisible Steganography Fingerprint */}
             {currentBlock.blockId === 'blk_writing_04' ? (
               <div className="text-slate-900 text-sm sm:text-base leading-loose whitespace-pre-line font-sans">
-                현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다. 이에 따라 생산성이{' '}
+                {injectZeroWidthWatermark('현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다. 이에 따라 생산성이 ', licenseToken)}
                 <button
                   onClick={() =>
                     setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('비약적')) || null)
@@ -757,7 +831,7 @@ export default function SmartStudyViewerPage() {
                 >
                   비약적(飛躍的)
                 </button>
-                으로 증가하고 삶의 편의성이 향상된 반면, 일자리 감소와 개인정보 침해, 알고리즘{' '}
+                {injectZeroWidthWatermark('으로 증가하고 삶의 편의성이 향상된 반면, 일자리 감소와 개인정보 침해, 알고리즘 ', licenseToken)}
                 <button
                   onClick={() =>
                     setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('편향성')) || null)
@@ -766,9 +840,7 @@ export default function SmartStudyViewerPage() {
                 >
                   편향성(偏向性)
                 </button>
-                과 같은 윤리적 문제 또한 끊임없이 제기되고 있습니다.
-
-                이러한 기술의 부작용을 극복하고 인간과의 조화로운 공존을 이룩하기 위해서는 제도적 가이드라인 마련과 윤리 의식 함양이 무엇보다도 시급한{' '}
+                {injectZeroWidthWatermark('과 같은 윤리적 문제 또한 끊임없이 제기되고 있습니다.\n\n이러한 기술의 부작용을 극복하고 인간과의 조화로운 공존을 이룩하기 위해서는 제도적 가이드라인 마련과 윤리 의식 함양이 무엇보다도 시급한 ', licenseToken)}
                 <button
                   onClick={() =>
                     setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('선결 과제')) || null)
@@ -777,12 +849,12 @@ export default function SmartStudyViewerPage() {
                 >
                   선결 과제(先決課題)
                 </button>
-                라 할 수 있습니다.
+                {injectZeroWidthWatermark('라 할 수 있습니다.', licenseToken)}
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base leading-relaxed whitespace-pre-line font-sans">
-                  {currentBlock.koContent}
+                  {injectZeroWidthWatermark(currentBlock.koContent, licenseToken)}
                 </div>
                 {/* Clickable Vocab Tags */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -839,7 +911,7 @@ export default function SmartStudyViewerPage() {
                   </span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-800 whitespace-pre-line leading-relaxed font-sans">
-                  {currentBlock.writingRubric.modelAnswer}
+                  {injectZeroWidthWatermark(currentBlock.writingRubric.modelAnswer, licenseToken)}
                 </div>
               </div>
             )}
@@ -2298,6 +2370,7 @@ export default function SmartStudyViewerPage() {
         >
           설문 참여하고 20% 쿠폰 받기 →
         </button>
+      </div>
       </div>
 
       {/* Sori Tutor Pronunciation Clinic Modal (Loosely-Coupled iFrame & Simulator) */}
