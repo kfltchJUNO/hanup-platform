@@ -33,10 +33,15 @@ function JoinContent() {
   const paramEmail = searchParams.get('email') || '';
   const paramClassId = searchParams.get('class') || searchParams.get('classId') || 'cls_topik_01';
   const paramClassName = searchParams.get('className') || 'TOPIK 중급 실전 완성반';
-  const paramTeacher = searchParams.get('teacher') || '박지민 선생님';
-  const paramOrg = searchParams.get('org') || '서울글로벌어학원';
+  const paramTeacher = searchParams.get('teacher') || '';
+  const paramOrg = searchParams.get('org') || 'hanup_global';
   const paramLevel = Number(searchParams.get('level')) || 4;
   const paramL1 = searchParams.get('l1') || 'zh-CN';
+
+  const isDirectPromo =
+    paramOrg === 'hanup_global' ||
+    searchParams.get('mode') === 'direct' ||
+    !paramTeacher;
 
   // Form States
   const [studentName, setStudentName] = useState(paramName);
@@ -143,41 +148,77 @@ function JoinContent() {
         {/* Top Gold-to-Ruby Brand Ribbon */}
         <div className="h-2.5 bg-gradient-to-r from-amber-500 via-rose-500 to-red-600" />
 
-        {/* Card Header & Teacher Invitation Greeting */}
+        {/* Card Header & Invitation Greeting */}
         <div className="p-6 sm:p-7 pb-4 text-center border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
           <div className="flex justify-center mb-3">
             <HanUpLogo size="md" showText={false} />
           </div>
 
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-blue-800 text-xs font-bold border border-blue-200 shadow-xs mb-2">
-            <School className="w-3.5 h-3.5 text-blue-600" />
-            <span>{paramOrg} • {paramTeacher}</span>
-          </span>
-
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            수업 초대장이 도착했습니다! 🎓
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            선생님이 미리 설정해 둔 맞춤 학습 정보로 3초 만에 시작하세요
-          </p>
-
-          {/* Pre-configured Class Invitation Box */}
-          <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200/80 text-left space-y-2 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-blue-700">배정 클래스</span>
-              <span className="text-xs font-black text-indigo-900">{paramClassName}</span>
-            </div>
-            <div className="flex items-center justify-between pt-1.5 border-t border-blue-200/50 text-[11px]">
-              <span className="text-slate-500">목표 급수</span>
-              <span className="font-extrabold text-amber-600">TOPIK {targetLevel}급</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">모국어 해설</span>
-              <span className="font-semibold text-slate-700">
-                {currentL1Info.flag} {currentL1Info.label}
+          {isDirectPromo ? (
+            <>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/90 text-emerald-800 text-xs font-bold border border-emerald-200 shadow-xs mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>한업 글로벌 본사 직속 오픈 체험 트랙</span>
               </span>
-            </div>
-          </div>
+
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                본사 직속 무료 체험을 환영합니다! 🚀
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                기관이나 선생님 초대 없이도 3초 구글 로그인으로 즉시 학습을 시작하세요
+              </p>
+
+              {/* Direct Promo Benefits Box */}
+              <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/60 border border-emerald-200/80 text-left space-y-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-emerald-700">체험 트랙</span>
+                  <span className="text-xs font-black text-emerald-950">한업 TOPIK 준비편 & 생활한국어 입문</span>
+                </div>
+                <div className="flex items-center justify-between pt-1.5 border-t border-emerald-200/50 text-[11px]">
+                  <span className="text-slate-500">수강 혜택</span>
+                  <span className="font-extrabold text-emerald-700">1~2급 무료 ($0) + 약점 3제 + 소리튜터</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500">데이터 보존</span>
+                  <span className="font-semibold text-slate-700">
+                    실제 계정 연동 (추후 학원 등록 시 기록 자동 승계)
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-blue-800 text-xs font-bold border border-blue-200 shadow-xs mb-2">
+                <School className="w-3.5 h-3.5 text-blue-600" />
+                <span>{paramOrg} • {paramTeacher}</span>
+              </span>
+
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                수업 초대장이 도착했습니다! 🎓
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                선생님이 미리 설정해 둔 맞춤 학습 정보로 3초 만에 시작하세요
+              </p>
+
+              {/* Pre-configured Class Invitation Box */}
+              <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200/80 text-left space-y-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-blue-700">배정 클래스</span>
+                  <span className="text-xs font-black text-indigo-900">{paramClassName}</span>
+                </div>
+                <div className="flex items-center justify-between pt-1.5 border-t border-blue-200/50 text-[11px]">
+                  <span className="text-slate-500">목표 급수</span>
+                  <span className="font-extrabold text-amber-600">TOPIK {targetLevel}급</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500">모국어 해설</span>
+                  <span className="font-semibold text-slate-700">
+                    {currentL1Info.flag} {currentL1Info.label}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Card Body: Quick Onboarding Actions */}
@@ -187,9 +228,11 @@ function JoinContent() {
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2.5 animate-in fade-in">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
               <div>
-                <p className="text-sm font-black">수업 등록이 완료되었습니다!</p>
+                <p className="text-sm font-black">
+                  {isDirectPromo ? '본사 직속 무료 체험 등록이 완료되었습니다!' : '수업 등록이 완료되었습니다!'}
+                </p>
                 <p className="text-[11px] text-emerald-700 font-normal">
-                  선생님의 반과 연결된 나의 학습 대시보드로 이동합니다...
+                  {isDirectPromo ? '체험 교재와 진단이 준비된 학습 대시보드로 이동합니다...' : '선생님의 반과 연결된 나의 학습 대시보드로 이동합니다...'}
                 </p>
               </div>
             </div>

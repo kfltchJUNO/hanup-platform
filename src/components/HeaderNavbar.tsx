@@ -96,41 +96,53 @@ export const HeaderNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      {/* 1. Top RBAC Switcher Banner (Multi-tenancy & Testing Hub) - Mobile Optimized */}
+      {/* 1. Top RBAC Switcher Banner (Multi-tenancy & Testing Hub) - Shown on /demo or for Master Admin */}
       <div className="bg-slate-900 text-slate-200 px-3 sm:px-4 py-1.5 text-xs flex items-center justify-between gap-2 border-b border-slate-800">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <span className="flex items-center gap-1 font-semibold text-blue-400 shrink-0 text-[11px] sm:text-xs">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">[RBAC 모드]:</span>
-          </span>
-          <div className="inline-flex rounded-lg p-0.5 bg-slate-800 border border-slate-700 shrink-0">
-            {((isMasterEmail(currentUser.email)
-              ? ['student', 'instructor', 'org_admin', 'super_admin']
-              : ['student', 'instructor', 'org_admin']) as UserRole[]).map((r) => {
-              const isActive = currentRole === r;
-              const shortLabels: Record<UserRole, string> = {
-                student: '학생',
-                instructor: '교사',
-                org_admin: '기관',
-                super_admin: '본사',
-              };
-              return (
-                <button
-                  key={r}
-                  onClick={() => switchRole(r)}
-                  className={`px-2 sm:px-2.5 py-0.5 rounded text-[11px] sm:text-xs font-medium transition-all ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-sm font-bold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-                  }`}
-                  title={ROLE_DEFINITIONS[r].labelKo}
-                >
-                  <span className="sm:hidden">{shortLabels[r]}</span>
-                  <span className="hidden sm:inline">{ROLE_DEFINITIONS[r].labelKo}</span>
-                </button>
-              );
-            })}
-          </div>
+          {pathname.startsWith('/demo') || isMasterEmail(currentUser.email) ? (
+            <>
+              <span className="flex items-center gap-1 font-semibold text-blue-400 shrink-0 text-[11px] sm:text-xs">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">[RBAC 모드]:</span>
+              </span>
+              <div className="inline-flex rounded-lg p-0.5 bg-slate-800 border border-slate-700 shrink-0">
+                {((isMasterEmail(currentUser.email)
+                  ? ['student', 'instructor', 'org_admin', 'super_admin']
+                  : ['student', 'instructor', 'org_admin']) as UserRole[]).map((r) => {
+                  const isActive = currentRole === r;
+                  const shortLabels: Record<UserRole, string> = {
+                    student: '학생',
+                    instructor: '교사',
+                    org_admin: '기관',
+                    super_admin: '본사',
+                  };
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => switchRole(r)}
+                      className={`px-2 sm:px-2.5 py-0.5 rounded text-[11px] sm:text-xs font-medium transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-sm font-bold'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+                      }`}
+                      title={ROLE_DEFINITIONS[r].labelKo}
+                    >
+                      <span className="sm:hidden">{shortLabels[r]}</span>
+                      <span className="hidden sm:inline">{ROLE_DEFINITIONS[r].labelKo}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <Link
+              href="/demo"
+              className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-indigo-300 transition-colors"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <span>교육기관·강사용 B2B 통합 솔루션 시연 둘러보기 →</span>
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -364,6 +376,28 @@ export const HeaderNavbar: React.FC = () => {
                       </div>
                     </div>
                   </a>
+
+                  {/* B2B Solution Demo Link */}
+                  <Link
+                    href="/demo"
+                    onClick={() => setIsAppLauncherOpen(false)}
+                    className="flex items-start gap-3 p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 transition-colors group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">
+                          B2B 기관·강사 솔루션 시연
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600" />
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                        4단계 RBAC 권한 전환 & Human-in-the-Loop 검수 큐 체험
+                      </p>
+                    </div>
+                  </Link>
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-slate-400 leading-snug px-1">

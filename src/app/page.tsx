@@ -12,7 +12,6 @@ import {
   ArrowRight,
   ShieldCheck,
   ChevronRight,
-  ChevronDown,
   Award,
   Mic,
   Camera,
@@ -23,27 +22,27 @@ import {
   Zap,
   Tag,
   Check,
+  Star,
+  Users,
+  ExternalLink,
 } from 'lucide-react';
 import { useHanUp } from '../context/HanUpContext';
 import { MOCK_SERIES } from '../mock/mockData';
-import { UserRole, ROLE_DEFINITIONS } from '../types/hanup';
 import { SoriTutorModal } from '../components/SoriTutorModal';
+import { Hangul40BoardModal } from '../components/Hangul40BoardModal';
 
 export default function HomePage() {
-  const { currentRole, switchRole, lang, openSurveyModal } = useHanUp();
+  const { switchRole, openSurveyModal } = useHanUp();
   const [activeSeriesTab, setActiveSeriesTab] = useState<'topik' | 'life'>('topik');
   const [isSoriModalOpen, setIsSoriModalOpen] = useState(false);
   const [soriSampleSentence, setSoriSampleSentence] = useState('급한 일이 생겨서요 [그판 니리 생겨서요]');
-
-  const handleRoleQuickStart = (role: UserRole) => {
-    switchRole(role);
-  };
+  const [isHangulBoardOpen, setIsHangulBoardOpen] = useState(false);
 
   const filteredSeries = MOCK_SERIES.filter((s) => s.category === activeSeriesTab);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-10 sm:space-y-14">
-      {/* 1. Hero Banner (Clean, Inspiring, Student-First) */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-12 sm:space-y-16">
+      {/* 1. Hero Banner (Clean, Inspiring, 100% Student-First) */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white p-6 sm:p-10 lg:p-14 shadow-2xl border border-slate-800">
         <div className="relative z-10 max-w-3xl space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
@@ -67,34 +66,34 @@ export default function HomePage() {
           {/* Touch-Friendly Primary CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
             <Link
-              href="/study/hanup_topik_prep/ch_prep_01"
+              href="/join?org=hanup_global"
               onClick={() => switchRole('student')}
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <Sparkles className="w-5 h-5 text-emerald-100" />
-              <span>🚀 1~2급 무료 체험 시작하기</span>
+              <span>🚀 본사 직속 무료 체험 시작하기</span>
               <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-white/20 text-white ml-1">
                 $0 무료
               </span>
             </Link>
 
             <Link
-              href="/dashboard"
+              href="/study/hanup_topik_prep/ch_prep_01"
               onClick={() => switchRole('student')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-100 border border-slate-700 font-bold text-sm transition-all"
+              className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-100 border border-slate-700 font-bold text-sm transition-all"
             >
-              <GraduationCap className="w-4 h-4 text-blue-400" />
-              <span>나의 학습 대시보드</span>
+              <BookOpen className="w-4 h-4 text-blue-400" />
+              <span>준비편 1강 둘러보기</span>
               <ArrowRight className="w-4 h-4 text-slate-400" />
             </Link>
 
             <Link
               href="/clinic"
               onClick={() => switchRole('student')}
-              className="inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 font-semibold text-xs sm:text-sm transition-all"
+              className="inline-flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 font-semibold text-xs sm:text-sm transition-all"
             >
               <Stethoscope className="w-4 h-4 text-blue-400" />
-              <span>오늘의 약점 3제 풀기</span>
+              <span>약점 진단 3제 풀기</span>
             </Link>
           </div>
 
@@ -113,8 +112,8 @@ export default function HomePage() {
               <span>🌐 6개 국어 모국어 해설</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-              <span>📷 원고지 손글씨 OCR</span>
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              <span>🔤 한글 자모 40자 체계</span>
             </div>
           </div>
         </div>
@@ -124,20 +123,20 @@ export default function HomePage() {
         <div className="absolute left-[30%] bottom-[-20%] w-[350px] h-[350px] bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
       </section>
 
-      {/* 2. Core Learning Features (3 Clean Mobile/Tablet Cards) */}
+      {/* 2. Core Interactive Learning Experiences (4 Student Action Cards) */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-              스마트 학습 핵심 기능
+              스마트 학습 핵심 체험 존
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              독학으로 어려운 쓰기·발음·취약점을 AI 기술로 확실하게 잡아드립니다.
+              독학으로 막막했던 쓰기·발음·자모·취약점을 클릭 한 번으로 체험해 보세요.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Card 1: AI Writing */}
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-lg transition-all group flex flex-col justify-between">
             <div className="space-y-3">
@@ -145,7 +144,7 @@ export default function HomePage() {
                 <PenTool className="w-6 h-6" />
               </div>
               <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                AI 53·54번 원고지 정밀 첨삭
+                AI 53·54번 원고지 첨삭
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 손글씨 원고지를 스마트폰 카메라로 찍어 올리면 3초 만에 맞춤법, 띄어쓰기, L1 번역투 간섭 오류를 짚어내고 모국어 해설을 제공합니다.
@@ -163,7 +162,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Card 2: Sori Tutor */}
+          {/* Card 2: Sori Tutor Modal Trigger */}
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200 bg-white hover:border-emerald-400 hover:shadow-lg transition-all group flex flex-col justify-between">
             <div className="space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shadow-xs group-hover:scale-105 transition-transform">
@@ -173,7 +172,7 @@ export default function HomePage() {
                 소리튜터 실시간 발음 클리닉
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                교재 속 어휘와 문장(연음, 겹받침, 비음화)을 원클릭으로 소리튜터와 연결하여 음운 오류와 발음 억양을 실시간 교정받습니다.
+                교재 속 문장(연음, 겹받침, 비음화)을 원클릭으로 소리튜터와 연결하여 음운 오류와 발음 억양을 실시간 교정받습니다.
               </p>
             </div>
             <div className="pt-4 mt-2 border-t border-slate-100">
@@ -190,7 +189,31 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Card 3: Weakness Clinic */}
+          {/* Card 3: Hangul 40-Letter Board Modal Trigger */}
+          <div className="p-5 sm:p-6 rounded-3xl border border-slate-200 bg-white hover:border-rose-400 hover:shadow-lg transition-all group flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shadow-xs group-hover:scale-105 transition-transform">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                한글 자모 40자 체계 정복
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                원어민 표준 음가 듣기, 6개 국어 입모양 꿀팁, 그리고 인쇄해서 직접 쓰는 A4 바둑판 워크북을 인터랙티브하게 체험하세요.
+              </p>
+            </div>
+            <div className="pt-4 mt-2 border-t border-slate-100">
+              <button
+                onClick={() => setIsHangulBoardOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-600 hover:text-rose-700"
+              >
+                <span>자모 40자 인터랙티브 보드 열기</span>
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Card 4: Weakness Clinic */}
           <div className="p-5 sm:p-6 rounded-3xl border border-slate-200 bg-white hover:border-purple-400 hover:shadow-lg transition-all group flex flex-col justify-between">
             <div className="space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold shadow-xs group-hover:scale-105 transition-transform">
@@ -222,7 +245,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-              한업 교재 시리즈 라인업
+              한업 교재 시리즈 라인업 (총 8종 84강)
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
               시험 대비 TOPIK 과정부터 일상 생존 한국어까지 수준별 맞춤 커리큘럼을 선택하세요.
@@ -337,7 +360,67 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. Special Event Banner: Free Trial + 20% Discount Coupon */}
+      {/* 4. Student Social Proof & Reviews */}
+      <section className="bg-slate-50/80 rounded-3xl p-6 sm:p-10 border border-slate-200/80 space-y-6">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+            <span>글로벌 수강생 실사용 후기</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+            외국인 유학생들이 먼저 인정한 한업(HanUp)
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            실제 시험 점수 향상과 자연스러운 한국어 발음 교정 경험을 전해드립니다.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          {/* Review 1 */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🇻🇳</span>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900">응우옌 티 마이 (Nguyen Thi Mai)</h4>
+                <p className="text-[11px] text-blue-600 font-semibold">TOPIK 5급 합격 • 베트남 유학생</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              &quot;53번 도표 쓰기에서 항상 시간에 쫓겼는데, 한업의 필수 표현 공식과 3초 첨삭 덕분에 쓰기 점수가 15점이나 올랐어요. 베트남어 모국어 해설이 있어서 조사 실수를 정확히 고칠 수 있었습니다!&quot;
+            </p>
+          </div>
+
+          {/* Review 2 */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🇨🇳</span>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900">왕웨이 (Wang Wei)</h4>
+                <p className="text-[11px] text-emerald-600 font-semibold">TOPIK 6급 합격 • 서울대 대학원생</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              &quot;소리튜터로 겹받침과 연음 발음을 교재 문장마다 즉시 테스트할 수 있어 큰 도움이 되었습니다. 교수님께 보내는 정중한 이메일 템플릿도 대학원 생활에서 바로 써먹었습니다.&quot;
+            </p>
+          </div>
+
+          {/* Review 3 */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🇯🇵</span>
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900">사토 유키 (Sato Yuki)</h4>
+                <p className="text-[11px] text-purple-600 font-semibold">TOPIK 4급 달성 • 도쿄 IT 직장인</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              &quot;직장 다니면서 학원 갈 시간이 없었는데, 출퇴근 전철에서 매일 약점 3문제씩 풀고 주말에는 A4 자모 워크북을 인쇄해서 써봤습니다. 스마트폰 하나로 모든 게 해결돼요!&quot;
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Special Event Banner: Free Trial + 20% Discount Coupon */}
       <section className="rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center md:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold">
@@ -356,198 +439,61 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full md:w-auto">
           <button
             onClick={openSurveyModal}
-            className="px-5 py-3 rounded-2xl bg-white text-slate-900 font-extrabold text-xs sm:text-sm hover:bg-slate-100 transition-all text-center shadow-lg"
+            className="px-5 py-3.5 rounded-2xl bg-white text-slate-900 font-extrabold text-xs sm:text-sm hover:bg-slate-100 transition-all text-center shadow-lg"
           >
             🎁 설문 참여하고 쿠폰 받기
           </button>
           <Link
             href="/study/hanup_topik_prep/ch_prep_01"
             onClick={() => switchRole('student')}
-            className="px-5 py-3 rounded-2xl bg-black/30 hover:bg-black/40 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all text-center"
+            className="px-5 py-3.5 rounded-2xl bg-black/30 hover:bg-black/40 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all text-center"
           >
             준비편 1회차 풀러 가기
           </Link>
         </div>
       </section>
 
-      {/* 5. Collapsible Admin & Teacher System Showcase (Keeps Student Screen Clean) */}
-      <details className="group border border-slate-200 rounded-3xl bg-slate-50/80 p-5 sm:p-7 transition-all cursor-pointer">
-        <summary className="list-none flex items-center justify-between select-none">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              <ShieldCheck className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
-                <span>교육기관 · 강사 · 연구자용 시스템 관리 모드</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                  클릭하여 펼치기
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                4단계 권한 전환(RBAC), Human-in-the-Loop 검수 큐, 기관 분양형 SaaS, 한업 저작 스튜디오 & 연구 코퍼스 DB
-              </p>
-            </div>
+      {/* 6. Discreet B2B Partner Demo Gateway (Keeps Main Flow Clean for Students) */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-3.5 text-center sm:text-left">
+          <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shrink-0">
+            <Building2 className="w-5 h-5 text-indigo-400" />
           </div>
-          <ChevronDown className="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" />
-        </summary>
-
-        <div className="pt-6 mt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 cursor-default">
-          {/* Card 1: Lv.1 Student */}
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              currentRole === 'student'
-                ? 'border-blue-500 bg-blue-50/50 shadow-md ring-2 ring-blue-500/20'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                Lv.1 학생
-              </span>
-              <GraduationCap className="w-4 h-4 text-blue-600" />
-            </div>
-            <h4 className="font-bold text-slate-900 text-sm mb-1">멀티 시리즈 통합 학습</h4>
-            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-              • TOPIK 약점 레이더 & 120제<br />
-              • 스마트 뷰어 & AI 실시간 첨삭
+          <div>
+            <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+              어학원·대학교·한국어 교육기관 및 강사님이신가요?
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              교사 첨삭 큐, 원클릭 학생 QR 등록, 기관 화이트라벨링, 저작 스튜디오 등 B2B 통합 솔루션을 시연해 보세요.
             </p>
-            <div className="space-y-1 pt-2 border-t border-slate-100">
-              <Link
-                href="/dashboard"
-                onClick={() => handleRoleQuickStart('student')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100/60 transition-colors"
-              >
-                <span>📊 마이 대시보드</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/clinic"
-                onClick={() => handleRoleQuickStart('student')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-100/60 transition-colors"
-              >
-                <span>🎯 약점 진단 3제</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Card 2: Lv.2 Instructor */}
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              currentRole === 'instructor'
-                ? 'border-emerald-500 bg-emerald-50/50 shadow-md ring-2 ring-emerald-500/20'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                Lv.2 교사
-              </span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            </div>
-            <h4 className="font-bold text-slate-900 text-sm mb-1">Human-in-the-Loop</h4>
-            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-              • AI 1차 첨삭 결과 원클릭 승인<br />
-              • 교사 2차 코멘트 & 반 과제 배정
-            </p>
-            <div className="space-y-1 pt-2 border-t border-slate-100">
-              <Link
-                href="/teacher/grading"
-                onClick={() => handleRoleQuickStart('instructor')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 hover:bg-emerald-100/60 transition-colors"
-              >
-                <span>✍️ 2차 첨삭 검수 큐</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/teacher/classes"
-                onClick={() => handleRoleQuickStart('instructor')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 hover:bg-emerald-100/60 transition-colors"
-              >
-                <span>👥 반 관리 & 과제 배정</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Card 3: Lv.3 Org Admin */}
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              currentRole === 'org_admin'
-                ? 'border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                Lv.3 기관/원장
-              </span>
-              <Building2 className="w-4 h-4 text-amber-600" />
-            </div>
-            <h4 className="font-bold text-slate-900 text-sm mb-1">B2B 멀티테넌트 분양</h4>
-            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-              • 학원(orgId) 화이트라벨링 설정<br />
-              • 강사/학생 시트(Seats) 할당
-            </p>
-            <div className="space-y-1 pt-2 border-t border-slate-100">
-              <Link
-                href="/admin/orgs"
-                onClick={() => handleRoleQuickStart('org_admin')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-800 hover:bg-amber-100/60 transition-colors"
-              >
-                <span>🏢 학원 시트 & 브랜딩</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Card 4: Lv.4 Super Admin */}
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              currentRole === 'super_admin'
-                ? 'border-purple-500 bg-purple-50/50 shadow-md ring-2 ring-purple-500/20'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-                Lv.4 본사
-              </span>
-              <Layers className="w-4 h-4 text-purple-600" />
-            </div>
-            <h4 className="font-bold text-slate-900 text-sm mb-1">저작 스튜디오 & 연구</h4>
-            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-              • 원고 블록 에디터 & OSMU 마케팅<br />
-              • 작문 종단 코퍼스 필터링/다운로드
-            </p>
-            <div className="space-y-1 pt-2 border-t border-slate-100">
-              <Link
-                href="/admin/studio"
-                onClick={() => handleRoleQuickStart('super_admin')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100/60 transition-colors"
-              >
-                <span>🎨 저작 스튜디오 (OSMU)</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/admin/research"
-                onClick={() => handleRoleQuickStart('super_admin')}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-700 hover:bg-purple-100/60 transition-colors"
-              >
-                <span>🔬 학술 연구 코퍼스 DB</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
           </div>
         </div>
-      </details>
+
+        <Link
+          href="/demo"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 hover:scale-[1.02] shadow-xs"
+        >
+          <span>🏫 B2B 솔루션 및 Lv.1~4 권한 시연 보기</span>
+          <ArrowRight className="w-4 h-4 text-slate-400" />
+        </Link>
+      </section>
 
       {/* Sori Tutor Pronunciation Test Modal */}
       <SoriTutorModal
         isOpen={isSoriModalOpen}
         onClose={() => setIsSoriModalOpen(false)}
         targetSentence={soriSampleSentence}
+      />
+
+      {/* Hangul 40-Letter Board Modal */}
+      <Hangul40BoardModal
+        isOpen={isHangulBoardOpen}
+        onClose={() => setIsHangulBoardOpen(false)}
+        onOpenSoriTutor={(sentence) => {
+          setIsHangulBoardOpen(false);
+          setSoriSampleSentence(sentence);
+          setIsSoriModalOpen(true);
+        }}
       />
     </div>
   );

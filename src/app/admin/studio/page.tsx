@@ -92,7 +92,7 @@ export default function AuthoringStudioPage() {
 
   // Studio OSMU Execution States
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic'>('illustration');
+  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic' | 'promo'>('illustration');
   const [osmuLang, setOsmuLang] = useState<'zh' | 'en' | 'ja' | 'vi' | 'my'>('zh');
   const [copiedText, setCopiedText] = useState(false);
   const [saveNotice, setSaveNotice] = useState(false);
@@ -575,15 +575,15 @@ export default function AuthoringStudioPage() {
             </span>
           </div>
 
-          {/* OSMU Tabs (6 Tabs) */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
+          {/* OSMU Tabs (7 Tabs) */}
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
             <button
               onClick={() => setOsmuTab('illustration')}
               className={`py-2 rounded-xl font-black transition-all ${
                 osmuTab === 'illustration' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-600'
               }`}
             >
-              🎨 AI 삽화
+              🎨 삽화
             </button>
             <button
               onClick={() => setOsmuTab('xiaohongshu')}
@@ -624,6 +624,14 @@ export default function AuthoringStudioPage() {
               }`}
             >
               🛡️ 포렌식
+            </button>
+            <button
+              onClick={() => setOsmuTab('promo')}
+              className={`py-2 rounded-xl font-black transition-all ${
+                osmuTab === 'promo' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              📢 프로모션
             </button>
           </div>
 
@@ -1037,6 +1045,70 @@ export default function AuthoringStudioPage() {
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span>F12 / DevTools 가드</span>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* OSMU Tab 6: Proposal A Direct Open Promotional Link & QR Suite */}
+          {osmuTab === 'promo' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-teal-800 flex items-center gap-1.5">
+                  <QrCode className="w-4 h-4 text-teal-600" />
+                  <span>본사 직속 오픈 체험 프로모션 (대안 A) 링크 & QR 배포</span>
+                </span>
+                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                  Lv.4 마케팅 전용
+                </span>
+              </div>
+
+              <div className="p-4 bg-teal-50/70 rounded-2xl border border-teal-200 text-xs space-y-3">
+                <p className="text-teal-950 font-bold leading-relaxed">
+                  SNS 홍보(인스타그램, 유튜브, 샤오홍슈) 및 유학원 포스터용 범용 오픈 링크입니다. 학생은 별도 임시 더미 계정 없이 본인 실제 Google 계정으로 가입하며 모든 학습 기록이 영구 보존됩니다.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-teal-900">배포용 오픈 체험 URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value="https://hanup.edu/join?org=hanup_global&source=direct_promo"
+                      className="w-full bg-white border border-teal-300 rounded-xl px-3 py-2 font-mono text-xs text-slate-800 shadow-2xs"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard?.writeText('https://hanup.edu/join?org=hanup_global&source=direct_promo');
+                        setCopiedText(true);
+                        setTimeout(() => setCopiedText(false), 2000);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
+                    >
+                      {copiedText ? '복사됨!' : '링크 복사'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-teal-200 text-[11px] space-y-1.5 text-slate-700">
+                  <div className="font-bold text-teal-900 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>대안 A 운영 장점</span>
+                  </div>
+                  <p>• <strong>데이터 영구 보존:</strong> 학생이 임시 계정으로 시작하지 않으므로 추후 재가입할 필요가 없습니다.</p>
+                  <p>• <strong>사후 매핑 지원:</strong> 추후 특정 학원이나 강사에게 배정되더라도 학생의 기존 풀이 내역과 오답 기록이 그대로 연동됩니다.</p>
+                  <p>• <strong>1클릭 Google 온보딩:</strong> 복잡한 절차 없이 3초 만에 첫 강의 체험으로 진입합니다.</p>
+                </div>
+
+                <div className="pt-2 flex items-center gap-2">
+                  <Link
+                    href="/join?org=hanup_global&source=direct_promo"
+                    target="_blank"
+                    className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <span>새 창에서 학생 체험 화면 테스트</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
                 </div>
               </div>
             </div>
