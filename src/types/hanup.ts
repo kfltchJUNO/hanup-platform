@@ -337,6 +337,25 @@ export interface SeriesPrice {
   label?: string;
 }
 
+export interface BookCoverStyle {
+  seriesId: string;
+  themeColor: string; // Hex color (e.g. '#10b981', '#2563eb')
+  accentColor?: string;
+  layoutStyle: 'top' | 'center' | 'left'; // Title alignment & structure
+  titleKo: string;
+  titleZh?: string;
+  subtitleKo: string;
+  targetLevelText: string;
+  spineText?: string;
+  authorText: string;
+  publisherText: string;
+  isbnCode: string;
+  barcodePrice: string;
+  finishType: 'matte' | 'glossy' | 'leather';
+  showQrCode: boolean;
+  updatedAt?: string;
+}
+
 export interface HanUpSeries {
   seriesId: string;
   category: 'topik' | 'life';
@@ -358,6 +377,7 @@ export interface HanUpSeries {
   chaptersCount: number;
   hasCampusTip?: boolean; // 완성편: <쉬어가기: 한국 대학·대학원 학업 & 캠퍼스 TIP>
   surveyTriggerAfterChapters?: number; // 준비편: 2회분 완료 시 설문 팝업
+  coverStyle?: BookCoverStyle;
 }
 
 // ==========================================

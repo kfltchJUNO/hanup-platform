@@ -17,6 +17,7 @@ import {
   SeriesEnrollment,
   ChapterAccessStatus,
   UserNotificationSettings,
+  BookCoverStyle,
 } from '../types/hanup';
 import {
   MOCK_USERS,
@@ -156,7 +157,143 @@ interface HanUpContextType {
   openNotificationModal: () => void;
   closeNotificationModal: () => void;
   updateNotificationSettings: (newSettings: Partial<UserNotificationSettings>) => void;
+
+  // Book Covers & Publishing Style Designer (Lv.4 Studio Integration)
+  bookCoverStyles: Record<string, BookCoverStyle>;
+  updateBookCoverStyle: (seriesId: string, updates: Partial<BookCoverStyle>) => void;
+  getBookCoverStyle: (seriesId: string) => BookCoverStyle;
 }
+
+export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
+  hanup_topik_prep: {
+    seriesId: 'hanup_topik_prep',
+    themeColor: '#10b981',
+    layoutStyle: 'center',
+    titleKo: '한업 TOPIK 준비편',
+    titleZh: '韩升 TOPIK 准备篇 (1~2级)',
+    subtitleKo: '듣기·읽기 기초 집중 훈련 & 기본 어휘 300선',
+    targetLevelText: '1~2급 초급',
+    spineText: '한업 TOPIK 준비편 (1~2급) • 기초',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-01-2',
+    barcodePrice: '₩12,000 / $10.00',
+    finishType: 'matte',
+    showQrCode: true,
+  },
+  hanup_topik_challenge: {
+    seriesId: 'hanup_topik_challenge',
+    themeColor: '#2563eb',
+    layoutStyle: 'top',
+    titleKo: '한업 TOPIK 도전편',
+    titleZh: '韩升 TOPIK 挑战篇 (3~4级)',
+    subtitleKo: '빈출 유형 빠른 풀이 비법 & 고빈도 어휘',
+    targetLevelText: '3~4급 중급',
+    spineText: '한업 TOPIK 도전편 (3~4급) • 유형',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-02-9',
+    barcodePrice: '₩18,000 / $16.00',
+    finishType: 'glossy',
+    showQrCode: true,
+  },
+  hanup_topik_master: {
+    seriesId: 'hanup_topik_master',
+    themeColor: '#4f46e5',
+    layoutStyle: 'top',
+    titleKo: '한업 TOPIK 완성편',
+    titleZh: '韩升 TOPIK 强化完成篇 (4~6级)',
+    subtitleKo: '쓰기 비중 강화 & 캠퍼스 학업 생존 TIP',
+    targetLevelText: '4~6급 고급',
+    spineText: '한업 TOPIK 완성편 (4~6급) • 심화',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-03-6',
+    barcodePrice: '₩24,000 / $21.00',
+    finishType: 'leather',
+    showQrCode: true,
+  },
+  hanup_topik_53_formula: {
+    seriesId: 'hanup_topik_53_formula',
+    themeColor: '#0284c7',
+    layoutStyle: 'left',
+    titleKo: '쓰기 53번 만능 공식집',
+    titleZh: 'TOPIK 53题万能公式集 & 120题',
+    subtitleKo: '도표·자료 분석 300자 원고지 작성 템플릿',
+    targetLevelText: '3~6급 공통',
+    spineText: '쓰기 53번 만능 공식집 & 120제',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-04-3',
+    barcodePrice: '₩11,000 / $9.90',
+    finishType: 'matte',
+    showQrCode: true,
+  },
+  hanup_life_step1: {
+    seriesId: 'hanup_life_step1',
+    themeColor: '#d97706',
+    layoutStyle: 'center',
+    titleKo: '생활한국어 Step 1: 첫걸음',
+    titleZh: '生活韩国语 第一步: 零基础起步',
+    subtitleKo: '한글 자모 40자 완전 정복 & 발음 클리닉',
+    targetLevelText: '입문/왕초보',
+    spineText: '생활한국어 Step 1: 첫걸음 • 자모 40자',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-05-0',
+    barcodePrice: '₩10,000 / $8.00',
+    finishType: 'matte',
+    showQrCode: true,
+  },
+  hanup_life_step2: {
+    seriesId: 'hanup_life_step2',
+    themeColor: '#e11d48',
+    layoutStyle: 'top',
+    titleKo: '생활한국어 Step 2: 동네 한 바퀴',
+    titleZh: '生活韩国语 第二步: 街区日常',
+    subtitleKo: '카페·식당·교통 생존 생활 회화 12강',
+    targetLevelText: '초급 회화',
+    spineText: '생활한국어 Step 2: 동네 한 바퀴 • 일상',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-06-7',
+    barcodePrice: '₩15,000 / $13.00',
+    finishType: 'glossy',
+    showQrCode: true,
+  },
+  hanup_life_step3: {
+    seriesId: 'hanup_life_step3',
+    themeColor: '#0d9488',
+    layoutStyle: 'left',
+    titleKo: '생활한국어 Step 3: 단짝 친구',
+    titleZh: '生活韩国语 第三步: 知心好友',
+    subtitleKo: '감정 표현·취미·자연스러운 스몰토크 12강',
+    targetLevelText: '중급 회화',
+    spineText: '생활한국어 Step 3: 단짝 친구 • 교우',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-07-4',
+    barcodePrice: '₩16,000 / $14.00',
+    finishType: 'matte',
+    showQrCode: true,
+  },
+  hanup_life_step4: {
+    seriesId: 'hanup_life_step4',
+    themeColor: '#334155',
+    layoutStyle: 'center',
+    titleKo: '생활한국어 Step 4: 프로 한국살이',
+    titleZh: '生活韩国语 第四步: 韩国职场生存',
+    subtitleKo: '부동산·병원·공공기관 & 직장 비즈니스 18강',
+    targetLevelText: '고급 실전',
+    spineText: '생활한국어 Step 4: 프로 한국살이 • 비즈니스',
+    authorText: '한업 한국어교육연구소 기획·집필',
+    publisherText: '도서출판 한업 (HanUp Publishing)',
+    isbnCode: 'ISBN 979-11-98765-08-1',
+    barcodePrice: '₩20,000 / $17.50',
+    finishType: 'leather',
+    showQrCode: true,
+  },
+};
 
 const HanUpContext = createContext<HanUpContextType | undefined>(undefined);
 
@@ -174,10 +311,56 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<'refund' | 'terms' | 'privacy' | 'support'>('refund');
 
-  // Firebase Google & Email Auth State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Book Covers & Publishing Style Designer (Lv.4 Studio Integration)
+  const [bookCoverStyles, setBookCoverStyles] = useState<Record<string, BookCoverStyle>>(INITIAL_BOOK_COVERS);
+
+  const updateBookCoverStyle = (seriesId: string, updates: Partial<BookCoverStyle>) => {
+    setBookCoverStyles((prev) => {
+      const current = prev[seriesId] || INITIAL_BOOK_COVERS[seriesId] || {
+        seriesId,
+        themeColor: '#10b981',
+        layoutStyle: 'center' as const,
+        titleKo: '한업 한국어',
+        subtitleKo: '',
+        targetLevelText: '',
+        authorText: '한업 한국어교육연구소',
+        publisherText: '도서출판 한업',
+        isbnCode: 'ISBN 979-11-98765-00-5',
+        barcodePrice: '₩14,000',
+        finishType: 'matte' as const,
+        showQrCode: true,
+      };
+      return {
+        ...prev,
+        [seriesId]: {
+          ...current,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    });
+  };
+
+  const getBookCoverStyle = (seriesId: string): BookCoverStyle => {
+    return bookCoverStyles[seriesId] || INITIAL_BOOK_COVERS[seriesId] || {
+      seriesId,
+      themeColor: '#10b981',
+      layoutStyle: 'center',
+      titleKo: '한업 한국어',
+      subtitleKo: '',
+      targetLevelText: '',
+      authorText: '한업 한국어교육연구소',
+      publisherText: '도서출판 한업',
+      isbnCode: 'ISBN 979-11-98765-00-5',
+      barcodePrice: '₩14,000',
+      finishType: 'matte',
+      showQrCode: true,
+    };
+  };
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -813,6 +996,9 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         isLoggedIn,
         handleLogout,
         loginAsCustomUser,
+        bookCoverStyles,
+        updateBookCoverStyle,
+        getBookCoverStyle,
       }}
     >
       {children}

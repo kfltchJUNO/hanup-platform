@@ -32,6 +32,9 @@ import { AuthoringBlock, VocabAnnotation } from '../../../types/hanup';
 import { SyllabusDrawer } from '../../../components/SyllabusDrawer';
 import { Hangul40BoardModal } from '../../../components/Hangul40BoardModal';
 import { CampusTipModal } from '../../../components/CampusTipModal';
+import { BookCover } from '../../../components/BookCover';
+import { MOCK_SERIES } from '../../../mock/mockData';
+import { BookCoverStyle } from '../../../types/hanup';
 import {
   extractZeroWidthWatermark,
   generateLicenseToken,
@@ -40,8 +43,19 @@ import {
 } from '../../../lib/security';
 
 export default function AuthoringStudioPage() {
-  const { authoringBlocks, saveAuthoringBlock, lang, currentUser, openAuthModal } = useHanUp();
+  const {
+    authoringBlocks,
+    saveAuthoringBlock,
+    lang,
+    currentUser,
+    openAuthModal,
+    bookCoverStyles,
+    updateBookCoverStyle,
+  } = useHanUp();
   const isMaster = isMasterEmail(currentUser.email);
+
+  const [selectedCoverSeriesId, setSelectedCoverSeriesId] = useState<string>('hanup_topik_prep');
+  const [coverSaveNotice, setCoverSaveNotice] = useState(false);
 
   if (!isMaster) {
     return (
@@ -92,7 +106,7 @@ export default function AuthoringStudioPage() {
 
   // Studio OSMU Execution States
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic' | 'promo'>('illustration');
+  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic' | 'promo' | 'cover'>('cover');
   const [osmuLang, setOsmuLang] = useState<'zh' | 'en' | 'ja' | 'vi' | 'my'>('zh');
   const [copiedText, setCopiedText] = useState(false);
   const [saveNotice, setSaveNotice] = useState(false);
@@ -575,8 +589,16 @@ export default function AuthoringStudioPage() {
             </span>
           </div>
 
-          {/* OSMU Tabs (7 Tabs) */}
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
+          {/* OSMU Tabs (8 Tabs) */}
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-1 p-1 bg-slate-100 rounded-2xl text-center text-xs">
+            <button
+              onClick={() => setOsmuTab('cover')}
+              className={`py-2 rounded-xl font-black transition-all ${
+                osmuTab === 'cover' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              📘 표지디자인
+            </button>
             <button
               onClick={() => setOsmuTab('illustration')}
               className={`py-2 rounded-xl font-black transition-all ${
@@ -634,6 +656,302 @@ export default function AuthoringStudioPage() {
               📢 프로모션
             </button>
           </div>
+
+          {/* OSMU Tab -1: Book Cover Publishing Studio (Lv.4 Designer) */}
+          {osmuTab === 'cover' && (() => {
+            const currentStyle = bookCoverStyles[selectedCoverSeriesId] || {
+              seriesId: selectedCoverSeriesId,
+              themeColor: '#10b981',
+              layoutStyle: 'center' as const,
+              titleKo: '한업 한국어 교재',
+              titleZh: '',
+              subtitleKo: '스마트 맞춤형 한국어 스마트 러닝 교재',
+              targetLevelText: '1~2급 초급',
+              spineText: '한업 교재 • 표준',
+              authorText: '한업 한국어교육연구소 기획·집필',
+              publisherText: '도서출판 한업 (HanUp Publishing)',
+              isbnCode: 'ISBN 979-11-98765-01-2',
+              barcodePrice: '₩14,000 / $12.00',
+              finishType: 'matte' as const,
+              showQrCode: true,
+            };
+
+            const colorPresets = [
+              { label: '민트 (준비편)', hex: '#10b981' },
+              { label: '사파이어 (도전편)', hex: '#2563eb' },
+              { label: '인디고 (완성편)', hex: '#4f46e5' },
+              { label: '시안 (53번 공식)', hex: '#0284c7' },
+              { label: '앰버 (생활 1: 첫걸음)', hex: '#d97706' },
+              { label: '코랄 (생활 2: 동네)', hex: '#e11d48' },
+              { label: '틸 (생활 3: 친구)', hex: '#0d9488' },
+              { label: '슬레이트 (생활 4: 프로)', hex: '#334155' },
+            ];
+
+            return (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-indigo-600" />
+                      <span>출판 교재 표지 디자이너 (Lv.4 Book Cover Studio)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      도서의 색상, 글자 배치, 책등 및 출판사 로고를 실시간 조판하고 인쇄용 고해상도 PDF로 출력합니다.
+                    </p>
+                  </div>
+                  {coverSaveNotice && (
+                    <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
+                      <Check className="w-4 h-4" /> 표지 스타일 실시간 반영 완료!
+                    </span>
+                  )}
+                </div>
+
+                {/* Grid Layout: Controls (Left) vs Live 3D Cover Preview (Right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* Left Controls (7 cols) */}
+                  <div className="lg:col-span-7 space-y-4 text-xs">
+                    {/* Series Picker */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        디자인 대상 교재 선택
+                      </label>
+                      <select
+                        value={selectedCoverSeriesId}
+                        onChange={(e) => setSelectedCoverSeriesId(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-800 text-xs shadow-2xs"
+                      >
+                        <optgroup label="한업 TOPIK 4종">
+                          <option value="hanup_topik_prep">한업 TOPIK 준비편 (1~2급)</option>
+                          <option value="hanup_topik_challenge">한업 TOPIK 도전편 (3~4급)</option>
+                          <option value="hanup_topik_master">한업 TOPIK 완성편 (4~6급)</option>
+                          <option value="hanup_topik_53_formula">쓰기 53번 만능 공식집 & 약점 120제</option>
+                        </optgroup>
+                        <optgroup label="한업 생활한국어 4단계">
+                          <option value="hanup_life_step1">생활한국어 Step 1: 첫걸음 (자모 40자)</option>
+                          <option value="hanup_life_step2">생활한국어 Step 2: 동네 한 바퀴 (12강)</option>
+                          <option value="hanup_life_step3">생활한국어 Step 3: 단짝 친구 (12강)</option>
+                          <option value="hanup_life_step4">생활한국어 Step 4: 프로 한국살이 (18강)</option>
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    {/* Color Theme Selector */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          표지 배경 테마 색상 (Cover Color)
+                        </label>
+                        <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+                          <span>{currentStyle.themeColor}</span>
+                          <input
+                            type="color"
+                            value={currentStyle.themeColor}
+                            onChange={(e) =>
+                              updateBookCoverStyle(selectedCoverSeriesId, {
+                                themeColor: e.target.value,
+                              })
+                            }
+                            className="w-5 h-5 rounded cursor-pointer border-0"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {colorPresets.map((preset) => (
+                          <button
+                            key={preset.hex}
+                            onClick={() =>
+                              updateBookCoverStyle(selectedCoverSeriesId, {
+                                themeColor: preset.hex,
+                              })
+                            }
+                            className={`p-1.5 rounded-lg border text-[10px] font-bold flex items-center gap-1 transition-all ${
+                              currentStyle.themeColor.toLowerCase() === preset.hex.toLowerCase()
+                                ? 'border-slate-900 bg-slate-900 text-white shadow-2xs'
+                                : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: preset.hex }}
+                            />
+                            <span className="truncate">{preset.label.split(' ')[0]}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Title Font Layout Alignment */}
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                        글자 배치 및 타이틀 레이아웃 (Layout Alignment)
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl text-center text-xs font-bold">
+                        {(['center', 'top', 'left'] as const).map((l) => (
+                          <button
+                            key={l}
+                            onClick={() =>
+                              updateBookCoverStyle(selectedCoverSeriesId, {
+                                layoutStyle: l,
+                              })
+                            }
+                            className={`py-1.5 rounded-lg transition-all ${
+                              currentStyle.layoutStyle === l
+                                ? 'bg-white text-indigo-700 shadow-sm font-black'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            {l === 'center' ? '중앙 강조형' : l === 'top' ? '상단 정렬형' : '좌측 모던형'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cover Titles & Subtitles */}
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          도서 제목 (Book Title)
+                        </label>
+                        <input
+                          type="text"
+                          value={currentStyle.titleKo}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              titleKo: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-slate-900 text-xs shadow-2xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          부제목 / 학습 특징 설명
+                        </label>
+                        <input
+                          type="text"
+                          value={currentStyle.subtitleKo}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              subtitleKo: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs shadow-2xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Publishing Imprint: Author & Publisher */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          저자 표기
+                        </label>
+                        <input
+                          type="text"
+                          value={currentStyle.authorText}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              authorText: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs shadow-2xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          출판사 상호 표기
+                        </label>
+                        <input
+                          type="text"
+                          value={currentStyle.publisherText}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              publisherText: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs shadow-2xs font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Finish Type & Barcode */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          표지 코팅 질감 (Finish)
+                        </label>
+                        <select
+                          value={currentStyle.finishType}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              finishType: e.target.value as any,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs"
+                        >
+                          <option value="matte">무광 코팅 (Matte)</option>
+                          <option value="glossy">유광 라미네이팅 (Glossy)</option>
+                          <option value="leather">가죽 양장 박 (Leather)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
+                          ISBN 등록 코드
+                        </label>
+                        <input
+                          type="text"
+                          value={currentStyle.isbnCode}
+                          onChange={(e) =>
+                            updateBookCoverStyle(selectedCoverSeriesId, {
+                              isbnCode: e.target.value,
+                            })
+                          }
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Save Button */}
+                    <div className="pt-2 flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setCoverSaveNotice(true);
+                          setTimeout(() => setCoverSaveNotice(false), 2500);
+                        }}
+                        className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>표지 스타일 저장 & 전체 앱 실시간 적용</span>
+                      </button>
+                      <button
+                        onClick={() => setIsPdfModalOpen(true)}
+                        className="py-3 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center gap-1"
+                        title="A4 출판 조판 규격 미리보기"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span>A4 인쇄</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Live 3D Cover Preview (5 cols) */}
+                  <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center space-y-3">
+                    <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      실시간 3D 양장본 표지 프리뷰
+                    </span>
+                    <BookCover
+                      styleData={currentStyle}
+                      size="md"
+                      interactive={true}
+                    />
+                    <p className="text-[10px] text-slate-400 max-w-[240px] leading-relaxed">
+                      마우스를 올리거나 터치하면 실시간 3D 기울기 및 광택 반사가 적용됩니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* OSMU Tab 0: AI Illustration Prompt Generator & Local Asset Simulation */}
           {osmuTab === 'illustration' && (

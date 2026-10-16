@@ -36,9 +36,10 @@ import { useHanUp } from '../context/HanUpContext';
 import { MOCK_SERIES } from '../mock/mockData';
 import { SoriTutorModal } from '../components/SoriTutorModal';
 import { Hangul40BoardModal } from '../components/Hangul40BoardModal';
+import { BookshelfSelector } from '../components/BookshelfSelector';
 
 export default function HomePage() {
-  const { switchRole, openSurveyModal } = useHanUp();
+  const { switchRole, openSurveyModal, bookCoverStyles } = useHanUp();
   const [activeSeriesTab, setActiveSeriesTab] = useState<'topik' | 'life'>('topik');
   const [isSoriModalOpen, setIsSoriModalOpen] = useState(false);
   const [soriSampleSentence, setSoriSampleSentence] = useState('급한 일이 생겨서요 [그판 니리 생겨서요]');
@@ -406,124 +407,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. Interactive Curriculum Showcase (Tabbed for Mobile/Tablet) */}
-      <section id="curriculum" className="space-y-6 scroll-mt-20">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-              한업 교재 시리즈 라인업 (총 8종 84강)
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              시험 대비 TOPIK 과정부터 일상 생존 한국어까지 수준별 맞춤 커리큘럼을 선택하세요.
-            </p>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 self-start sm:self-auto">
-            <button
-              onClick={() => setActiveSeriesTab('topik')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeSeriesTab === 'topik'
-                  ? 'bg-white text-blue-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>한업 TOPIK 시리즈</span>
-            </button>
-            <button
-              onClick={() => setActiveSeriesTab('life')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeSeriesTab === 'life'
-                  ? 'bg-white text-emerald-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Globe className="w-4 h-4" />
-              <span>생활한국어 시리즈</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Series Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredSeries.map((series) => {
-            const isFree = series.price?.isFree || series.price?.usd === 0;
-            const startHref =
-              series.seriesId === 'hanup_topik_prep'
-                ? '/study/hanup_topik_prep/ch_prep_01'
-                : `/study/${series.seriesId}/ch_writing_04`;
-
-            return (
-              <div
-                key={series.seriesId}
-                className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group"
-              >
-                <div className="space-y-3">
-                  {/* Top Badges */}
-                  <div className="flex items-center justify-between gap-1">
-                    <span
-                      className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold text-white shadow-xs"
-                      style={{ backgroundColor: series.accentColor }}
-                    >
-                      {series.stageName || series.badgeText}
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
-                      총 {series.chaptersCount}강
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-base group-hover:text-blue-600 transition-colors">
-                      {series.titleKo}
-                    </h3>
-                    <p className="text-xs font-medium text-slate-400 mt-0.5">
-                      {series.titleZh}
-                    </p>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-xs text-slate-600 leading-relaxed min-h-[36px]">
-                    {series.descriptionKo}
-                  </p>
-
-                  {/* Pace and Price Badges */}
-                  <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
-                    <div className="flex items-center gap-1.5 text-slate-600">
-                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{series.durationWeeks}주 완성 (복습 2X 보장: {series.durationWeeks * 2}주 제공) • {series.schedulePace}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[11px] text-slate-400 font-medium">단품 정가</span>
-                      <span
-                        className={`text-xs font-black ${
-                          isFree ? 'text-emerald-600' : 'text-slate-900'
-                        }`}
-                      >
-                        {isFree ? '무료 체험 $0' : `$${series.price?.usd} / ₩${series.price?.krw?.toLocaleString()}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direct Action Button */}
-                <div className="pt-4 mt-3">
-                  <Link
-                    href={startHref}
-                    onClick={() => switchRole('student')}
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:opacity-95 hover:shadow-md"
-                    style={{ backgroundColor: series.accentColor }}
-                  >
-                    <span>{isFree ? '🚀 무료 체험 시작하기' : '교재 뷰어 입장'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* 4. 3D Digital Bookshelf & Chapter Spread Selector */}
+      <section id="curriculum" className="scroll-mt-20">
+        <BookshelfSelector seriesList={MOCK_SERIES} bookCoverStyles={bookCoverStyles} />
       </section>
 
       {/* 5. Student Social Proof & Reviews */}

@@ -54,6 +54,8 @@ import { SoriTutorModal } from '../../../../components/SoriTutorModal';
 import { SyllabusDrawer } from '../../../../components/SyllabusDrawer';
 import { Hangul40BoardModal } from '../../../../components/Hangul40BoardModal';
 import { CampusTipModal } from '../../../../components/CampusTipModal';
+import { BookCover } from '../../../../components/BookCover';
+import { ALL_SYLLABUS_CHAPTERS } from '../../../../mock/syllabusData';
 import {
   maskEmail,
   generateLicenseToken,
@@ -86,10 +88,31 @@ export default function SmartStudyViewerPage() {
     markChapterCompleted,
     openNotificationModal,
     notificationSettings,
+    bookCoverStyles,
+    getBookCoverStyle,
   } = useHanUp();
 
   const currentSeries =
     MOCK_SERIES.find((s) => s.seriesId === seriesId) || MOCK_SERIES[2];
+
+  // Book Cover Style & Modal State
+  const currentCoverStyle = getBookCoverStyle(seriesId);
+  const [isBookCoverModalOpen, setIsBookCoverModalOpen] = useState<boolean>(false);
+
+  // Series Chapters for Book Page Flipping
+  const seriesChapters = ALL_SYLLABUS_CHAPTERS.filter((c) => c.seriesId === seriesId);
+  const currentChapterIndexInSeries = seriesChapters.findIndex(
+    (c) => c.chapterId === chapterId
+  );
+  const currentSyllabusChapter =
+    currentChapterIndexInSeries >= 0 ? seriesChapters[currentChapterIndexInSeries] : null;
+  const prevChapter =
+    currentChapterIndexInSeries > 0 ? seriesChapters[currentChapterIndexInSeries - 1] : null;
+  const nextChapter =
+    currentChapterIndexInSeries >= 0 &&
+    currentChapterIndexInSeries < seriesChapters.length - 1
+      ? seriesChapters[currentChapterIndexInSeries + 1]
+      : null;
 
   // Prep Curriculum Schedule (2-week drip: Day 1, 3, 7, 10)
   const prepChapterList = [
@@ -640,6 +663,16 @@ export default function SmartStudyViewerPage() {
             >
               <span>☕</span>
               <span>캠퍼스 학업 TIP</span>
+            </button>
+
+            {/* Book Cover & Colophon Spread CTA */}
+            <button
+              onClick={() => setIsBookCoverModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition-all hover:scale-105 shadow-2xs"
+              title="교재 3D 표지 및 도서 간행정보 보기"
+            >
+              <span>📘</span>
+              <span>도서 표지 & 간행정보</span>
             </button>
           </div>
 
@@ -2387,6 +2420,82 @@ export default function SmartStudyViewerPage() {
         </>
       )}
 
+        {/* 📖 Book Page Flipping Navigation Bar (책장 넘기기 바) */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Previous Chapter */}
+          {prevChapter ? (
+            <Link
+              href={`/study/${seriesId}/${prevChapter.chapterId}`}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black transition-all hover:-translate-x-0.5 shadow-2xs group"
+            >
+              <span className="text-sm transition-transform group-hover:-translate-x-1">◀</span>
+              <div className="text-left">
+                <div className="text-[10px] text-slate-400 font-medium">이전 단원 (책장 넘기기)</div>
+                <div className="line-clamp-1 max-w-[200px]">
+                  제{prevChapter.chapterNumber}강: {prevChapter.titleKo}
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-50 text-slate-300 text-xs font-semibold cursor-not-allowed">
+              <span>◀</span>
+              <div className="text-left">
+                <div className="text-[10px] text-slate-300">첫 페이지</div>
+                <div>이전 단원이 없습니다</div>
+              </div>
+            </div>
+          )}
+
+          {/* Book Info Center Badge & Cover Modal Trigger */}
+          <button
+            onClick={() => setIsBookCoverModalOpen(true)}
+            className="group inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 transition-all text-center"
+          >
+            <div className="w-7 h-9 rounded bg-emerald-600 text-white flex items-center justify-center text-xs font-serif shadow-xs group-hover:scale-105 transition-transform">
+              📘
+            </div>
+            <div className="text-left">
+              <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                <span>{currentCoverStyle.publisherText || '도서출판 한업'}</span>
+                <span>•</span>
+                <span>{currentCoverStyle.isbnCode || '공식 교재'}</span>
+              </div>
+              <div className="text-xs font-black text-slate-800 group-hover:text-emerald-700 flex items-center gap-1">
+                <span>《{currentSeries.titleKo}》</span>
+                {currentSyllabusChapter && (
+                  <span className="text-emerald-600 font-extrabold">
+                    제{currentSyllabusChapter.chapterNumber}강
+                  </span>
+                )}
+                <span className="text-[10px] text-emerald-600 font-medium bg-emerald-100/70 px-1.5 py-0.5 rounded ml-1">
+                  표지 보기 🔍
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {/* Next Chapter */}
+          {nextChapter ? (
+            <Link
+              href={`/study/${seriesId}/${nextChapter.chapterId}`}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all hover:translate-x-0.5 shadow-md shadow-blue-500/20 group"
+            >
+              <div className="text-right">
+                <div className="text-[10px] text-blue-200 font-medium">다음 단원 (책장 넘기기)</div>
+                <div className="line-clamp-1 max-w-[200px]">
+                  제{nextChapter.chapterNumber}강: {nextChapter.titleKo}
+                </div>
+              </div>
+              <span className="text-sm transition-transform group-hover:translate-x-1">▶</span>
+            </Link>
+          ) : (
+            <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
+              <span>🎉</span>
+              <div>도서 전 단원 완독 완료!</div>
+            </div>
+          )}
+        </div>
+
       {/* WTP Survey Trigger Banner (체험판 2회분 완료 시 또는 수험생 설문 유도) */}
       <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-3xl p-5 sm:p-6 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3.5">
@@ -2416,6 +2525,154 @@ export default function SmartStudyViewerPage() {
         </button>
       </div>
       </div>
+
+      {/* 📘 Authentic Book Cover & Colophon Modal (도서 양면 스프레드 뷰어) */}
+      {isBookCoverModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl bg-[#fdfbf7] rounded-3xl shadow-2xl border border-amber-900/20 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Top Bar */}
+            <div className="flex items-center justify-between px-6 py-4 bg-[#f6f2e9] border-b border-amber-900/10 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📖</span>
+                <span className="text-sm font-black text-slate-800">
+                  도서출판 한업 • 《{currentSeries.titleKo}》 도서 양면 보기
+                </span>
+                <span className="text-[10px] px-2 py-0.5 bg-amber-200/80 text-amber-900 rounded-full font-black">
+                  공식 출판 교재
+                </span>
+              </div>
+              <button
+                onClick={() => setIsBookCoverModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-sm font-bold transition-all"
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body: Two-Page Book Spread */}
+            <div className="overflow-y-auto p-6 sm:p-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#faf6ef]">
+              {/* Left Page: 3D Hardcover Book */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center">
+                <BookCover styleData={currentCoverStyle} size="lg" interactive={false} />
+                <div className="mt-4 text-center">
+                  <div className="text-[11px] text-slate-500 font-serif">
+                    {currentCoverStyle.publisherText || '도서출판 한업 (HanUp Publishing)'}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    {currentCoverStyle.isbnCode || 'ISBN 979-11-98765-01-2'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Page: Book Colophon, Preface & Table of Contents */}
+              <div className="lg:col-span-7 bg-white p-6 sm:p-7 rounded-2xl border border-amber-900/10 shadow-sm space-y-5 font-serif text-slate-800">
+                <div className="border-b border-amber-900/15 pb-4">
+                  <div className="text-[11px] tracking-widest text-slate-400 font-sans uppercase font-bold">
+                    Official Course Textbook
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 font-sans mt-0.5">
+                    {currentSeries.titleKo}
+                  </h3>
+                  {currentSeries.titleZh && (
+                    <div className="text-xs text-slate-500 font-sans mt-0.5">
+                      {currentSeries.titleZh}
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-600 font-sans mt-2 leading-relaxed">
+                    {currentSeries.descriptionKo}
+                  </p>
+                </div>
+
+                {/* Colophon Details */}
+                <div className="grid grid-cols-2 gap-3 text-xs bg-amber-50/50 p-3.5 rounded-xl border border-amber-100 font-sans">
+                  <div>
+                    <span className="text-slate-400 text-[11px]">기획·집필:</span>
+                    <div className="font-bold text-slate-800">{currentCoverStyle.authorText || '한업 한국어교육연구소'}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px]">발행처:</span>
+                    <div className="font-bold text-slate-800">{currentCoverStyle.publisherText || '도서출판 한업'}</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px]">수업 권장 공식:</span>
+                    <div className="font-bold text-blue-700">{currentSeries.schedulePace} ({currentSeries.sessionMinutes}분 코스)</div>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px]">수강권 보장:</span>
+                    <div className="font-bold text-emerald-700">복습 2X 보장 기간 포함</div>
+                  </div>
+                </div>
+
+                {/* Table of Contents in this book */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-sans font-bold text-slate-700">
+                    <span className="flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-700" />
+                      <span>교재 목차 (Table of Contents)</span>
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-normal">총 {seriesChapters.length}개 단원</span>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 font-sans text-xs">
+                    {seriesChapters.map((ch) => {
+                      const isCurrent = ch.chapterId === chapterId;
+                      return (
+                        <Link
+                          key={ch.chapterId}
+                          href={`/study/${seriesId}/${ch.chapterId}`}
+                          onClick={() => setIsBookCoverModalOpen(false)}
+                          className={`flex items-center justify-between p-2 rounded-xl transition-all ${
+                            isCurrent
+                              ? 'bg-blue-50 border border-blue-200 text-blue-900 font-bold'
+                              : 'hover:bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded font-black ${
+                                isCurrent
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              제{ch.chapterNumber}강
+                            </span>
+                            <span className="line-clamp-1">{ch.titleKo}</span>
+                          </div>
+                          {isCurrent && (
+                            <span className="text-[10px] text-blue-600 font-bold shrink-0">
+                              현재 위치 📍
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Quick Preface Quote */}
+                <div className="text-[11px] text-slate-500 italic border-t border-amber-900/10 pt-3">
+                  "본 교재는 원어민의 정확한 조음과 풍부한 학술·생활 예문을 통해 실전 한국어 소통 및 TOPIK 역량을 완성하도록 제작되었습니다."
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Bottom Bar */}
+            <div className="flex items-center justify-between px-6 py-3.5 bg-[#f6f2e9] border-t border-amber-900/10 shrink-0 text-xs">
+              <div className="text-[11px] text-slate-500">
+                ※ 표지 색상 및 레이아웃 변경은 <Link href="/admin/studio" className="text-blue-600 font-bold underline">Lv.4 스튜디오</Link>에서 가능합니다.
+              </div>
+              <button
+                onClick={() => setIsBookCoverModalOpen(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xs transition-all"
+              >
+                교재 본문으로 돌아가기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sori Tutor Pronunciation Clinic Modal (Loosely-Coupled iFrame & Simulator) */}
       <SoriTutorModal
