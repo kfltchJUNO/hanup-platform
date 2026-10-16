@@ -27,6 +27,9 @@ import {
   X,
   Lock,
   ArrowRight,
+  Compass,
+  Mail,
+  Zap,
 } from 'lucide-react';
 import { useHanUp, isMasterEmail } from '../context/HanUpContext';
 import { UserRole, ROLE_DEFINITIONS } from '../types/hanup';
@@ -59,9 +62,22 @@ export const HeaderNavbar: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  // Navigation Links filtered by Role with i18n support
+  // Navigation Links filtered by Login State and Role with i18n support
   const getNavLinks = () => {
     const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ko;
+
+    // 1. Visitor / Unauthenticated Mode: Public learning & guide links
+    if (!isLoggedIn) {
+      return [
+        { href: '/#guide', label: '학습 가이드', icon: Compass },
+        { href: '/#features', label: '핵심 기능', icon: Sparkles },
+        { href: '/#curriculum', label: '교재 라인업', icon: BookOpen },
+        { href: '/study/hanup_topik_prep/ch_prep_01', label: '1~2급 무료 체험', icon: Zap },
+        { href: '/#contact', label: '고객지원·문의', icon: Mail },
+      ];
+    }
+
+    // 2. Authenticated Mode: Role-specific workspace links
     switch (currentRole) {
       case 'student':
         return [
@@ -234,8 +250,8 @@ export const HeaderNavbar: React.FC = () => {
 
         {/* Right Side: Quick Actions, Profile & Mobile Hamburger */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Student Target Badge (Hidden on mobile) */}
-          {currentRole === 'student' && (
+          {/* Student Target Badge (Only shown when logged in as student) */}
+          {isLoggedIn && currentRole === 'student' && (
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium">
               <Award className="w-3.5 h-3.5 text-amber-600" />
               <span>목표: TOPIK {currentUser.targetTopikLevel}급</span>
@@ -243,8 +259,8 @@ export const HeaderNavbar: React.FC = () => {
             </div>
           )}
 
-          {/* Quick Triggers for Background Intake & WTP Survey (Desktop - Student Only) */}
-          {currentRole === 'student' && (
+          {/* Quick Triggers for Background Intake & WTP Survey (Desktop - Logged-in Student Only) */}
+          {isLoggedIn && currentRole === 'student' && (
             <>
               <button
                 onClick={openBackgroundModal}
@@ -262,6 +278,18 @@ export const HeaderNavbar: React.FC = () => {
                 <span>🎁 WTP 설문</span>
               </button>
             </>
+          )}
+
+          {/* Quick Support / Contact for Unauthenticated Visitors */}
+          {!isLoggedIn && (
+            <a
+              href="mailto:ot.helper7@gmail.com?subject=[한업 학생 문의] 학습 및 이용 관련"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 hover:text-blue-600"
+              title="관리자 공식 이메일 문의: ot.helper7@gmail.com"
+            >
+              <Mail className="w-3.5 h-3.5 text-blue-600" />
+              <span>관리자 문의</span>
+            </a>
           )}
 
           {/* 3-App Suite 9-Dots Launcher (Google/Microsoft Style) */}
@@ -605,8 +633,8 @@ export const HeaderNavbar: React.FC = () => {
             })}
           </div>
 
-          {/* Quick Triggers inside Mobile Menu (Student Only) */}
-          {currentRole === 'student' && (
+          {/* Quick Triggers inside Mobile Menu (Logged-in Student Only) */}
+          {isLoggedIn && currentRole === 'student' && (
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
               <button
                 onClick={() => {
