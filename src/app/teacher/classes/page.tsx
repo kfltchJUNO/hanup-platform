@@ -77,8 +77,15 @@ export default function TeacherClassesPage() {
   // Selected Student for PDF Consultation Report Modal
   const [reportStudentProfile, setReportStudentProfile] = useState<any | null>(null);
 
-  // Selected QR Code modal
+  // Selected QR & Custom Invite Modal
   const [qrModalClass, setQrModalClass] = useState<any | null>(null);
+  const [inviteStudentName, setInviteStudentName] = useState('김한별');
+  const [inviteStudentEmail, setInviteStudentEmail] = useState('');
+  const [inviteStudentLevel, setInviteStudentLevel] = useState<number>(4);
+  const [inviteStudentL1, setInviteStudentL1] = useState('zh-CN');
+  const [copiedInviteUrl, setCopiedInviteUrl] = useState(false);
+  const [copiedKakaoMsg, setCopiedKakaoMsg] = useState(false);
+  const [preRegisterNotice, setPreRegisterNotice] = useState<string | null>(null);
 
   // New Class Modal
   const [isNewClassModalOpen, setIsNewClassModalOpen] = useState(false);
@@ -330,26 +337,35 @@ export default function TeacherClassesPage() {
                   <h3 className="text-lg font-black text-slate-900 mt-0.5">{cls.className}</h3>
                 </div>
 
-                <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => setQrModalClass(cls)}
-                    className="p-1 text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors"
-                    title="초대용 QR코드 보기"
+                    onClick={() => {
+                      setQrModalClass(cls);
+                      setCopiedInviteUrl(false);
+                      setCopiedKakaoMsg(false);
+                      setPreRegisterNotice(null);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20 active:scale-95"
+                    title="학생 맞춤 초대 링크 & 스마트 QR 발급"
                   >
-                    <QrCode className="w-4 h-4" />
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>학생 맞춤 초대 QR</span>
                   </button>
-                  <span className="font-mono font-black text-xs text-blue-700 px-1">{cls.inviteCode}</span>
-                  <button
-                    onClick={() => handleCopyCode(cls.inviteCode)}
-                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-white rounded-lg transition-colors"
-                    title="초대 코드 복사"
-                  >
-                    {copiedCode === cls.inviteCode ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+
+                  <div className="flex items-center gap-1 bg-slate-100 px-2 py-1.5 rounded-xl border border-slate-200 text-xs">
+                    <span className="font-mono font-black text-blue-700">{cls.inviteCode}</span>
+                    <button
+                      onClick={() => handleCopyCode(cls.inviteCode)}
+                      className="p-0.5 text-slate-400 hover:text-slate-700 transition-colors"
+                      title="코드 복사"
+                    >
+                      {copiedCode === cls.inviteCode ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -666,47 +682,219 @@ export default function TeacherClassesPage() {
         />
       )}
 
-      {/* 4. QR Code Invitation Modal */}
-      {qrModalClass && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-5 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setQrModalClass(null)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* 4. Student Custom Invitation & Smart QR Modal */}
+      {qrModalClass && (() => {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://hanup-platform.vercel.app';
+        const inviteUrl = `${baseUrl}/join?class=${encodeURIComponent(qrModalClass.classId)}&className=${encodeURIComponent(qrModalClass.className)}&teacher=${encodeURIComponent(currentUser.name)}&org=${encodeURIComponent(currentOrg.orgName)}&name=${encodeURIComponent(inviteStudentName)}&email=${encodeURIComponent(inviteStudentEmail)}&level=${inviteStudentLevel}&l1=${encodeURIComponent(inviteStudentL1)}`;
+        const kakaoTemplate = `[한업 (HanUp) 수업 초대장]\n안녕하세요 ${inviteStudentName || '학생'} 님!\n${currentUser.name} 선생님의 '${qrModalClass.className}'에 초대되었습니다.\n선생님이 사전 설정한 정보로 번거로운 입력 없이 3초 만에 바로 학습을 시작하실 수 있습니다 🎓\n\n👉 맞춤 초대 링크:\n${inviteUrl}`;
 
-            <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center mx-auto shadow-md">
-              <QrCode className="w-8 h-8" />
-            </div>
+        const handleAddPreRegisteredStudent = () => {
+          const newStudent = {
+            uid: `usr_invited_${Date.now()}`,
+            name: `${inviteStudentName || '신규수강생'} (초대중)`,
+            l1: inviteStudentL1 === 'zh-CN' ? 'zh-CN (중국)' : inviteStudentL1 === 'vi' ? 'vi-VN (베트남)' : inviteStudentL1 === 'ja' ? 'ja-JP (일본)' : 'en-US (영어)',
+            currentLevel: Math.max(1, inviteStudentLevel - 1),
+            targetLevel: inviteStudentLevel,
+            latestTask: '초대장 발송 완료 (학생 가입 대기)',
+            avgScore: 0,
+            status: 'invited',
+          };
+          setStudentsList((prev) => [newStudent, ...prev]);
+          setPreRegisterNotice(`[${inviteStudentName || '학생'}] 님이 명단에 사전 등록되었습니다.`);
+          setTimeout(() => setPreRegisterNotice(null), 3000);
+        };
 
-            <div>
-              <h3 className="text-base font-black text-slate-900">{qrModalClass.className}</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                학생들이 카메라로 스캔하면 즉시 해당 반으로 등록됩니다.
-              </p>
-            </div>
-
-            {/* QR Mockup */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 inline-block shadow-inner">
-              <div className="w-40 h-40 bg-white p-2 rounded-xl border border-slate-300 flex items-center justify-center shadow-xs">
-                <QrCode className="w-32 h-32 text-slate-900" />
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-5 relative animate-in zoom-in-95 duration-200 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                      <span>학생 맞춤 초대 링크 & 스마트 QR</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                        3초 가입 보장
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      선생님이 정보를 미리 설정하여 보내면 학생은 입력 없이 바로 수업에 입장합니다.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setQrModalClass(null)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <div className="font-mono text-sm font-black text-blue-700 mt-2">
-                초대코드: {qrModalClass.inviteCode}
+
+              {/* Class Target Info */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-slate-400 text-[10px] block">배정 클래스</span>
+                  <span className="font-extrabold text-slate-800 text-sm">{qrModalClass.className}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-400 text-[10px] block">초대 코드</span>
+                  <span className="font-mono font-black text-blue-700 text-sm">{qrModalClass.inviteCode}</span>
+                </div>
+              </div>
+
+              {/* Notice */}
+              {preRegisterNotice && (
+                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>{preRegisterNotice}</span>
+                </div>
+              )}
+
+              {/* 1. Teacher Configuration Inputs */}
+              <div className="space-y-3 p-4 rounded-2xl bg-blue-50/40 border border-blue-100">
+                <span className="text-xs font-bold text-blue-950 block">
+                  1. 학생 맞춤 정보 사전 설정 (선생님 입력)
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      학생 이름 / 닉네임
+                    </label>
+                    <input
+                      type="text"
+                      value={inviteStudentName}
+                      onChange={(e) => setInviteStudentName(e.target.value)}
+                      placeholder="예: 김한별 / Alex / 王伟"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      학생 이메일 (선택 사항)
+                    </label>
+                    <input
+                      type="email"
+                      value={inviteStudentEmail}
+                      onChange={(e) => setInviteStudentEmail(e.target.value)}
+                      placeholder="예: student@gmail.com"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      목표 TOPIK 급수
+                    </label>
+                    <select
+                      value={inviteStudentLevel}
+                      onChange={(e) => setInviteStudentLevel(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-bold"
+                    >
+                      <option value={1}>TOPIK 1급 (초급 기초)</option>
+                      <option value={2}>TOPIK 2급 (초급 완성)</option>
+                      <option value={3}>TOPIK 3급 (중급 진입)</option>
+                      <option value={4}>TOPIK 4급 (학부 입학 기준)</option>
+                      <option value={5}>TOPIK 5급 (대학원/취업 추천)</option>
+                      <option value={6}>TOPIK 6급 (최고급 마스터)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      학생 모국어 (L1 해설 언어)
+                    </label>
+                    <select
+                      value={inviteStudentL1}
+                      onChange={(e) => setInviteStudentL1(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-bold"
+                    >
+                      <option value="zh-CN">🇨🇳 중국어 (简体中文)</option>
+                      <option value="en">🇺🇸 영어 (English)</option>
+                      <option value="ja">🇯🇵 일본어 (日本語)</option>
+                      <option value="vi">🇻🇳 베트남어 (Tiếng Việt)</option>
+                      <option value="my">🇲🇲 미얀마어 (မြန်မာ)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Generated Outputs: Smart QR & Copy Actions */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-800 block">
+                  2. 실시간 발급된 스마트 QR 및 전송 도구
+                </span>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                  {/* Dynamic QR Code */}
+                  <div className="text-center shrink-0">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(inviteUrl)}`}
+                      alt="학생 초대 스마트 QR 코드"
+                      className="w-32 h-32 rounded-xl border border-slate-300 shadow-sm bg-white p-1 mx-auto"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      스마트폰 카메라로 스캔
+                    </span>
+                  </div>
+
+                  {/* Copy Buttons */}
+                  <div className="flex-1 w-full space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(inviteUrl);
+                        setCopiedInviteUrl(true);
+                        setTimeout(() => setCopiedInviteUrl(false), 2500);
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
+                    >
+                      {copiedInviteUrl ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                      <span>{copiedInviteUrl ? '초대 링크가 복사되었습니다!' : '초대 링크 복사 (URL)'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(kakaoTemplate);
+                        setCopiedKakaoMsg(true);
+                        setTimeout(() => setCopiedKakaoMsg(false), 2500);
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
+                    >
+                      {copiedKakaoMsg ? <Check className="w-4 h-4 text-emerald-800" /> : <Send className="w-4 h-4" />}
+                      <span>{copiedKakaoMsg ? '안내문이 복사되었습니다!' : '카톡 / 위챗 전송용 안내문 복사'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAddPreRegisteredStudent}
+                      className="w-full py-2 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>수강생 명단에 사전 등록 (+1명 추가)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  onClick={() => setQrModalClass(null)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors"
+                >
+                  닫기
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => setQrModalClass(null)}
-              className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors"
-            >
-              닫기
-            </button>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 5. New Class Modal */}
       {isNewClassModalOpen && (
