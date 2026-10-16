@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHanUp } from '../context/HanUpContext';
 import {
   X,
@@ -14,7 +14,10 @@ import {
   DollarSign,
   Users,
   MessageSquare,
+  Languages,
 } from 'lucide-react';
+import { SURVEY_TRANSLATIONS, SurveyLocale } from '../lib/surveyI18n';
+import { SUPPORTED_LANGUAGES, SupportedLanguage } from '../lib/i18n';
 
 export default function AiEducationSurveyModal() {
   const {
@@ -26,13 +29,22 @@ export default function AiEducationSurveyModal() {
     openPaywallModal,
   } = useHanUp();
 
+  // Local active language with seamless tab switching
+  const [activeLang, setActiveLang] = useState<SupportedLanguage>(lang || 'zh');
+
+  useEffect(() => {
+    if (lang) {
+      setActiveLang(lang);
+    }
+  }, [lang]);
+
   const [aiScore, setAiScore] = useState<number>(5);
   const [selectedReasons, setSelectedReasons] = useState<string[]>([
-    '즉각적인 실시간 피드백',
-    '틀려도 부끄럽지 않은 심리적 편안함',
+    'reason_instant',
+    'reason_comfort',
   ]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([
-    '전문 시험 채점관과의 미세한 점수 차이 우려',
+    'concern_scoring',
   ]);
   const [tier, setTier] = useState<
     'tier1_ai_only' | 'tier2_ai_human_review' | 'tier3_ai_group_lecture' | 'tier4_human_1on1'
@@ -46,30 +58,32 @@ export default function AiEducationSurveyModal() {
 
   if (!isSurveyModalOpen) return null;
 
-  const reasonOptions = [
-    '즉각적인 실시간 피드백 (대기 시간 없음)',
-    '틀려도 부끄럽지 않은 심리적 편안함',
-    '오프라인 학원/과외 대비 압도적인 가성비',
-    '모국어(중국어/영어/베트남어 등) 맞춤 오류 분석',
-    '24시간 언제 어디서나 반복 학습 가능',
+  const t: SurveyLocale = SURVEY_TRANSLATIONS[activeLang] || SURVEY_TRANSLATIONS.ko;
+
+  const reasonKeys: (keyof typeof t.q2Options)[] = [
+    'reason_instant',
+    'reason_comfort',
+    'reason_price',
+    'reason_l1',
+    'reason_anytime',
   ];
 
-  const concernOptions = [
-    '전문 시험 채점관과의 미세한 점수 오차 우려',
-    'AI의 획일적인 문장 첨삭 패턴 가능성',
-    '인간적인 정서적 공감 및 학습 동기 부여 부족',
-    '복잡하고 창의적인 논술 수사 구조 파악 한계',
+  const concernKeys: (keyof typeof t.q3Options)[] = [
+    'concern_scoring',
+    'concern_formulaic',
+    'concern_empathy',
+    'concern_nuance',
   ];
 
-  const handleToggleReason = (r: string) => {
+  const handleToggleReason = (key: string) => {
     setSelectedReasons((prev) =>
-      prev.includes(r) ? prev.filter((item) => item !== r) : [...prev, r]
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
     );
   };
 
-  const handleToggleConcern = (c: string) => {
+  const handleToggleConcern = (key: string) => {
     setSelectedConcerns((prev) =>
-      prev.includes(c) ? prev.filter((item) => item !== c) : [...prev, c]
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]
     );
   };
 
@@ -81,8 +95,8 @@ export default function AiEducationSurveyModal() {
       studentEmail: currentUser.email,
       nativeLanguage: currentUser.nativeLanguage,
       aiPreferenceScore: aiScore,
-      preferenceReasons: selectedReasons,
-      concernFactors: selectedConcerns,
+      preferenceReasons: selectedReasons.map((k) => t.q2Options[k as keyof typeof t.q2Options] || k),
+      concernFactors: selectedConcerns.map((k) => t.q3Options[k as keyof typeof t.q3Options] || k),
       preferredInterventionTier: tier,
       wtpTier1AiOnly: wtp1,
       wtpTier2AiHumanReview: wtp2,
@@ -101,27 +115,50 @@ export default function AiEducationSurveyModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-6 text-white relative">
-          <button
-            onClick={closeSurveyModal}
-            className="absolute top-5 right-5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-all"
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-200">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Academic Research & AI Education Needs Survey</span>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-200">
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>{t.headerBadge}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* In-Modal Language Switcher Pills */}
+              <div className="flex items-center bg-white/15 backdrop-blur-md p-1 rounded-xl border border-white/20 gap-0.5">
+                {(['ko', 'zh', 'en', 'ja', 'vi', 'my'] as SupportedLanguage[]).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setActiveLang(l)}
+                    className={`px-1.5 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                      activeLang === l
+                        ? 'bg-white text-indigo-900 shadow-xs font-black'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                    }`}
+                    title={SUPPORTED_LANGUAGES[l]?.nativeLabel}
+                  >
+                    <span>{SUPPORTED_LANGUAGES[l]?.flag}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={closeSurveyModal}
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-all"
+                aria-label="닫기"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <h2 className="text-xl font-black mt-1">
-            AI 한국어 학습 경험 및 인간 교사 개입 선호도 설문
+
+          <h2 className="text-lg sm:text-xl font-black mt-2 leading-snug">
+            {t.title}
           </h2>
-          <p className="text-xs text-blue-100 mt-1">
-            2회분 학습 완료 축하드립니다! 설문에 응답해주시면 연구 윤리(IRB)에 따라 익명 코퍼스로 분석되며,{' '}
-            <strong className="text-amber-300 font-bold">20% 특별 할인 쿠폰</strong>이 즉시 발급됩니다.
+          <p className="text-xs text-blue-100 mt-1.5 leading-relaxed font-sans">
+            {t.subtitle}
           </p>
         </div>
 
@@ -135,17 +172,17 @@ export default function AiEducationSurveyModal() {
 
               <div>
                 <h3 className="text-xl font-black text-slate-900">
-                  설문 참여가 성공적으로 완료되었습니다!
+                  {t.successTitle}
                 </h3>
                 <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
-                  귀중한 연구 데이터는 한국어 교육학 AI 모델 발전과 학술 논문 통계 분석에 소중히 활용됩니다.
+                  {t.successDesc}
                 </p>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 max-w-md mx-auto space-y-3">
                 <div className="flex items-center justify-center gap-2 text-amber-800 font-bold text-sm">
                   <Gift className="w-5 h-5 text-amber-600" />
-                  <span>약속된 20% 정기/단품 할인 쿠폰이 발급되었습니다</span>
+                  <span>{t.couponNotice}</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-amber-300 shadow-sm">
                   <span className="font-mono text-lg font-black text-slate-900 tracking-wider">
@@ -156,11 +193,11 @@ export default function AiEducationSurveyModal() {
                     className="ml-2 inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{copied ? '복사됨!' : '코드 복사'}</span>
+                    <span>{copied ? t.btnCopied : t.btnCopyCode}</span>
                   </button>
                 </div>
                 <p className="text-[11px] text-amber-700">
-                  결제창에 쿠폰 코드가 자동 적용되었습니다. 단품 및 Pro 패스 결제 시 20% 즉시 감면됩니다.
+                  {t.couponApplied}
                 </p>
               </div>
 
@@ -169,7 +206,7 @@ export default function AiEducationSurveyModal() {
                   onClick={closeSurveyModal}
                   className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors"
                 >
-                  학습으로 돌아가기
+                  {t.btnReturn}
                 </button>
                 <button
                   onClick={() => {
@@ -178,18 +215,18 @@ export default function AiEducationSurveyModal() {
                   }}
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
                 >
-                  <span>20% 할인가로 교재·패스 구매</span>
+                  <span>{t.btnBuyDiscount}</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Q1: AI 학습 선호도 리커트 */}
+              {/* Q1: AI 학습 만족도 리커트 */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  <span>1. 전반적인 AI 한국어 피드백 만족도 및 선호도 (1~5점)</span>
+                  <span>{t.q1Label}</span>
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((score) => (
@@ -204,14 +241,8 @@ export default function AiEducationSurveyModal() {
                       }`}
                     >
                       <div className="text-base font-bold">{score}점</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        {score === 1
-                          ? '매우 불만'
-                          : score === 3
-                          ? '보통'
-                          : score === 5
-                          ? '매우 만족'
-                          : ''}
+                      <div className="text-[10px] text-slate-500 mt-0.5 truncate px-1 font-medium">
+                        {t.scoreLabels[score] || ''}
                       </div>
                     </button>
                   ))}
@@ -221,21 +252,21 @@ export default function AiEducationSurveyModal() {
               {/* Q2: 선호 이유 */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-900">
-                  2. AI 피드백을 선호하는 주된 요인은 무엇인가요? (중복 선택)
+                  {t.q2Label}
                 </label>
                 <div className="space-y-1.5">
-                  {reasonOptions.map((opt) => (
+                  {reasonKeys.map((key) => (
                     <label
-                      key={opt}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs text-slate-800"
+                      key={key}
+                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs text-slate-800 transition-colors"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedReasons.includes(opt)}
-                        onChange={() => handleToggleReason(opt)}
+                        checked={selectedReasons.includes(key)}
+                        onChange={() => handleToggleReason(key)}
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span>{opt}</span>
+                      <span>{t.q2Options[key]}</span>
                     </label>
                   ))}
                 </div>
@@ -244,21 +275,21 @@ export default function AiEducationSurveyModal() {
               {/* Q3: 우려 요인 */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-900">
-                  3. AI 학습에서 가장 우려되거나 아쉬운 점은 무엇인가요? (중복 선택)
+                  {t.q3Label}
                 </label>
                 <div className="space-y-1.5">
-                  {concernOptions.map((opt) => (
+                  {concernKeys.map((key) => (
                     <label
-                      key={opt}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs text-slate-800"
+                      key={key}
+                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200/80 hover:bg-slate-50 cursor-pointer text-xs text-slate-800 transition-colors"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedConcerns.includes(opt)}
-                        onChange={() => handleToggleConcern(opt)}
+                        checked={selectedConcerns.includes(key)}
+                        onChange={() => handleToggleConcern(key)}
                         className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
                       />
-                      <span>{opt}</span>
+                      <span>{t.q3Options[key]}</span>
                     </label>
                   ))}
                 </div>
@@ -268,76 +299,41 @@ export default function AiEducationSurveyModal() {
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Users className="w-4 h-4 text-indigo-600" />
-                  <span>4. 가장 이상적이라고 생각하는 'AI + 인간 교사' 결합 모델은?</span>
+                  <span>{t.q4Label}</span>
                 </label>
                 <div className="space-y-2 text-xs">
-                  <label
-                    className={`block p-3 rounded-xl border cursor-pointer transition-all ${
-                      tier === 'tier1_ai_only'
-                        ? 'border-indigo-600 bg-indigo-50/60 font-semibold'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={tier === 'tier1_ai_only'}
-                      onChange={() => setTier('tier1_ai_only')}
-                      className="mr-2 text-indigo-600"
-                    />
-                    <strong>Tier 1: 순수 AI 자습형</strong> - 교사 개입 없이 AI 실시간 무제한 첨삭과 클리닉 자습
-                  </label>
-
-                  <label
-                    className={`block p-3 rounded-xl border cursor-pointer transition-all ${
-                      tier === 'tier2_ai_human_review'
-                        ? 'border-indigo-600 bg-indigo-50/60 font-semibold'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={tier === 'tier2_ai_human_review'}
-                      onChange={() => setTier('tier2_ai_human_review')}
-                      className="mr-2 text-indigo-600"
-                    />
-                    <strong>Tier 2: AI 실시간 첨삭 + 인간 교사 주 1회 2차 검수 (Human-in-the-Loop)</strong> - 일상 자습은 AI로, 핵심 답안은 한국인 교사가 주 1회 직접 정밀 첨삭 및 녹음 코멘트 제공
-                  </label>
-
-                  <label
-                    className={`block p-3 rounded-xl border cursor-pointer transition-all ${
-                      tier === 'tier3_ai_group_lecture'
-                        ? 'border-indigo-600 bg-indigo-50/60 font-semibold'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={tier === 'tier3_ai_group_lecture'}
-                      onChange={() => setTier('tier3_ai_group_lecture')}
-                      className="mr-2 text-indigo-600"
-                    />
-                    <strong>Tier 3: AI 자습 + 교사 격주 줌(Zoom) 소그룹 라이브 특강</strong> - AI 피드백 바탕으로 격주 60분 빈출 오답 풀이 및 질의응답
-                  </label>
-
-                  <label
-                    className={`block p-3 rounded-xl border cursor-pointer transition-all ${
-                      tier === 'tier4_human_1on1'
-                        ? 'border-indigo-600 bg-indigo-50/60 font-semibold'
-                        : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={tier === 'tier4_human_1on1'}
-                      onChange={() => setTier('tier4_human_1on1')}
-                      className="mr-2 text-indigo-600"
-                    />
-                    <strong>Tier 4: 인간 교사 1:1 밀착 과외 + AI 보조</strong> - 전담 한국어 전문 강사의 주 2회 화상 과외와 AI 진단 리포트 결합
-                  </label>
+                  {(
+                    [
+                      'tier1_ai_only',
+                      'tier2_ai_human_review',
+                      'tier3_ai_group_lecture',
+                      'tier4_human_1on1',
+                    ] as const
+                  ).map((tierKey) => {
+                    const item = t.q4Tiers[tierKey];
+                    return (
+                      <label
+                        key={tierKey}
+                        className={`block p-3 rounded-xl border cursor-pointer transition-all ${
+                          tier === tierKey
+                            ? 'border-indigo-600 bg-indigo-50/60 font-semibold shadow-2xs'
+                            : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="tier"
+                          checked={tier === tierKey}
+                          onChange={() => setTier(tierKey)}
+                          className="mr-2 text-indigo-600"
+                        />
+                        <strong className="text-slate-900">{item.title}</strong>
+                        <span className="text-slate-600 block mt-0.5 pl-5 leading-relaxed font-normal">
+                          {item.desc}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -345,72 +341,72 @@ export default function AiEducationSurveyModal() {
               <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
                 <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-emerald-600" />
-                  <span>5. 서비스 모델별 월 최대 지불의향 (WTP - Willingness to Pay)</span>
+                  <span>{t.q5Label}</span>
                 </label>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                   <div className="bg-white p-3 rounded-xl border border-slate-200">
                     <span className="font-bold text-slate-800 block mb-1">
-                      Tier 1: 순수 AI 자습형
+                      {t.q5Tier1Title}
                     </span>
                     <select
                       value={wtp1}
                       onChange={(e) => setWtp1(e.target.value)}
-                      className="w-full text-xs p-2 rounded-lg border border-slate-300"
+                      className="w-full text-xs p-2 rounded-lg border border-slate-300 font-sans"
                     >
-                      <option value="$5 미만">$5 미만 (₩6,500↓)</option>
-                      <option value="$5~$10">$5~$10 (₩7,000~13,000)</option>
-                      <option value="$10~$15">$10~$15 (₩14,000~20,000)</option>
-                      <option value="$15 이상">$15 이상 (₩20,000↑)</option>
+                      <option value="$5 미만">$5 미만 (₩6,500↓ / ¥35↓)</option>
+                      <option value="$5~$10">$5~$10 (₩7,000~13,000 / ¥35~70)</option>
+                      <option value="$10~$15">$10~$15 (₩14,000~20,000 / ¥70~105)</option>
+                      <option value="$15 이상">$15 이상 (₩20,000↑ / ¥105↑)</option>
                     </select>
                   </div>
 
                   <div className="bg-white p-3 rounded-xl border border-slate-200">
                     <span className="font-bold text-slate-800 block mb-1">
-                      Tier 2: AI + 교사 주1회 검수
+                      {t.q5Tier2Title}
                     </span>
                     <select
                       value={wtp2}
                       onChange={(e) => setWtp2(e.target.value)}
-                      className="w-full text-xs p-2 rounded-lg border border-slate-300"
+                      className="w-full text-xs p-2 rounded-lg border border-slate-300 font-sans"
                     >
-                      <option value="$15 미만">$15 미만 (₩20,000↓)</option>
-                      <option value="$15~$30">$15~$30 (₩20,000~40,000)</option>
-                      <option value="$30~$50">$30~$50 (₩40,000~68,000)</option>
-                      <option value="$50 이상">$50 이상 (₩70,000↑)</option>
+                      <option value="$15 미만">$15 미만 (₩20,000↓ / ¥105↓)</option>
+                      <option value="$15~$30">$15~$30 (₩20,000~40,000 / ¥105~210)</option>
+                      <option value="$30~$50">$30~$50 (₩40,000~68,000 / ¥210~350)</option>
+                      <option value="$50 이상">$50 이상 (₩70,000↑ / ¥350↑)</option>
                     </select>
                   </div>
 
                   <div className="bg-white p-3 rounded-xl border border-slate-200">
                     <span className="font-bold text-slate-800 block mb-1">
-                      Tier 3: AI + 라이브 코칭
+                      {t.q5Tier3Title}
                     </span>
                     <select
                       value={wtp3}
                       onChange={(e) => setWtp3(e.target.value)}
-                      className="w-full text-xs p-2 rounded-lg border border-slate-300"
+                      className="w-full text-xs p-2 rounded-lg border border-slate-300 font-sans"
                     >
-                      <option value="$30 미만">$30 미만 (₩40,000↓)</option>
-                      <option value="$30~$60">$30~$60 (₩40,000~80,000)</option>
-                      <option value="$60~$100">$60~$100 (₩80,000~135,000)</option>
-                      <option value="$100 이상">$100 이상 (₩140,000↑)</option>
+                      <option value="$30 미만">$30 미만 (₩40,000↓ / ¥210↓)</option>
+                      <option value="$30~$60">$30~$60 (₩40,000~80,000 / ¥210~420)</option>
+                      <option value="$60~$100">$60~$100 (₩80,000~135,000 / ¥420~700)</option>
+                      <option value="$100 이상">$100 이상 (₩140,000↑ / ¥700↑)</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Q6: 토픽 모델링용 자유 서술형 */}
+              {/* Q6: 자유 서술형 */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-blue-600" />
-                  <span>6. 한업(HanUp) 플랫폼 및 AI 한국어 교육에 바라는 점 (자유 서술형)</span>
+                  <span>{t.q6Label}</span>
                 </label>
                 <textarea
                   value={openText}
                   onChange={(e) => setOpenText(e.target.value)}
-                  placeholder="예: 원고지 띄어쓰기뿐만 아니라 대학원 면담 이메일 템플릿도 추가되었으면 좋겠습니다. 중국어 간섭 오류 설명이 매우 유익합니다."
+                  placeholder={t.q6Placeholder}
                   rows={3}
-                  className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-sans"
                 />
               </div>
 
@@ -418,7 +414,7 @@ export default function AiEducationSurveyModal() {
               <div className="pt-2 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>개인식별정보는 완전히 가명화/마스킹 처리되어 연구에 활용됩니다.</span>
+                  <span>{t.irbNotice}</span>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
@@ -426,13 +422,13 @@ export default function AiEducationSurveyModal() {
                     onClick={closeSurveyModal}
                     className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                   >
-                    나중에 하기
+                    {t.btnLater}
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs font-bold text-white shadow-md transition-all"
+                    className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs font-bold text-white shadow-md transition-all hover:scale-105"
                   >
-                    설문 제출 & 20% 쿠폰 받기
+                    {t.btnSubmit}
                   </button>
                 </div>
               </div>
