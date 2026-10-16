@@ -16,13 +16,27 @@ export const HanUpLogo: React.FC<HanUpLogoProps> = ({
 }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [textIndex, setTextIndex] = useState<0 | 1>(0); // 0: Korean (한업), 1: English (HanUp)
-  const [isFlipping, setIsFlipping] = useState(false);
 
-  // Emblem sizes: noticeably larger and bolder
+  // Emblem and text dimension map with strictly fixed bounding widths to prevent nav jitter
   const dimensionMap = {
-    sm: { box: 'w-9 h-9 sm:w-10 sm:h-10', px: 40 },
-    md: { box: 'w-11 h-11 sm:w-12 sm:h-12', px: 48 },
-    lg: { box: 'w-14 h-14 sm:w-16 sm:h-16', px: 64 },
+    sm: {
+      box: 'w-9 h-9 sm:w-10 sm:h-10',
+      px: 40,
+      textBox: 'w-16 sm:w-20 h-7',
+      textSize: 'text-lg sm:text-xl',
+    },
+    md: {
+      box: 'w-11 h-11 sm:w-12 sm:h-12',
+      px: 48,
+      textBox: 'w-20 sm:w-24 h-8',
+      textSize: 'text-xl sm:text-2xl',
+    },
+    lg: {
+      box: 'w-14 h-14 sm:w-16 sm:h-16',
+      px: 64,
+      textBox: 'w-24 sm:w-28 h-9',
+      textSize: 'text-2xl sm:text-3xl',
+    },
   };
 
   const dim = dimensionMap[size];
@@ -30,23 +44,15 @@ export const HanUpLogo: React.FC<HanUpLogoProps> = ({
   // Automatic smooth text rotation between Korean ('한업') and English ('HanUp')
   useEffect(() => {
     const timer = setInterval(() => {
-      setIsFlipping(true);
-      setTimeout(() => {
-        setTextIndex((prev) => (prev === 0 ? 1 : 0));
-        setIsFlipping(false);
-      }, 300); // half transition duration
-    }, 2800);
+      setTextIndex((prev) => (prev === 0 ? 1 : 0));
+    }, 3200);
 
     return () => clearInterval(timer);
   }, []);
 
   const triggerAnimation = () => {
     setIsSpinning(true);
-    setIsFlipping(true);
-    setTimeout(() => {
-      setTextIndex((prev) => (prev === 0 ? 1 : 0));
-      setIsFlipping(false);
-    }, 250);
+    setTextIndex((prev) => (prev === 0 ? 1 : 0));
     setTimeout(() => {
       setIsSpinning(false);
     }, 1150);
@@ -55,8 +61,8 @@ export const HanUpLogo: React.FC<HanUpLogoProps> = ({
   return (
     <div
       onClick={triggerAnimation}
-      className={`hanup-logo-container select-none cursor-pointer group flex items-center ${isSpinning ? 'hanup-spin-active' : ''} ${className}`}
-      title="한업 (HanUp) - 클릭하면 로고 회전과 한글/영어 전환 효과가 재생됩니다"
+      className={`hanup-logo-container select-none cursor-pointer group flex items-center shrink-0 ${isSpinning ? 'hanup-spin-active' : ''} ${className}`}
+      title="한업 (HanUp) - 클릭하면 로고 회전 및 한글/영문 전환"
     >
       {/* 3D Rotating Emblem Container */}
       <div
@@ -76,44 +82,35 @@ export const HanUpLogo: React.FC<HanUpLogoProps> = ({
       </div>
 
       {showText && (
-        <div className="ml-2.5 sm:ml-3 text-left">
-          {/* Animated 3D Rolling Text Container */}
+        <div className={`ml-2.5 sm:ml-3 text-left relative ${dim.textBox} shrink-0 overflow-hidden`}>
+          {/* Korean Text: 한업 */}
           <div
-            className={`transition-all duration-300 ease-out transform ${
-              isFlipping
-                ? 'opacity-0 -translate-y-2 scale-95'
-                : 'opacity-100 translate-y-0 scale-100'
+            className={`absolute inset-0 flex items-center transition-all duration-500 ease-out transform ${
+              textIndex === 0
+                ? 'opacity-100 translate-y-0 scale-100'
+                : 'opacity-0 -translate-y-3 scale-95 pointer-events-none'
             }`}
           >
-            {textIndex === 0 ? (
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                    한업
-                  </span>
-                  <span className="text-[10px] sm:text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700">
-                    AI 튜터
-                  </span>
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 font-semibold leading-none mt-0.5 hidden xs:block">
-                  스마트 한국어 교육 플랫폼
-                </p>
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-indigo-500 transition-all">
-                    HanUp
-                  </span>
-                  <span className="text-[10px] sm:text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
-                    Smart AI
-                  </span>
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 font-semibold leading-none mt-0.5 hidden xs:block">
-                  Korean Learning Platform
-                </p>
-              </div>
-            )}
+            <span
+              className={`${dim.textSize} font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors whitespace-nowrap`}
+            >
+              한업
+            </span>
+          </div>
+
+          {/* English Text: HanUp */}
+          <div
+            className={`absolute inset-0 flex items-center transition-all duration-500 ease-out transform ${
+              textIndex === 1
+                ? 'opacity-100 translate-y-0 scale-100'
+                : 'opacity-0 translate-y-3 scale-95 pointer-events-none'
+            }`}
+          >
+            <span
+              className={`${dim.textSize} font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-indigo-500 transition-all font-sans whitespace-nowrap`}
+            >
+              HanUp
+            </span>
           </div>
         </div>
       )}

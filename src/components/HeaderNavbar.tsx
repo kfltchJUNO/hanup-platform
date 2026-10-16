@@ -220,8 +220,8 @@ export const HeaderNavbar: React.FC = () => {
       {/* 2. Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <div className="flex items-center gap-4 lg:gap-8">
-          <Link href="/" className="flex items-center">
+        <div className="flex items-center gap-4 lg:gap-8 shrink-0">
+          <Link href="/" className="flex items-center shrink-0">
             <HanUpLogo size="md" showText={true} />
           </Link>
 
