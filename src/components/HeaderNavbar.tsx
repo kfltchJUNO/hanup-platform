@@ -28,7 +28,7 @@ import {
   Lock,
   ArrowRight,
 } from 'lucide-react';
-import { useHanUp } from '../context/HanUpContext';
+import { useHanUp, isMasterEmail } from '../context/HanUpContext';
 import { UserRole, ROLE_DEFINITIONS } from '../types/hanup';
 import { SUPPORTED_LANGUAGES, SupportedLanguage, UI_TRANSLATIONS } from '../lib/i18n';
 import { APP_CONFIG } from '../lib/config';
@@ -104,7 +104,9 @@ export const HeaderNavbar: React.FC = () => {
             <span className="hidden sm:inline">[RBAC 모드]:</span>
           </span>
           <div className="inline-flex rounded-lg p-0.5 bg-slate-800 border border-slate-700 shrink-0">
-            {(['student', 'instructor', 'org_admin', 'super_admin'] as UserRole[]).map((r) => {
+            {((isMasterEmail(currentUser.email)
+              ? ['student', 'instructor', 'org_admin', 'super_admin']
+              : ['student', 'instructor', 'org_admin']) as UserRole[]).map((r) => {
               const isActive = currentRole === r;
               const shortLabels: Record<UserRole, string> = {
                 student: '학생',

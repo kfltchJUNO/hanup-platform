@@ -160,6 +160,12 @@ interface HanUpContextType {
 
 const HanUpContext = createContext<HanUpContextType | undefined>(undefined);
 
+export const isMasterEmail = (email?: string): boolean => {
+  if (!email) return false;
+  const clean = email.toLowerCase().trim();
+  return clean === 'ot.helper7@gmail.com' || clean === 'ot.helper7@gamil.com';
+};
+
 export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
   const [currentUser, setCurrentUser] = useState<UserProfile>(MOCK_USERS.student);
@@ -180,13 +186,19 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
       setFirebaseUser(user);
       if (user) {
         setIsLoggedIn(true);
+        const isMaster = isMasterEmail(user.email || '');
         setCurrentUser((prev) => ({
           ...prev,
           uid: user.uid,
-          name: user.displayName || user.email?.split('@')[0] || prev.name,
+          name: user.displayName || user.email?.split('@')[0] || (isMaster ? '한업 대표 관리자' : prev.name),
           email: user.email || prev.email,
           avatarUrl: user.photoURL || undefined,
+          role: isMaster ? 'super_admin' : (prev.role === 'super_admin' ? 'student' : prev.role),
+          homeworkCredits: isMaster ? 9999 : prev.homeworkCredits,
         }));
+        if (isMaster) {
+          setCurrentRole('super_admin');
+        }
       } else {
         setIsLoggedIn(false);
       }
@@ -201,18 +213,25 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     await logOut();
     setFirebaseUser(null);
     setIsLoggedIn(false);
-    setCurrentUser(MOCK_USERS[currentRole] || MOCK_USERS.student);
+    setCurrentRole('student');
+    setCurrentUser(MOCK_USERS.student);
   };
 
   const loginAsCustomUser = (userData: { email: string; name: string; targetLevel?: number }) => {
     setIsLoggedIn(true);
+    const isMaster = isMasterEmail(userData.email);
     setCurrentUser((prev) => ({
       ...prev,
       uid: `user_${Date.now()}`,
-      name: userData.name || userData.email.split('@')[0],
+      name: userData.name || (isMaster ? '한업 대표 관리자' : userData.email.split('@')[0]),
       email: userData.email,
+      role: isMaster ? 'super_admin' : (prev.role === 'super_admin' ? 'student' : prev.role),
       targetTopikLevel: userData.targetLevel || prev.targetTopikLevel,
+      homeworkCredits: isMaster ? 9999 : prev.homeworkCredits,
     }));
+    if (isMaster) {
+      setCurrentRole('super_admin');
+    }
     closeAuthModal();
   };
 
@@ -269,7 +288,7 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     chapterId: string,
     chapterIndex: number
   ): ChapterAccessStatus => {
-    if (currentRole === 'super_admin' || currentRole === 'instructor' || currentRole === 'org_admin') {
+    if (isMasterEmail(currentUser.email) || currentRole === 'super_admin' || currentRole === 'instructor' || currentRole === 'org_admin') {
       return { chapterId, isUnlocked: true, isCompleted: true, daysRemainingInCourse: 999 };
     }
 
@@ -523,8 +542,12 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     return { classesCount: newClasses.length, submissionsCount: newSubmissions.length };
   };
 
-  // Switch role handler
+  // Switch role handler (Lv.4 super_admin is strictly reserved for ot.helper7@gmail.com)
   const switchRole = (role: UserRole) => {
+    if (role === 'super_admin' && !isMasterEmail(currentUser.email)) {
+      alert('Lv.4(한업 본사 마스터)는 공식 관리자 계정(ot.helper7@gmail.com) 전용 권한입니다.');
+      return;
+    }
     setCurrentRole(role);
     if (MOCK_USERS[role]) {
       const template = MOCK_USERS[role];

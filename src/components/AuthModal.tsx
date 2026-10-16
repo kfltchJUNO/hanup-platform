@@ -458,7 +458,7 @@ export const AuthModal: React.FC = () => {
               <span>🧪 빠른 테스트 계정 체험 (1클릭)</span>
               <span className="text-[10px] text-slate-400 font-normal">비밀번호 불필요</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() =>
@@ -472,10 +472,10 @@ export const AuthModal: React.FC = () => {
                 className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-left transition-colors group"
               >
                 <div className="text-[11px] font-bold text-slate-800 group-hover:text-blue-700 truncate">
-                  👤 학생: 김한별
+                  👤 Lv.1 학생
                 </div>
                 <div className="text-[10px] text-slate-500 truncate">
-                  student.kim@hanup.edu
+                  김한별
                 </div>
               </button>
 
@@ -491,10 +491,10 @@ export const AuthModal: React.FC = () => {
                 className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition-colors group"
               >
                 <div className="text-[11px] font-bold text-slate-800 group-hover:text-emerald-700 truncate">
-                  👩‍🏫 교사: 박지민
+                  👩‍🏫 Lv.2 교사
                 </div>
                 <div className="text-[10px] text-slate-500 truncate">
-                  teacher.park@hanup.edu
+                  박지민
                 </div>
               </button>
 
@@ -510,31 +510,19 @@ export const AuthModal: React.FC = () => {
                 className="p-2 rounded-xl bg-slate-50 hover:bg-purple-50 border border-slate-200 hover:border-purple-300 text-left transition-colors group"
               >
                 <div className="text-[11px] font-bold text-slate-800 group-hover:text-purple-700 truncate">
-                  🏢 기관: 글로벌어학원
+                  🏢 Lv.3 기관
                 </div>
                 <div className="text-[10px] text-slate-500 truncate">
-                  admin@global-korean.org
+                  글로벌어학원
                 </div>
               </button>
+            </div>
 
-              <button
-                type="button"
-                onClick={() =>
-                  handlePresetLogin({
-                    email: 'hq@hanup.co.kr',
-                    name: '한업 본사 (슈퍼)',
-                    role: 'super_admin',
-                  })
-                }
-                className="p-2 rounded-xl bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 text-left transition-colors group"
-              >
-                <div className="text-[11px] font-bold text-slate-800 group-hover:text-amber-700 truncate">
-                  ⭐ 본사: 저작스튜디오
-                </div>
-                <div className="text-[10px] text-slate-500 truncate">
-                  hq@hanup.co.kr
-                </div>
-              </button>
+            <div className="mt-2.5 p-2 rounded-xl bg-amber-50/80 border border-amber-200 text-[10px] text-amber-900 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>
+                <strong>Lv.4 본사 마스터:</strong> 공식 관리자 계정(<strong>ot.helper7@gmail.com</strong>)으로 로그인 시 모든 권한이 자동 부여됩니다.
+              </span>
             </div>
           </div>
         </div>

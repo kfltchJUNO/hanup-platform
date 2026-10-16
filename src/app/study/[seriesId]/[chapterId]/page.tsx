@@ -461,7 +461,30 @@ export default function SmartStudyViewerPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div
+      onContextMenu={(e) => {
+        // Prevent right-click context menu on proprietary content
+        e.preventDefault();
+      }}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative select-none"
+    >
+      {/* 🛡️ Dynamic Forensic Anti-Piracy Watermark (Capture & Photo Leak Deterrent) */}
+      <div
+        className="pointer-events-none fixed inset-0 z-30 overflow-hidden opacity-[0.035] select-none flex flex-wrap gap-20 p-8 transform -rotate-12 items-center justify-center print:opacity-[0.07]"
+        aria-hidden="true"
+      >
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div key={i} className="text-xs font-mono font-bold tracking-widest text-slate-900 whitespace-nowrap">
+            HanUp Secured • {currentUser.email || 'student@hanup.edu'} • UID:{currentUser.uid?.slice(-6) || '77892'}
+          </div>
+        ))}
+      </div>
+
+      {/* Print License Ownership Stamp */}
+      <div className="hidden print:block text-[10px] text-slate-500 border-b border-slate-300 pb-1 mb-2 font-mono text-center">
+        [HanUp 정품 인증] 본 교재는 수강생 ({currentUser.name} / {currentUser.email}) 전용 열람용이며 무단 복제, 전재, 배포 시 법적 처벌을 받습니다.
+      </div>
+
       {/* 1. Chapter Title & Global Header Bar */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="space-y-2 flex-1 w-full">

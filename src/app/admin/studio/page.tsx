@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Layers,
   Sparkles,
@@ -21,12 +22,44 @@ import {
   Trash2,
   ExternalLink,
   Volume2,
+  Lock,
 } from 'lucide-react';
-import { useHanUp } from '../../../context/HanUpContext';
+import { useHanUp, isMasterEmail } from '../../../context/HanUpContext';
 import { AuthoringBlock, VocabAnnotation } from '../../../types/hanup';
 
 export default function AuthoringStudioPage() {
-  const { authoringBlocks, saveAuthoringBlock, lang } = useHanUp();
+  const { authoringBlocks, saveAuthoringBlock, lang, currentUser, openAuthModal } = useHanUp();
+  const isMaster = isMasterEmail(currentUser.email);
+
+  if (!isMaster) {
+    return (
+      <div className="max-w-xl mx-auto my-16 p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+          <Lock className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-black text-slate-900">
+          Lv.4 본사 마스터 전용 보안 영역
+        </h2>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          저작 스튜디오 및 OSMU 마케팅 엔진은 승인된 공식 본사 관리자 계정(<strong>ot.helper7@gmail.com</strong>)으로 로그인해야 접근하실 수 있습니다.
+        </p>
+        <div className="pt-2 flex items-center justify-center gap-3">
+          <Link
+            href="/dashboard"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+          >
+            학습 대시보드로 돌아가기
+          </Link>
+          <button
+            onClick={openAuthModal}
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors"
+          >
+            관리자 계정으로 로그인
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const [selectedBlockId, setSelectedBlockId] = useState<string>(
     authoringBlocks[0]?.blockId || ''
