@@ -16,17 +16,25 @@ import {
   Check,
   CheckCircle2,
   TrendingUp,
+  School,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useHanUp } from '../../../context/HanUpContext';
 import { Organization } from '../../../types/hanup';
+import { UriBanSyncModal } from '../../../components/UriBanSyncModal';
 
 export default function OrganizationsManagementPage() {
-  const { organizations, currentOrg } = useHanUp();
+  const { organizations, currentOrg, isUriBanEnabled, toggleUriBanEnabled } = useHanUp();
 
   // Local state for interactive editing of orgs
   const [orgList, setOrgList] = useState<Organization[]>(organizations);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [savedNotice, setSavedNotice] = useState(false);
+
+  // UriBan On-Demand Collapsible State (Default: Closed)
+  const [isUriBanSectionOpen, setIsUriBanSectionOpen] = useState(false);
+  const [isUriBanModalOpen, setIsUriBanModalOpen] = useState(false);
 
   // Form states for modal
   const [formName, setFormName] = useState('');
@@ -118,6 +126,67 @@ export default function OrganizationsManagementPage() {
           <span>기관 화이트라벨링 및 시트 설정이 성공적으로 저장 및 적용되었습니다!</span>
         </div>
       )}
+
+      {/* 1.5 UriBan On-Demand Collapsible Accordion (Prevents Port 3001 Collisions & Default Inactive) */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden transition-all">
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-50 to-indigo-50/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+              <School className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-sm text-slate-900">우리반(UriBan) 학사 ERP 온디맨드 연동</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isUriBanEnabled ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'}`}>
+                  {isUriBanEnabled ? '● 연동 활성화 (Port 3001)' : '○ 비활성화 대기 중 (단독 실행 안전 모드)'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                우리반.com ERP 시스템과 학생 명부, 출결, 과제 점수를 동기화할 때만 활성화합니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleUriBanEnabled}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                isUriBanEnabled
+                  ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-xs'
+              }`}
+            >
+              {isUriBanEnabled ? '연동 모듈 끄기' : '온디맨드 연동 켜기'}
+            </button>
+            <button
+              onClick={() => setIsUriBanSectionOpen(!isUriBanSectionOpen)}
+              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-1"
+            >
+              <span>{isUriBanSectionOpen ? '상세 접기' : '상세 펼치기'}</span>
+              {isUriBanSectionOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+
+        {isUriBanSectionOpen && (
+          <div className="p-5 border-t border-slate-100 bg-white space-y-3 text-xs text-slate-600 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+              <div>
+                <span className="font-bold text-slate-800 block">학사 데이터 양방향 패키지 동기화</span>
+                <span className="text-[11px] text-slate-500">
+                  학생 명부와 과제 제출 로그를 JSON 패키지로 내보내거나 가져옵니다.
+                </span>
+              </div>
+              <button
+                onClick={() => setIsUriBanModalOpen(true)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shrink-0 shadow-xs"
+              >
+                우리반 패키지 동기화 콘솔 열기 →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 2. Organizations Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -316,6 +385,13 @@ export default function OrganizationsManagementPage() {
           </div>
         </div>
       )}
+
+      {/* UriBan Sync Modal */}
+      <UriBanSyncModal
+        isOpen={isUriBanModalOpen}
+        onClose={() => setIsUriBanModalOpen(false)}
+      />
     </div>
   );
 }
+

@@ -18,6 +18,7 @@ import {
   ChapterAccessStatus,
   UserNotificationSettings,
   BookCoverStyle,
+  RubricBreakdown,
 } from '../types/hanup';
 import {
   MOCK_USERS,
@@ -93,7 +94,10 @@ interface HanUpContextType {
     submissionId: string,
     teacherComment: string,
     finalScore: number,
-    approvedAi: boolean
+    approvedAi: boolean,
+    rubricBreakdown?: RubricBreakdown,
+    audioMemoUrl?: string,
+    audioDurationSec?: number
   ) => void;
   submitStudentRevision: (submissionId: string, revisedText: string) => void;
 
@@ -776,11 +780,16 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     submissionId: string,
     teacherComment: string,
     finalScore: number,
-    approvedAi: boolean
+    approvedAi: boolean,
+    rubricBreakdown?: RubricBreakdown,
+    audioMemoUrl?: string,
+    audioDurationSec?: number
   ) => {
     setSubmissions((prev) =>
       prev.map((sub) => {
         if (sub.submissionId === submissionId) {
+          const is53 = sub.taskType === 'topik_53_graph';
+          const maxScore = is53 ? 30 : 50;
           return {
             ...sub,
             instructorFeedback: {
@@ -789,6 +798,16 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
               approvedAiFeedback: approvedAi,
               teacherComment,
               finalScore,
+              maxScore,
+              rubricBreakdown: rubricBreakdown || {
+                taskPerformance: is53 ? Math.round(finalScore * (7 / 30)) : Math.round(finalScore * (12 / 50)),
+                textStructure: is53 ? Math.round(finalScore * (7 / 30)) : Math.round(finalScore * (12 / 50)),
+                languageUsage: is53 ? Math.max(0, finalScore - Math.round(finalScore * (14 / 30))) : Math.max(0, finalScore - Math.round(finalScore * (24 / 50))),
+                maxScore,
+                totalCompositeMaxScore: 80,
+              },
+              audioMemoUrl,
+              audioDurationSec,
               reviewedAt: new Date().toISOString(),
             },
           };

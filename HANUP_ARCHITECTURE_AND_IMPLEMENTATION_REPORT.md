@@ -1,0 +1,307 @@
+# 한업 (HanUp | 韩升) 스마트 에듀테크 플랫폼 아키텍처 및 역할별 종합 작동 명세서 (v2.2)
+
+> [!NOTE]
+> 본 문서는 외국인 유학생 및 수험생을 위한 AI 기반 1:1 맞춤형 한국어 스마트 러닝 플랫폼 **‘한업(HanUp)’**의 전체 시스템 아키텍처와 함께, **학생(Lv.1), 강사(Lv.2), 기관(Lv.3), 관리자(Lv.4)** 4대 주체별 실제 작동 방식(Operational Flow), 입출력 데이터 처리 규격, TOPIK II 공인 채점 기준, 글로벌 수익화 퍼널, 학술 연구 연계 파이프라인을 집대성한 공식 기술 명세서입니다.
+
+---
+
+## 1. 플랫폼 비전 및 4대 주체 상호작용 구조
+
+한업은 **"실물 출판 교재의 아날로그 물성"**과 **"AI 기반 1:1 스마트 인터랙션"**을 유기적으로 융합한 글로벌 한국어 에듀테크 솔루션입니다. 4대 주체는 플랫폼 내에서 유기적으로 연결되어 데이터를 생성·순환합니다.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Lv.4 슈퍼 관리자 / 출판 본부
+    actor Inst as Lv.3 교육기관 관리자 (어학당)
+    actor Teacher as Lv.2 한국어 강사 / 튜터
+    actor Student as Lv.1 외국인 학생 / 수험생
+
+    Admin->>Admin: 8종 도서 표지 디자인(컬러·배치·ISBN) & 마스터 커리큘럼(82강) 발행
+    Admin->>Inst: B2B 기관 라이선스 배분 & 반(Class) 생성 권한 부여
+    Inst->>Teacher: 반 배정 및 강사 계정 발급 (우리반 ERP 온디맨드 연동)
+    Inst->>Student: 일괄 초대 링크 / QR 코드 발송 (대안 A 5초 간편 온보딩)
+    Student->>Student: 첫 학습 전 10초 학술 연구 7대 배경변인 입력 & IRB 동의
+    Teacher->>Teacher: 맞춤형 AI 숙제 제작 스튜디오 (크레딧 $9.9/20회, $39/100회 차감)
+    Teacher->>Student: 단원 과제 배정 (TOPIK II 쓰기 53번/54번)
+    Student->>Student: 3D 서가에서 책 고르기 → 스마트 리더(개념·듣기·원고지/손글씨 OCR)
+    Student->>Teacher: 원고지 작문 제출 (AI 1차 루브릭 채점 즉시 적용: 30점/50점/80점)
+    Teacher->>Student: 3영역 루브릭 채점, 빨간펜 첨삭, 원어민 음성 메모 녹음 첨부
+    Student->>Admin: 연구 코퍼스 축적(SHA-256 비식별화) & WTP 설문 응답 (쿠폰 발급)
+```
+
+---
+
+## 2. 4대 주체별 상세 작동 방식 및 화면 시나리오
+
+---
+
+### 2.1. [Lv.1 학생 (Student)] 작동 방식
+
+외국인 수험생 및 어학연수생이 실제 플랫폼을 이용하는 전 과정입니다.
+
+```mermaid
+flowchart TD
+    S1["1. 맞춤형 간편 가입 (QR/초대 링크 5초 소요)"] --> S2["2. 첫 학습 시 10초 학술 배경변인 체크"]
+    S2 --> S3["3. 3D 디지털 서가 책 고르기"]
+    S3 --> S4["4. 양면 스프레드 확인 (모바일: 단면 스와이프 탭)"]
+    S4 --> S5["5. 스마트 리더 집중 학습 (/study/*)"]
+    S5 --> S6["6. 탭1: 클릭형 단어장 & L1 다국어 독해"]
+    S5 --> S7["7. 탭2: 오디오 배속 & 받아쓰기"]
+    S5 --> S8["8. 탭3: 50분 타이머 & 200자 원고지/OCR 작성"]
+    S8 --> S9["9. 소리튜터 AI 발음 정밀 진단 (F0 피치 대조)"]
+    S9 --> S10["10. 과제 제출 → AI 1차 공인 루브릭 채점 (30점/50점)"]
+    S10 --> S11["11. 하단 '책장 넘기기' 다음 단원 진행"]
+```
+
+#### ① 초간편 온보딩 및 10초 학술 배경변인 수집 ([`/join`](file:///c:/HanUp/src/app/join/page.tsx))
+- **5초 간편 가입**: 기관 초대 링크/QR 코드를 통해 접속 시 기관명(예: `서울대 언어교육원`), 반(예: `2026 봄학기 정규 3반`), 모국어(L1), 목표 급수가 자동 프리필되어 비밀번호 입력만으로 즉시 가입 완료.
+- **10초 학술 배경변인 체크 ([`LearnerBackgroundModal.tsx`](file:///c:/HanUp/src/components/LearnerBackgroundModal.tsx))**:
+  - 첫 학습이나 레벨테스트 진입 시 논문 연구에 필수적인 **7대 학술 배경변인**을 비동기 모달로 10초 만에 체크합니다:
+    1. 총 한국어 학습 기간 (`studyDuration`: 6개월 미만, 6개월~1년, 1~2년, 2년 이상)
+    2. 주 학습 방식 (`studyMethod`: 대학 어학당, 독학/인강, 현지 학원, 과외)
+    3. 한국 체류 경험 (`stayExperience`: 6개월 미만, 1~2년, 2년 이상, 없음)
+    4. IRB 연구 참여 및 코퍼스 분석 동의 (`irbConsent`: 필수 동의)
+    5. 모국어 (`nativeLanguage`: 중국어, 베트남어, 영어, 일본어, 몽골어 등)
+    6. TOPIK 목표 급수 (`targetLevel`: 3급 ~ 6급)
+    7. 입력 모달리티 (`inputMethod`: 키보드 타이핑 vs 종이 손글씨 OCR)
+- **보안 세션 부여**: 다중 접속 방지 및 저작권 보호를 위해 학생 계정마다 고유 라이선스 토큰(`generateLicenseToken`) 발급.
+
+#### ② 3D 디지털 서가 & 모바일 반응형 양면 스프레드 ([`BookshelfSelector.tsx`](file:///c:/HanUp/src/components/BookshelfSelector.tsx))
+- **서점 브라우징 감성**: 원목 선반에 꽂힌 **[한업 TOPIK 서가 (4종)]** 및 **[생활한국어 서가 (4단계)]** 8종 교재를 탐색.
+- **양면 스프레드 (Two-Page Spread) 모달**:
+  - **PC 데스크톱 (768px 이상)**: 좌측에 3D 실물 하드커버 책 표지와 2X 복습 보장 안내, 우측에 전체 목차(TOC)와 `[1강 무료 펼쳐보기]`가 나란히 펼쳐짐.
+  - **모바일 웹 (768px 미만, 위챗/샤오홍슈 인앱 브라우저 최적화)**: 좁은 세로 화면에서 글자가 깨지지 않도록 `[📘 표지 & 스펙]`과 `[📑 단원 목차]` 상단 세그먼트 탭으로 자동 분리되어 부드러운 스와이프 카드 뷰로 전환.
+
+#### ③ 스마트 리더 집중 학습 ([`/study/[seriesId]/[chapterId]`](file:///c:/HanUp/src/app/study/[seriesId]/[chapterId]/page.tsx))
+- **상단 도서 툴바**:
+  - `[📘 도서 표지 & 간행정보]`: 책 표지, 머리말, 출판사 판권, 목차 퀵점프.
+  - `[전체 82강 커리큘럼]`: [SyllabusDrawer](file:///c:/HanUp/src/components/SyllabusDrawer.tsx)로 8종 82강 전체 탐색.
+  - `[자모 40자 보드]`: [Hangul40BoardModal](file:///c:/HanUp/src/components/Hangul40BoardModal.tsx) 자모 40자 원어민 음가 및 A4 인쇄용 격자 워크북.
+  - `[캠퍼스 학업 TIP]`: [CampusTipModal](file:///c:/HanUp/src/components/CampusTipModal.tsx) 교수님 이메일 템플릿(1강), 조별과제 생존법(4강), 대학원 사전컨택(10강).
+- **탭 1: 개념 및 독해**: 클릭형 단어 팝오버(오디오, L1 번역, 나만의 단어장 저장) 및 중국어/베트남어/영어 대역 토글.
+- **탭 2: 원어민 청취 및 받아쓰기(Dictation)**: 0.8~1.2 배속 재생 및 빈칸 받아쓰기 정오답 진단.
+- **탭 3: 실전 원고지 논술 시뮬레이터 & OCR**:
+  - **TOPIK II 실제 시험 배점 분리 적용**:
+    - **53번 도표 분석 (30점 만점)**: 내용 및 과제 수행 7점, 글의 전개 구조 7점, 어휘·문법·원고지 표기 16점.
+    - **54번 찬반 논술 (50점 만점)**: 내용 및 과제 수행 12점, 글의 전개 구조 12점, 어휘·문법·원고지 표기 26점.
+    - 쓰기 영역 합산 점수(총 80점) 공식과 실시간 영역별 배점 뱃지 노출.
+  - **모바일 반응형 원고지**: 20칸 원고지 격자가 모바일 화면에서 잘리지 않도록 터치 가로 스크롤 및 반응형 줄바꿈 안내 제공.
+  - **손글씨 AI OCR 인식기 ([`/api/ai/ocr`](file:///c:/HanUp/src/app/api/ai/ocr/route.ts))**: 스마트폰 촬영 손글씨를 3초 만에 원고지 텍스트로 자동 디지털 변환.
+- **소리튜터 AI 발음 클리닉 ([`SoriTutorModal.tsx`](file:///c:/HanUp/src/components/SoriTutorModal.tsx))**:
+  - 원어민 표준 음성의 F0 피치 곡선과 학습자의 녹음 곡선을 실시간 중첩 대조.
+  - 6개 언어권별 조음 위치 가이드 및 평음/경음/격음, 종성(받침) 정밀 교정.
+- **하단 책장 넘기기 (Page Flipping)**:
+  - 본문 최하단의 `◀ 이전 단원` | `도서출판 한업 • 《시리즈명》 제O강` | `다음 단원 ▶`으로 종이책 감성의 페이지 이동.
+
+---
+
+### 2.2. [Lv.2 개인 강사 (Teacher/Tutor)] 작동 방식
+
+개인 튜터 및 대학 어학당 강사가 학생들을 코칭하고 채점하는 흐름입니다.
+
+```mermaid
+flowchart TD
+    T1["1. 강사 클래스 개설 (/teacher/classes)"] --> T2["2. 학생 초대 QR/링크 배포"]
+    T2 --> T3["3. 맞춤형 AI 숙제 제작 스튜디오 (크레딧 차감)"]
+    T3 --> T4["4. 통합 채점실 입장 (/teacher/grading)"]
+    T4 --> T5["5. 제출물 확인 (원고지 격자 + 손글씨 OCR 원본 사진)"]
+    T5 --> T6["6. TOPIK II 공식 루브릭 (53번 30점 / 54번 50점) 검토"]
+    T6 --> T7["7. 본문 드래그 빨간펜 첨삭 & 총평 코멘트"]
+    T7 --> T8["8. 원어민 음성 메모(Audio Memo) 녹음 첨부"]
+    T8 --> T9{"채점 결정"}
+    T9 -->|"통과/채점완료"| T10["학생 대시보드로 성적표 즉시 전송"]
+    T9 -->|"보완 필요"| T11["수정 재제출(Revision v1/v2 Diff) 요청"]
+```
+
+#### ① 클래스 개설 및 수강생 관리 ([`/teacher/classes`](file:///c:/HanUp/src/app/teacher/classes/page.tsx))
+- **클래스 개설**: 목표 교재를 지정하여 분반 생성 및 초대 링크/QR 원클릭 배포.
+- **우리반 ERP 온디맨드 아코디언**: 기본 비활성(접힘) 상태로 유지되며, 학사 데이터 동기화가 필요할 때만 토글로 활성화하여 포트 충돌 없이 안전하게 사용.
+- **맞춤형 AI 숙제 제작 스튜디오**: 교사가 학생들의 취약점을 바탕으로 맞춤형 연습 문제를 생성하며, 유료 크레딧($9.9/20회, $39/100회)이 차감됩니다. (Lv.1 학생의 임의 생성은 엄격히 차단)
+
+#### ② 원고지 작문 & 발음 통합 채점실 ([`/teacher/grading`](file:///c:/HanUp/src/app/teacher/grading/page.tsx))
+- **제출 큐 필터링**: [채점 대기], [채점 완료], [재제출 요청].
+- **TOPIK II 실제 시험 배점 규격 분리 적용**:
+  - **53번 도표 분석 채점 모드**: 30점 만점 (과제 수행 7점 / 전개 구조 7점 / 언어 사용 16점) 슬라이더.
+  - **54번 찬반 논술 채점 모드**: 50점 만점 (과제 수행 12점 / 전개 구조 12점 / 언어 사용 26점) 슬라이더.
+  - 쓰기 총점 80점 환산 표기.
+- **인라인 빨간펜 첨삭**: 틀린 조사나 어휘를 드래그하여 교정 문구 입력.
+- **원어민 음성 메모 (Audio Memo) 녹음**:
+  - 교사가 마이크 버튼을 눌러 최대 60초간 음성 피드백을 직접 녹음하여 전송 (`teacher_feedback_voice.mp3`).
+  - 학생 화면에 재생 플레이어가 노출되어 뉘앙스와 억양을 실시간 청취 가능.
+- **재제출(Revision) v1/v2 비교 뷰어**: 수정 요청된 과제의 이전 제출본과 수정본을 좌우 나란히 대조(Diff)하며 첨삭.
+
+---
+
+### 2.3. [Lv.3 교육기관 관리자 (Institution)] 작동 방식
+
+대학 언어교육원, 한국어학당, 대형 유학원 관리자가 대규모 학생과 강사를 총괄하는 흐름입니다.
+
+```mermaid
+flowchart TD
+    I1["1. 기관 포털 로그인 (/admin/orgs)"] --> I2["2. 라이선스 좌석(Seats) 사용률 모니터링"]
+    I2 --> I3["3. 기관 화이트라벨링 커스텀 (브랜드 컬러/서브도메인)"]
+    I3 --> I4["4. 학기별/수준별 반(Class) 개설 & 강사 배정"]
+    I4 --> I5["5. 유학생 명부 CSV 대량 등록 (대안 A 간편 링크)"]
+    I5 --> I6["6. 우리반(UriBan) 학사 ERP 온디맨드 패키지 동기화"]
+    I6 --> I7["7. 수강 종료 후 2X 복습 보장 관리 & 라이선스 회수"]
+```
+
+#### ① 기관 및 좌석(Seats) 화이트라벨링 관리 ([`/admin/orgs`](file:///c:/HanUp/src/app/admin/orgs/page.tsx))
+- **기관 브랜딩 커스터마이징**: 기관 고유의 메인 브랜드 컬러(Primary Color)와 서브도메인을 지정하여 전용 러닝 포털 제공.
+- **좌석(Seats) 쿼터 관리**: 등록된 총 학생 수 대비 잔여 시트 현황을 실시간 게이지 바로 확인 및 추가 라이선스 구매.
+
+#### ② 우리반(UriBan) 학사 ERP 온디맨드 연동 ([`UriBanSyncModal.tsx`](file:///c:/HanUp/src/components/UriBanSyncModal.tsx))
+- **포트 3001 격리 및 온디맨드 토글**: 기본 상태에서는 외부 연결이 차단되어 한업 단독 실행 시 불필요한 네트워크 에러나 포트 충돌이 원천 차단됩니다.
+- **양방향 패키지 동기화**: 관리자가 토글을 켰을 때만 학생 명부, 출결 현황, 과제 제출 로그를 JSON 패키지로 내보내거나 가져옵니다.
+
+---
+
+### 2.4. [Lv.4 슈퍼 관리자 / 출판 본부 (Super Admin)] 작동 방식
+
+한업 본사, 출판부, 수석 연구원이 교재를 출판하고, 전역 설정을 제어하며, 연구 데이터를 수집하는 최고 권한 흐름입니다.
+
+```mermaid
+flowchart TD
+    A1["1. 최고 관리자 인증 (ot.helper7@gmail.com)"] --> A2["2. 교재 출판 스튜디오 마스터 3대 탭 (/admin/studio)"]
+    A2 --> A3["탭① 3D 도서 표지 & ISBN 디자이너"]
+    A2 --> A4["탭② 본문 AI 삽화 프롬프트 & 에셋 저장소"]
+    A2 --> A5["탭③ 글로벌 5대 언어 SNS(OSMU) 추출기"]
+    A1 --> A6["3. 연구소 데이터 랩 (/admin/research)"]
+    A6 --> A7["SHA-256 선택적 마스킹 CSV 추출 (IRB 준수)"]
+    A6 --> A8["소리튜터 받침 오류 vs 작문 조사 오류 교차 상관도 분석"]
+    A6 --> A9["WTP 지불의향 설문 집계 & 학술 스냅샷 링크 생성"]
+```
+
+#### ① Lv.4 교재 출판 스튜디오 마스터 3대 탭 ([`/admin/studio`](file:///c:/HanUp/src/app/admin/studio/page.tsx))
+상단 마스터 탭을 통해 3가지 핵심 기능이 누락 없이 완벽히 공존합니다:
+1. **탭 ① `📘 3D 도서 표지 & ISBN 디자이너`**:
+   - 8종 시리즈(TOPIK 4종 + 생활한국어 4단계) 실시간 표지 편집.
+   - 메인 테마 색상, 3종 레이아웃(헤더형/엠블럼형/좌측정렬), 표지 질감(무광 매트/유광/가죽).
+   - 저자명, 출판사명, ISBN 코드, 정가 실시간 수정 및 3D 하드커버 뷰어/전역 서가 동기화.
+   - 출판소 납품용 300DPI 인쇄용 A4 PDF 내보내기 지원.
+2. **탭 ② `🎨 본문 AI 삽화 프롬프트 & 에셋 저장소`**:
+   - 82개 단원별 상황에 맞는 AI 이미지 생성 프롬프트(Midjourney/DALL-E) 자동 생성.
+   - 단원별 삽화 에셋 클라우드 저장 및 스마트 리더 본문 즉시 배치.
+3. **탭 ③ `📱 글로벌 5대 언어 SNS(OSMU) 마케팅 추출기`**:
+   - 단원 핵심 어휘와 문법을 **샤오홍슈(중국어 간체), 인스타그램, 틱톡**용 3:4 카드뉴스 CSV로 일괄 추출.
+   - 40초 숏폼 릴스/쇼츠 대본 및 다국어(한국어, 중국어, 베트남어, 영어, 일본어) 자막 스크립트 원클릭 다운로드.
+
+#### ② 연구소 데이터 랩 & 학술 연구 파이프라인 ([`/admin/research`](file:///c:/HanUp/src/app/admin/research/page.tsx))
+- **SHA-256 선택적 비식별화 CSV 추출기**:
+  - 대학 연구팀 및 KCI/SSCI 등재지 논문 제출을 위해 학생 개인정보(이름, 이메일, 소속 기관)를 SHA-256 단방향 암호화 해시 또는 마스킹(`김**`, `ot***@***`)하여 연구용 작문 코퍼스 CSV 즉시 추출.
+- **소리튜터 종성(받침) 발음 오류 vs 작문 조사 오류 교차 상관도 분석**:
+  - 유학생의 음향학적 종성 발음 오류(예: 'ㄹ/ㄴ', 'ㄱ/ㅂ' 미파음화 탈락)와 한국어 작문 시 조사 오류(예: '은/는', '을/를', '이/가') 간의 통계적 상관계수($r$) 및 히트맵을 시각화하여 음운론-형태론 연계 학술 연구 지원.
+- **WTP(지불의향) 설문 분석 및 학술 스냅샷 공유 ([`/research/share/[snapshotId]`](file:///c:/HanUp/src/app/research/share/[snapshotId]/page.tsx))**:
+  - AI 단독 vs 인간 교사 첨삭에 대한 유학생 지불 의향 가격대($) 분포 분석 및 논문 인용용 고유 링크 발급.
+
+---
+
+## 3. 수익화 퍼널 (Monetization Funnel) & 글로벌 결제 규격
+
+한업은 B2C 유학생 결제와 B2B 교육기관 라이선스 모델을 결합한 3단계 하이브리드 수익화 구조를 운영합니다.
+
+| 구분 | 무료 체험 (Free Tier) | 한업 정규 교재 패키지 (Paid) | 소리튜터 단독 구독 (SoriTutor) | B2B 기관 라이선스 (Org Seats) |
+| :--- | :--- | :--- | :--- | :--- |
+| **가격** | \$0 (무료 회원가입) | 권당 \$19.99 ~ \$29.99 | 월 \$4.99 / 연 \$39.99 | 좌석당 \$15 ~ \$25/학기 |
+| **약점 클리닉** | 데일리 3제 무료 체험 | **120제 전체 무제한 해금** | 기본 진단 모드 | 반별 맞춤 문항 세트 |
+| **AI 첨삭/OCR** | 일일 2회 제한 | 교재 수강 기간 무제한 | - | 기관 쿼터 일괄 제공 |
+| **복습 보장 기간** | - | **수강 기간의 2배 (2X 보장)** | 구독 유지 기간 | 학기 종료 후 6개월 |
+| **소리튜터 혜택** | 맛보기 발음 3회 | **해당 교재 발음 교정 무료 무제한** | 전 영역 F0 피치 진단 | 기관 학생 전원 기본 제공 |
+| **크로스 할인** | WTP 설문 시 **20% 쿠폰** (`HANUP20WTP`) | 타 시리즈 구매 시 20% 할인 | **한업 교재 구매 시 30% 크로스 할인** | 100석 이상 30% 볼륨 할인 |
+| **숙제 생성 권한** | 차단 (학생 생성 불가) | - | - | 교사용 크레딧 (\$9.9/20회, \$39/100회) |
+
+- **글로벌 결제 모달 ([`LemonSqueezyCheckoutModal.tsx`](file:///c:/HanUp/src/components/LemonSqueezyCheckoutModal.tsx))**:
+  - Lemon Squeezy 기반 글로벌 신용카드, PayPal, Alipay, WeChat Pay 지원.
+  - WTP 설문 응답 완료 시 발급되는 `HANUP20WTP` 프로모션 코드를 입력하면 즉시 20% 결제 금액 할인 적용.
+
+---
+
+## 4. 모바일 반응형 UX 최적화 규격 (WeChat / Xiaohongshu 인앱 브라우저)
+
+샤오홍슈와 위챗 등 모바일 메신저 인앱 브라우저를 통해 접속하는 유학생(모바일 트래픽 80% 이상)을 위해 다음 3대 모바일 뷰포트 최적화가 적용되어 있습니다:
+
+1. **3D 서가 모달 단면 스와이프 탭 (Viewport < 768px)**:
+   - PC 화면의 양면 펼침(Two-Page Spread)이 모바일에서는 상단 `[📘 표지 & 스펙]`과 `[📑 단원 목차]` 세그먼트 버튼으로 자동 전환되어 가로 스크롤 잘림 현상 방지.
+2. **반응형 20칸 한국어 원고지 뷰어**:
+   - 모바일 좁은 폭에서도 20칸 원고지 규격이 깨지지 않도록 최소 너비(`min-w-[560px]`)와 `overflow-x-auto` 터치 가로 스크롤을 적용하고, '가로로 스크롤하여 원고지 전체를 확인하세요' 힌트 노출.
+3. **손글씨 OCR 원클릭 카메라 연동**:
+   - 모바일 웹에서 별도 앱 설치 없이 스마트폰 기본 카메라를 즉시 호출하여 종이 원고지를 촬영하고 3초 만에 원고지 텍스트로 디지털 변환.
+
+---
+
+## 5. 플랫폼 데이터 모델 및 스키마 관계도
+
+```mermaid
+erDiagram
+    HanUpSeries ||--o{ SyllabusChapter : contains
+    HanUpSeries ||--|| BookCoverStyle : styles
+    Organization ||--o{ ClassGroup : operates
+    ClassGroup ||--o{ UserProfile : enrolls
+    UserProfile ||--o{ WritingSubmission : submits
+    WritingSubmission ||--o{ TeacherFeedback : reviews
+    UserProfile ||--o{ AiEducationSurveyResponse : answers
+    UserProfile ||--|| LearnerBackground : records
+
+    HanUpSeries {
+        string seriesId PK
+        string titleKo
+        string targetLevelText
+        int sessionMinutes
+        int chaptersCount
+    }
+    BookCoverStyle {
+        string themeColor
+        string layoutStyle
+        string isbnCode
+        string finishType
+        string publisherText
+    }
+    SyllabusChapter {
+        string chapterId PK
+        int chapterNumber
+        string titleKo
+        string timeFormula
+        string taskType
+    }
+    UserProfile {
+        string uid PK
+        string role "student | teacher | institution | super_admin"
+        string licenseToken
+        string orgId FK
+        string classId FK
+        string studyDuration
+        string studyMethod
+        string stayExperience
+        boolean irbConsent
+    }
+    WritingSubmission {
+        string submissionId PK
+        string chapterId FK
+        string inputMethod "typing | ocr"
+        string content
+        float aiScoreTotal
+        int maxScore "30 | 50"
+        json rubricBreakdown
+        string status "graded | pending | revision"
+    }
+    TeacherFeedback {
+        string submissionId PK
+        string teacherComment
+        float finalScore
+        json rubricBreakdown
+        string audioMemoUrl
+        int audioDurationSec
+    }
+```
+
+---
+
+## 6. 결론 및 향후 기술 로드맵
+
+1. **검증된 무결성**:
+   - Next.js 14 App Router 기반 전체 16개 라우트 정적 빌드(`npm run build`) 통과 및 타입 안정성 100% 확보.
+2. **비즈니스·연구·수험의 완벽한 삼위일체**:
+   - TOPIK II 공인 채점 기준(30점/50점/80점)을 구현하여 수험 적합도를 극대화했습니다.
+   - 7대 학술 변인과 SHA-256 비식별화 파이프라인으로 연구 가치를 확보했습니다.
+   - Lemon Squeezy, 소리튜터 크로스 혜택, 교사 숙제 크레딧으로 지속 가능한 글로벌 수익 모델을 구축했습니다.

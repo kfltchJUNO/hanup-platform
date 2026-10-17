@@ -23,9 +23,15 @@ import {
   Minus,
   CheckCheck,
   School,
+  Mic,
+  MicOff,
+  Volume2,
+  Play,
+  RotateCcw,
 } from 'lucide-react';
 import { useHanUp } from '../../../context/HanUpContext';
 import { UriBanSyncModal } from '../../../components/UriBanSyncModal';
+import { RubricBreakdown } from '../../../types/hanup';
 
 export default function TeacherGradingQueuePage() {
   const { submissions, updateInstructorReview, currentUser } = useHanUp();
@@ -34,6 +40,17 @@ export default function TeacherGradingQueuePage() {
   // Selected submission in the grading queue
   const [selectedSubId, setSelectedSubId] = useState<string>(submissions[0]?.submissionId || '');
   const activeSubmission = submissions.find((s) => s.submissionId === selectedSubId) || submissions[0];
+
+  const is53 = activeSubmission?.taskType === 'topik_53_graph';
+  const maxScore = is53 ? 30 : 50;
+  const maxTaskPerf = is53 ? 7 : 12;
+  const maxTextStruct = is53 ? 7 : 12;
+  const maxLangUsage = is53 ? 16 : 26;
+
+  // Rubric 3-Domain Sub-Scores
+  const [taskPerfScore, setTaskPerfScore] = useState<number>(is53 ? 6 : 10);
+  const [textStructScore, setTextStructScore] = useState<number>(is53 ? 5 : 9);
+  const [langUsageScore, setLangUsageScore] = useState<number>(is53 ? 13 : 21);
 
   // Review Form State
   const [approvedAi, setApprovedAi] = useState<boolean>(
@@ -45,9 +62,14 @@ export default function TeacherGradingQueuePage() {
   );
   const [finalScore, setFinalScore] = useState<number>(
     activeSubmission?.instructorFeedback?.finalScore ||
-      activeSubmission?.aiFeedback.estimatedScore || 36
+      activeSubmission?.aiFeedback.estimatedScore || (is53 ? 24 : 40)
   );
   const [isSuccessNotice, setIsSuccessNotice] = useState<boolean>(false);
+
+  // Audio Voice Memo State
+  const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [voiceSeconds, setVoiceSeconds] = useState(0);
+  const [hasAudioMemo, setHasAudioMemo] = useState(false);
 
   // Tab: AI Feedback Review vs Student Revision Comparison
   const [viewTab, setViewTab] = useState<'review' | 'compare'>('review');
@@ -76,7 +98,22 @@ export default function TeacherGradingQueuePage() {
 
   const handleConfirmReview = () => {
     if (!activeSubmission) return;
-    updateInstructorReview(activeSubmission.submissionId, teacherComment, finalScore, approvedAi);
+    const rubric: RubricBreakdown = {
+      taskPerformance: taskPerfScore,
+      textStructure: textStructScore,
+      languageUsage: langUsageScore,
+      maxScore,
+      totalCompositeMaxScore: 80,
+    };
+    updateInstructorReview(
+      activeSubmission.submissionId,
+      teacherComment,
+      finalScore,
+      approvedAi,
+      rubric,
+      hasAudioMemo ? `/audio/memos/teacher_${activeSubmission.submissionId}.mp3` : undefined,
+      hasAudioMemo ? (voiceSeconds || 24) : undefined
+    );
     setIsSuccessNotice(true);
     setTimeout(() => setIsSuccessNotice(false), 3000);
   };
@@ -364,11 +401,54 @@ export default function TeacherGradingQueuePage() {
                     </div>
                   </div>
 
-                  {/* Teacher Feedback Textarea */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 block">
-                      교사 1:1 최종 코멘트 (학생 대시보드 및 학습관에 노출):
-                    </label>
+                  {/* Teacher Feedback Textarea & Voice Memo */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 block">
+                        교사 1:1 최종 코멘트 (학생 대시보드 및 학습관에 노출):
+                      </label>
+                      {/* Audio Voice Memo Recorder */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isVoiceRecording) {
+                            setIsVoiceRecording(false);
+                            setHasAudioMemo(true);
+                          } else {
+                            setIsVoiceRecording(true);
+                            setVoiceSeconds(1);
+                            const t = setInterval(() => {
+                              setVoiceSeconds((prev) => {
+                                if (prev >= 60) {
+                                  clearInterval(t);
+                                  setIsVoiceRecording(false);
+                                  setHasAudioMemo(true);
+                                  return 60;
+                                }
+                                return prev + 1;
+                              });
+                            }, 1000);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                          isVoiceRecording
+                            ? 'bg-rose-600 text-white animate-pulse'
+                            : hasAudioMemo
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}
+                      >
+                        <Mic className="w-3.5 h-3.5" />
+                        <span>
+                          {isVoiceRecording
+                            ? `녹음 중... (${voiceSeconds}초 / 60초 중지)`
+                            : hasAudioMemo
+                            ? `🎙️ 음성 피드백 첨부됨 (${voiceSeconds || 24}초)`
+                            : '🎙️ 음성 메모 녹음 첨부'}
+                        </span>
+                      </button>
+                    </div>
+
                     <textarea
                       rows={3}
                       value={teacherComment}
@@ -376,15 +456,117 @@ export default function TeacherGradingQueuePage() {
                       placeholder="학생에게 전달할 응원 및 보완 포인트 코멘트를 남겨주세요..."
                       className="w-full p-3.5 rounded-2xl border border-slate-200 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans shadow-inner"
                     />
+
+                    {hasAudioMemo && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="w-4 h-4 text-emerald-600" />
+                          <span className="font-bold">녹음된 원어민 음성 코멘트:</span>
+                          <span className="font-mono text-[11px] text-emerald-700">teacher_feedback_voice_{selectedSubId}.mp3 ({voiceSeconds || 24}초)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setHasAudioMemo(false)}
+                          className="text-[11px] text-slate-400 hover:text-rose-600 font-bold"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TOPIK II Official Rubric 3-Domain Breakdown Steppers */}
+                  <div className="p-4 bg-white rounded-2xl border border-emerald-200/80 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-emerald-600" />
+                        <span>TOPIK II 실제 시험 배점 규격 ({is53 ? '53번 도표 30점' : '54번 논술 50점'}) 채점표</span>
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-bold">
+                        TOPIK II 쓰기 총점 80점 합산 기준
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      {/* Domain 1: Task Performance */}
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-700">내용 및 과제 수행</span>
+                          <span className="font-black text-emerald-700 font-mono">{taskPerfScore} / {maxTaskPerf}점</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={maxTaskPerf}
+                          value={taskPerfScore}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setTaskPerfScore(val);
+                            setFinalScore(val + textStructScore + langUsageScore);
+                          }}
+                          className="w-full accent-emerald-600"
+                        />
+                        <span className="text-[10px] text-slate-400 block truncate">
+                          {is53 ? '자료 해석 및 변화 요인 충실성' : '논제 파악 및 논거 타당성'}
+                        </span>
+                      </div>
+
+                      {/* Domain 2: Text Structure */}
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-700">글의 전개 구조</span>
+                          <span className="font-black text-emerald-700 font-mono">{textStructScore} / {maxTextStruct}점</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={maxTextStruct}
+                          value={textStructScore}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setTextStructScore(val);
+                            setFinalScore(taskPerfScore + val + langUsageScore);
+                          }}
+                          className="w-full accent-emerald-600"
+                        />
+                        <span className="text-[10px] text-slate-400 block truncate">단락 구분 및 접속 표현 일관성</span>
+                      </div>
+
+                      {/* Domain 3: Language Usage */}
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-700">언어 사용 (어휘·문법)</span>
+                          <span className="font-black text-emerald-700 font-mono">{langUsageScore} / {maxLangUsage}점</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={maxLangUsage}
+                          value={langUsageScore}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setLangUsageScore(val);
+                            setFinalScore(taskPerfScore + textStructScore + val);
+                          }}
+                          className="w-full accent-emerald-600"
+                        />
+                        <span className="text-[10px] text-slate-400 block truncate">해라체 종결·맞춤법·원고지 표기</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Final Score Stepper & Submit Button */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-slate-700">교사 최종 확정 점수:</span>
+                      <span className="text-xs font-bold text-slate-700">
+                        교사 최종 합산 점수:
+                      </span>
                       <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-300">
                         <button
-                          onClick={() => setFinalScore(Math.max(0, finalScore - 1))}
+                          onClick={() => {
+                            const next = Math.max(0, finalScore - 1);
+                            setFinalScore(next);
+                          }}
                           className="p-1 rounded text-slate-500 hover:bg-slate-100"
                         >
                           <Minus className="w-3.5 h-3.5" />
@@ -392,19 +574,27 @@ export default function TeacherGradingQueuePage() {
                         <input
                           type="number"
                           min={0}
-                          max={50}
+                          max={maxScore}
                           value={finalScore}
                           onChange={(e) => setFinalScore(Number(e.target.value))}
                           className="w-12 text-center font-black text-emerald-700 text-sm focus:outline-none"
                         />
                         <button
-                          onClick={() => setFinalScore(Math.min(50, finalScore + 1))}
+                          onClick={() => {
+                            const next = Math.min(maxScore, finalScore + 1);
+                            setFinalScore(next);
+                          }}
                           className="p-1 rounded text-slate-500 hover:bg-slate-100"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <span className="text-xs text-slate-400 font-medium">/ 50점 만점</span>
+                      <div className="text-xs space-x-1">
+                        <span className="font-black text-slate-800">/ {maxScore}점 만점</span>
+                        <span className="text-slate-400 font-medium">
+                          ({is53 ? '53번 도표' : '54번 논술'} • 쓰기 총점 80점 병기)
+                        </span>
+                      </div>
                     </div>
 
                     <button

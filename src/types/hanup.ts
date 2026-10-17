@@ -277,8 +277,18 @@ export interface TranslationToneFixItem {
   tipMy?: string;
 }
 
+export interface RubricBreakdown {
+  taskPerformance: number; // 내용 및 과제 수행: 53번(7점), 54번(12점)
+  textStructure: number;   // 글의 전개 구조: 53번(7점), 54번(12점)
+  languageUsage: number;   // 언어 사용(어휘·문법·원고지): 53번(16점), 54번(26점)
+  maxScore: 30 | 50;       // 53번: 30점 만점, 54번: 50점 만점
+  totalCompositeMaxScore: 80; // TOPIK II 쓰기 총점 80점 만점 기준
+}
+
 export interface AiFeedback {
-  estimatedScore: number; // 50점 만점 기준
+  estimatedScore: number; // 53번 30점 만점 or 54번 50점 만점 기준
+  maxScore?: 30 | 50;
+  rubricBreakdown?: RubricBreakdown;
   estimatedLevel: number; // 1~6급
   grammarAndEndingErrors: GrammarFixItem[];
   chineseTranslationToneFixes: TranslationToneFixItem[];
@@ -292,6 +302,10 @@ export interface InstructorFeedback {
   approvedAiFeedback: boolean;
   teacherComment: string;
   finalScore?: number;
+  maxScore?: 30 | 50;
+  rubricBreakdown?: RubricBreakdown;
+  audioMemoUrl?: string; // 강사 음성 메모 녹음 첨삭 URL
+  audioDurationSec?: number;
   reviewedAt: string;
 }
 

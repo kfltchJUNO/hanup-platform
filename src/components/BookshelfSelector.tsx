@@ -34,6 +34,7 @@ export const BookshelfSelector: React.FC<BookshelfSelectorProps> = ({
   const { switchRole, checkChapterAccess } = useHanUp();
   const [activeTab, setActiveTab] = useState<'topik' | 'life'>('topik');
   const [selectedSeries, setSelectedSeries] = useState<HanUpSeries | null>(null);
+  const [mobileModalTab, setMobileModalTab] = useState<'cover' | 'toc'>('cover');
 
   const filteredSeries = seriesList.filter((s) => s.category === activeTab);
 
@@ -182,10 +183,38 @@ export const BookshelfSelector: React.FC<BookshelfSelectorProps> = ({
               </button>
             </div>
 
+            {/* Mobile Tab Switcher (Under 768px: WeChat & Xiaohongshu Viewport Optimization) */}
+            <div className="flex md:hidden items-center justify-center p-2.5 bg-slate-100 border-b border-slate-200">
+              <div className="grid grid-cols-2 gap-1 w-full max-w-xs bg-slate-200/80 p-1 rounded-xl text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setMobileModalTab('cover')}
+                  className={`py-1.5 rounded-lg transition-all ${
+                    mobileModalTab === 'cover'
+                      ? 'bg-white text-blue-700 font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📘 도서 표지 & 스펙
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileModalTab('toc')}
+                  className={`py-1.5 rounded-lg transition-all ${
+                    mobileModalTab === 'toc'
+                      ? 'bg-white text-blue-700 font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📑 단원 목차 ({syllabusChapters.length}강)
+                </button>
+              </div>
+            </div>
+
             {/* Modal Two-Page Book Spread Body */}
             <div className="p-4 sm:p-8 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-6 bg-gradient-to-r from-slate-50/50 via-white to-amber-50/20">
               {/* Left Page: 3D Book Cover & Book Introduction */}
-              <div className="md:col-span-5 flex flex-col items-center space-y-4 border-b md:border-b-0 md:border-r border-slate-200/80 pb-6 md:pb-0 md:pr-6">
+              <div className={`md:col-span-5 flex-col items-center space-y-4 border-b md:border-b-0 md:border-r border-slate-200/80 pb-6 md:pb-0 md:pr-6 ${mobileModalTab === 'cover' ? 'flex' : 'hidden md:flex'}`}>
                 <BookCover
                   styleData={
                     bookCoverStyles[selectedSeries.seriesId] || {
@@ -245,7 +274,7 @@ export const BookshelfSelector: React.FC<BookshelfSelectorProps> = ({
               </div>
 
               {/* Right Page: Authentic Table of Contents (차례 / 목차) */}
-              <div className="md:col-span-7 space-y-4">
+              <div className={`md:col-span-7 space-y-4 ${mobileModalTab === 'toc' ? 'block' : 'hidden md:block'}`}>
                 <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                   <span className="font-black text-sm text-slate-900 flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-amber-700" />

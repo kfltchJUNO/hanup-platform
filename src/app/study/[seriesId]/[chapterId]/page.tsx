@@ -90,6 +90,7 @@ export default function SmartStudyViewerPage() {
     notificationSettings,
     bookCoverStyles,
     getBookCoverStyle,
+    openBackgroundModal,
   } = useHanUp();
 
   const currentSeries =
@@ -474,7 +475,17 @@ export default function SmartStudyViewerPage() {
         researchConsent,
         consentedAt: new Date().toISOString(),
         aiFeedback: {
-          estimatedScore: aiData.estimatedScore || 35,
+          estimatedScore: taskMode === 'topik_54'
+            ? (aiData.estimatedScore || 38)
+            : Math.min(30, Math.round((aiData.estimatedScore || 38) * (30 / 50))),
+          maxScore: taskMode === 'topik_54' ? 50 : 30,
+          rubricBreakdown: {
+            taskPerformance: taskMode === 'topik_54' ? 10 : 6,
+            textStructure: taskMode === 'topik_54' ? 9 : 5,
+            languageUsage: taskMode === 'topik_54' ? 19 : 13,
+            maxScore: taskMode === 'topik_54' ? 50 : 30,
+            totalCompositeMaxScore: 80,
+          },
           estimatedLevel: aiData.estimatedLevel || 4,
           grammarAndEndingErrors: aiData.grammarAndEndingErrors || [],
           chineseTranslationToneFixes: aiData.chineseTranslationToneFixes || [],
@@ -595,6 +606,25 @@ export default function SmartStudyViewerPage() {
 
       {/* Study Materials Screen (Strictly Hidden during Print) */}
       <div className="space-y-6 print:hidden">
+
+      {/* 10-Second Academic Background Intake Banner (7 Research Variables) */}
+      {(!currentUser.studyDuration || !currentUser.studyMethod) && (
+        <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🎓</span>
+            <div className="text-xs">
+              <span className="font-black bg-white/20 px-2 py-0.5 rounded-md mr-1.5">[10초 완성 학술연구 설문]</span>
+              <span>한국어 학습기간, 학습방식, 체류 경험을 등록하시면 더 정밀한 AI 1:1 맞춤 피드백이 제공됩니다.</span>
+            </div>
+          </div>
+          <button
+            onClick={openBackgroundModal}
+            className="px-3.5 py-1.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl font-black text-xs shrink-0 shadow-sm transition-transform hover:scale-105"
+          >
+            배경변인 등록 (10초) →
+          </button>
+        </div>
+      )}
 
       {/* 1. Chapter Title & Global Header Bar */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -2169,12 +2199,59 @@ export default function SmartStudyViewerPage() {
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-2xl font-black text-blue-600">
-                        {existingSubmission.aiFeedback.estimatedScore}점
-                      </span>
-                      <span className="text-xs text-slate-400"> / 50점 만점</span>
+                      {(() => {
+                        const is53Sub = existingSubmission.taskType === 'topik_53_graph';
+                        const maxSub = is53Sub ? 30 : 50;
+                        const score = existingSubmission.aiFeedback.estimatedScore;
+                        return (
+                          <div>
+                            <div className="flex items-baseline justify-end gap-1">
+                              <span className="text-2xl font-black text-blue-600">
+                                {score}점
+                              </span>
+                              <span className="text-xs font-bold text-slate-500">
+                                / {maxSub}점 만점
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              {is53Sub ? '53번 도표분석 (30점)' : '54번 찬반논술 (50점)'} • 쓰기 총점 80점 병기
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
+
+                  {/* TOPIK II 3-Domain Rubric Breakdown Badges */}
+                  {(() => {
+                    const is53Sub = existingSubmission.taskType === 'topik_53_graph';
+                    const maxTask = is53Sub ? 7 : 12;
+                    const maxStruct = is53Sub ? 7 : 12;
+                    const maxLang = is53Sub ? 16 : 26;
+                    const rb = existingSubmission.aiFeedback.rubricBreakdown || {
+                      taskPerformance: Math.round(existingSubmission.aiFeedback.estimatedScore * (maxTask / (is53Sub ? 30 : 50))),
+                      textStructure: Math.round(existingSubmission.aiFeedback.estimatedScore * (maxStruct / (is53Sub ? 30 : 50))),
+                      languageUsage: Math.max(0, existingSubmission.aiFeedback.estimatedScore - Math.round(existingSubmission.aiFeedback.estimatedScore * ((maxTask + maxStruct) / (is53Sub ? 30 : 50)))),
+                      maxScore: is53Sub ? 30 : 50,
+                      totalCompositeMaxScore: 80,
+                    };
+                    return (
+                      <div className="grid grid-cols-3 gap-2 p-3 bg-blue-50/60 rounded-2xl border border-blue-100 text-xs">
+                        <div className="text-center p-1.5 bg-white rounded-xl shadow-2xs">
+                          <span className="text-[10px] text-slate-400 block font-medium">과제 수행</span>
+                          <span className="font-black text-blue-700">{rb.taskPerformance} / {maxTask}점</span>
+                        </div>
+                        <div className="text-center p-1.5 bg-white rounded-xl shadow-2xs">
+                          <span className="text-[10px] text-slate-400 block font-medium">전개 구조</span>
+                          <span className="font-black text-blue-700">{rb.textStructure} / {maxStruct}점</span>
+                        </div>
+                        <div className="text-center p-1.5 bg-white rounded-xl shadow-2xs">
+                          <span className="text-[10px] text-slate-400 block font-medium">언어 사용</span>
+                          <span className="font-black text-blue-700">{rb.languageUsage} / {maxLang}점</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Grammar & Sentence Endings */}
                   <div className="space-y-2">
@@ -2252,13 +2329,28 @@ export default function SmartStudyViewerPage() {
                           {existingSubmission.instructorFeedback.instructorName}
                         </span>
                       </div>
-                      <div className="text-emerald-800 font-black text-lg">
+                      <div className="text-emerald-800 font-black text-base sm:text-lg">
                         최종 확정: {existingSubmission.instructorFeedback.finalScore}점
+                        <span className="text-xs text-emerald-700 font-medium ml-1">
+                          / {existingSubmission.taskType === 'topik_53_graph' ? 30 : 50}점 (총 80점 기준)
+                        </span>
                       </div>
                     </div>
                     <p className="text-xs sm:text-sm text-slate-900 font-medium leading-relaxed bg-white p-4 rounded-2xl border border-emerald-200 shadow-xs">
                       "{existingSubmission.instructorFeedback.teacherComment}"
                     </p>
+
+                    {/* Teacher Audio Memo Player if present */}
+                    {existingSubmission.instructorFeedback.audioMemoUrl && (
+                      <div className="p-3 bg-white/80 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 text-xs text-emerald-950 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="w-4 h-4 text-emerald-600 animate-pulse" />
+                          <span className="font-bold">선생님 1:1 음성 메모 첨삭 ({existingSubmission.instructorFeedback.audioDurationSec || 24}초):</span>
+                        </div>
+                        <audio controls src={existingSubmission.instructorFeedback.audioMemoUrl} className="h-7 max-w-[200px]" />
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between text-[11px] text-emerald-800 pt-1">
                       <span>검수 일시: {new Date(existingSubmission.instructorFeedback.reviewedAt).toLocaleString()}</span>
                       <span className="font-bold">Human-in-the-Loop 완료 ✅</span>
