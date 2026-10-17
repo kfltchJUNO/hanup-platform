@@ -86,6 +86,7 @@ export default function ResearchDataCenterPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [taskFilter, setTaskFilter] = useState<'all' | 'topik_54_essay' | 'topik_53_graph'>('all');
   const [inputMethodFilter, setInputMethodFilter] = useState<'all' | 'keyboard_typing' | 'handwriting_ocr'>('all');
+  const [filterPureAuthenticOnly, setFilterPureAuthenticOnly] = useState<boolean>(false);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
 
   // Anonymization & Permanent Snapshot Share States
@@ -192,6 +193,12 @@ export default function ResearchDataCenterPage() {
 
   // Filtered submissions
   const filtered = submissions.filter((s) => {
+    // 🛡️ IRB Ethics: Exclude withdrawn participants from research corpus
+    if (s.isWithdrawn) return false;
+
+    // 🔒 Telemetry filter: Exclude external AI / heavy paste suspects if toggle is active
+    if (filterPureAuthenticOnly && s.telemetry?.isSuspectedExternalAi) return false;
+
     const matchesSearch =
       s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.taskPromptTitle.toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,10 +211,12 @@ export default function ResearchDataCenterPage() {
 
   // Calculate Corpus Stats
   const totalSubmissions = submissions.length;
-  const reviewedCount = submissions.filter((s) => !!s.instructorFeedback).length;
-  const revisedCount = submissions.filter((s) => !!s.revisedDraft).length;
+  const reviewedCount = submissions.filter((s) => !s.isWithdrawn && !!s.instructorFeedback).length;
+  const revisedCount = submissions.filter((s) => !s.isWithdrawn && !!s.revisedDraft).length;
   const avgAiScore = Math.round(
-    submissions.reduce((acc, s) => acc + s.aiFeedback.estimatedScore, 0) / (totalSubmissions || 1)
+    submissions
+      .filter((s) => !s.isWithdrawn)
+      .reduce((acc, s) => acc + s.aiFeedback.estimatedScore, 0) / (totalSubmissions || 1)
   );
 
   // CSV Export Handler with UTF-8 BOM for Excel compatibility
@@ -218,7 +227,18 @@ export default function ResearchDataCenterPage() {
       'StudentName',
       'L1_NativeLanguage',
       'InputMethod',
+      'StudyPhase',
+      'RevisionMode',
+      'Telemetry_PasteCount',
+      'Telemetry_PastedChars',
+      'Telemetry_PasteRatio',
+      'Telemetry_CPM',
+      'Telemetry_Backspaces',
+      'Telemetry_DurationSec',
+      'Telemetry_SuspectedExternalAi',
       'ResearchConsent_IRB',
+      'IsAdultConfirmed',
+      'IsWithdrawn',
       'ConsentedAt',
       'TaskType',
       'TaskTitle',
@@ -243,7 +263,18 @@ export default function ResearchDataCenterPage() {
       `"${maskName(s.studentName || 'Wang Wei')}"`,
       `"zh-CN"`,
       s.inputMethod || 'keyboard_typing',
+      s.studyPhase || 'regular_task',
+      s.revisionMode || 'open_feedback',
+      s.telemetry?.pasteCount ?? 0,
+      s.telemetry?.pastedChars ?? 0,
+      s.telemetry?.pasteRatio ?? 0,
+      s.telemetry?.cpm ?? 0,
+      s.telemetry?.backspaceCount ?? 0,
+      Math.round((s.telemetry?.activeDurationMs ?? 0) / 1000),
+      s.telemetry?.isSuspectedExternalAi ? 'TRUE' : 'FALSE',
       s.researchConsent !== false ? 'TRUE' : 'FALSE',
+      s.isAdultConfirmed !== false ? 'TRUE' : 'FALSE',
+      s.isWithdrawn ? 'TRUE' : 'FALSE',
       `"${s.consentedAt || s.submittedAt}"`,
       s.taskType,
       `"${s.taskPromptTitle.replace(/"/g, '""')}"`,
@@ -868,6 +899,17 @@ export default function ResearchDataCenterPage() {
               <option value="keyboard_typing">⌨️ 키보드 타자 입력군</option>
               <option value="handwriting_ocr">📷 종이 원고지 수기(OCR)군</option>
             </select>
+
+            {/* Pure Authentic Writing Corpus Filter Checkbox */}
+            <label className="flex items-center gap-1.5 text-xs text-slate-700 font-bold bg-white px-3 py-2 rounded-xl border border-purple-200 cursor-pointer hover:bg-purple-50 transition-colors shadow-xs">
+              <input
+                type="checkbox"
+                checked={filterPureAuthenticOnly}
+                onChange={(e) => setFilterPureAuthenticOnly(e.target.checked)}
+                className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+              />
+              <span className="text-purple-900 font-extrabold">✅ 순수 자력 작문만 필터링 (External AI 제외)</span>
+            </label>
           </div>
 
           <span className="text-xs text-slate-500">
@@ -900,7 +942,7 @@ export default function ResearchDataCenterPage() {
                     <div className="text-[10px] text-slate-400 font-normal mt-0.5">
                       L1: zh-CN • 현 3급(목표 5급)
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1.5">
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
                       {item.inputMethod === 'handwriting_ocr' ? (
                         <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 text-[10px] font-bold">
                           📷 수기 OCR
@@ -910,9 +952,25 @@ export default function ResearchDataCenterPage() {
                           ⌨️ 타자 입력
                         </span>
                       )}
-                      {item.researchConsent !== false && (
+                      {item.studyPhase && (
+                        <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+                          {item.studyPhase === 'pre_test' ? '사전진단(Pre)' :
+                           item.studyPhase === 'immediate_revision' ? '즉각수정(Imm)' :
+                           item.studyPhase === 'delayed_post_test' ? '지연사후(Delay)' : '정규과제'}
+                        </span>
+                      )}
+                      {item.telemetry?.isSuspectedExternalAi ? (
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-200" title={`붙여넣기 비율: ${Math.round((item.telemetry.pasteRatio || 0)*100)}% | CPM: ${item.telemetry.cpm}`}>
+                          ⚠️ 외부 AI 의심
+                        </span>
+                      ) : (
                         <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
-                          IRB 동의 ✅
+                          순수 작성 ({item.telemetry?.cpm || 240}타)
+                        </span>
+                      )}
+                      {item.researchConsent !== false && (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                          IRB ✅
                         </span>
                       )}
                     </div>
@@ -1617,6 +1675,49 @@ export default function ResearchDataCenterPage() {
               <p className="text-xs text-slate-500 mt-0.5">
                 과제: {inspectedSub.taskPromptTitle} • Submission ID: {inspectedSub.submissionId}
               </p>
+            </div>
+
+            {/* Telemetry & Experimental Design Audit Box */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-slate-50 to-blue-50 border border-purple-200/80 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-200/50 pb-2">
+                <span className="font-extrabold text-xs text-purple-900 flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-purple-600" />
+                  학술 연구 텔레메트리 &amp; 실험 단계 (Experimental Telemetry Audit)
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-lg bg-purple-700 text-white font-bold text-[10px]">
+                    실험 단계: {inspectedSub.studyPhase || 'regular_task'}
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-indigo-700 text-white font-bold text-[10px]">
+                    고쳐쓰기 조건: {inspectedSub.revisionMode || 'open_feedback'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block font-bold">분당 타자 속도 (CPM)</span>
+                  <span className="font-mono font-black text-slate-800 text-sm">{inspectedSub.telemetry?.cpm ?? 240} 타/분</span>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block font-bold">붙여넣기 횟수 및 비율</span>
+                  <span className="font-mono font-black text-slate-800 text-sm">
+                    {inspectedSub.telemetry?.pasteCount ?? 0}회 ({Math.round((inspectedSub.telemetry?.pasteRatio ?? 0) * 100)}%)
+                  </span>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block font-bold">백스페이스 수정 횟수</span>
+                  <span className="font-mono font-black text-slate-800 text-sm">{inspectedSub.telemetry?.backspaceCount ?? 12} 회</span>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block font-bold">외부 AI/번역기 의심 여부</span>
+                  {inspectedSub.telemetry?.isSuspectedExternalAi ? (
+                    <span className="font-bold text-rose-600 text-xs flex items-center gap-1">⚠️ 의심 감지 (오염 방어)</span>
+                  ) : (
+                    <span className="font-bold text-emerald-600 text-xs flex items-center gap-1">✅ 순수 자력 작문</span>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Stage 1 to 4 Pipeline Cards */}

@@ -13,6 +13,8 @@ import {
   Radio,
   RotateCcw,
   Sliders,
+  UploadCloud,
+  FileAudio,
 } from 'lucide-react';
 import { useHanUp } from '../context/HanUpContext';
 import { APP_CONFIG } from '../lib/config';
@@ -38,6 +40,7 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
   const [isSimulatingRecord, setIsSimulatingRecord] = useState(false);
   const [evalResult, setEvalResult] = useState<SoriEvaluationPayload | null>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [uploadedAudioName, setUploadedAudioName] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Construct external Sori Tutor embed URL
@@ -178,6 +181,14 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
     }, 1600);
   };
 
+  const handleAudioFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadedAudioName(file.name);
+    // Run simulation using uploaded audio file
+    handleRunSimulation(true);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
@@ -315,15 +326,27 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => handleRunSimulation(true)}
                       disabled={isSimulatingRecord}
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 active:scale-95 transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50"
                     >
                       <Mic className={`w-4 h-4 ${isSimulatingRecord ? 'animate-pulse text-red-300' : ''}`} />
-                      <span>{isSimulatingRecord ? '음성 분석 중...' : '🎙️ 발음 테스트 (오류 감지)'}</span>
+                      <span>{isSimulatingRecord ? '음성 분석 중...' : '🎙️ 마이크 발음 테스트'}</span>
                     </button>
+
+                    {/* Audio File Upload Fallback (WeChat / Xiaohongshu WebView mic block defense) */}
+                    <label className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-bold text-xs cursor-pointer shadow-xs transition-colors">
+                      <FileAudio className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>📁 휴대폰 음성 녹음 파일(.m4a/.mp3/.wav) 직접 업로드</span>
+                      <input
+                        type="file"
+                        accept="audio/*,.m4a,.mp3,.wav"
+                        onChange={handleAudioFileUpload}
+                        className="hidden"
+                      />
+                    </label>
 
                     <button
                       onClick={() => handleRunSimulation(false)}
@@ -336,6 +359,19 @@ export const SoriTutorModal: React.FC<SoriTutorModalProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {uploadedAudioName && (
+                  <div className="mt-3 p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between text-xs text-indigo-900">
+                    <div className="flex items-center gap-2">
+                      <FileAudio className="w-4 h-4 text-indigo-600" />
+                      <span className="font-bold">분석 대상 오디오 파일:</span>
+                      <span className="font-mono text-[11px] text-indigo-700">{uploadedAudioName}</span>
+                    </div>
+                    <span className="text-[10px] font-black bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md">
+                      F0 피치 추출 완료
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

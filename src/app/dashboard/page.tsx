@@ -35,6 +35,9 @@ import {
   Clock,
   Compass,
   FileText,
+  ShieldCheck,
+  Smartphone,
+  Laptop,
 } from 'lucide-react';
 import { useHanUp } from '../../context/HanUpContext';
 import { MOCK_SERIES } from '../../mock/mockData';
@@ -42,7 +45,14 @@ import { UI_TRANSLATIONS, SUPPORTED_LANGUAGES, SupportedLanguage } from '../../l
 import { GrowthReportModal } from '../../components/GrowthReportModal';
 
 export default function StudentDashboardPage() {
-  const { currentUser, lang, savedVocabs, submissions } = useHanUp();
+  const {
+    currentUser,
+    lang,
+    savedVocabs,
+    submissions,
+    optOutResearchConsent,
+    rejoinResearchConsent,
+  } = useHanUp();
   const [mounted, setMounted] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [seriesCategoryFilter, setSeriesCategoryFilter] = useState<'all' | 'topik' | 'life'>('all');
@@ -610,6 +620,110 @@ export default function StudentDashboardPage() {
               <Stethoscope className="w-4 h-4 text-emerald-400" />
               <span>{t.daily3Title}</span>
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* 🛡️ IRB Ethics Consent Management & Dual-Session Devices Card */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-black text-slate-900 text-sm">
+                학술 연구 윤리(IRB) 권리 보호 & 멀티 디바이스 세션 관리
+              </h4>
+              <p className="text-[11px] text-slate-500">
+                언제든 연구 참여 동의를 철회할 수 있으며, PC와 스마트폰 최대 2기기 동시 접속을 지원합니다.
+              </p>
+            </div>
+          </div>
+
+          {/* Current Status Badge */}
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-bold ${
+              currentUser.researchConsent && !currentUser.isWithdrawn
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                : 'bg-amber-100 text-amber-800 border border-amber-300'
+            }`}
+          >
+            {currentUser.researchConsent && !currentUser.isWithdrawn
+              ? '● 학술 연구 데이터 제공 동의 중 (비식별화 상태)'
+              : '○ 연구 데이터 제공 철회됨 (Opt-out 완료)'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          {/* IRB Opt-out Control */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="font-bold text-slate-800 mb-1 flex items-center justify-between">
+                <span>연구 데이터 제공 동의 철회권 (Opt-out)</span>
+                {currentUser.isWithdrawn && (
+                  <span className="text-[10px] text-amber-700 font-mono">
+                    철회일시: {currentUser.withdrawnAt ? new Date(currentUser.withdrawnAt).toLocaleDateString() : '최근'}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                동의를 철회하시면 귀하의 모든 작문·음성 코퍼스가 연구소 데이터 랩(/admin/research) 및 논문 통계 추출에서 <strong>즉시 제외</strong>됩니다. 비동의 시에도 정규 학습 및 AI 첨삭 이용에는 일체의 불이익이 없습니다.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              {currentUser.researchConsent && !currentUser.isWithdrawn ? (
+                <button
+                  type="button"
+                  onClick={optOutResearchConsent}
+                  className="px-4 py-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-black text-xs transition-colors"
+                >
+                  🛡️ 연구 데이터 제공 동의 철회 (Opt-out)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={rejoinResearchConsent}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 font-black text-xs shadow-xs transition-colors"
+                >
+                  ✅ 다시 학술 연구 참여 동의하기
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Active Devices (PC + Mobile 2-device concurrent session) */}
+          <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+            <div className="font-bold text-slate-800 mb-1 flex items-center justify-between">
+              <span>동시 허용 접속 기기 (1 PC + 1 Mobile 동시 세션)</span>
+              <span className="text-[10px] bg-indigo-200/80 text-indigo-900 px-2 py-0.5 rounded-full font-mono font-bold">
+                최대 2대
+              </span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-indigo-100">
+                <div className="flex items-center gap-2">
+                  <Laptop className="w-4 h-4 text-blue-600" />
+                  <span className="font-bold text-slate-800">데스크톱 / 태블릿 (원고지 작성)</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  활성 세션
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-indigo-100">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-purple-600" />
+                  <span className="font-bold text-slate-800">스마트폰 카메라 (Companion OCR 직송)</span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                  동시 연결 대기
+                </span>
+              </div>
+            </div>
+            <p className="text-[10px] text-indigo-800 leading-relaxed">
+              PC에서 원고지를 작성하면서 스마트폰으로 손글씨 사진을 업로드해도 PC 세션이 끊기지 않습니다.
+            </p>
           </div>
         </div>
       </div>

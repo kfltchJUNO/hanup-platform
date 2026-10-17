@@ -121,6 +121,17 @@ export interface UserProfile {
   learningPurpose: 'grad_school' | 'undergrad' | 'employment' | 'life_hobby' | 'hobby';
   subscriptionTier: 'free' | 'clinic_pack' | 'hanup_pro_pass' | 'vip_coaching';
   researchConsent: boolean; // 연구 데이터 수집 동의 여부
+  isAdultConfirmed?: boolean; // 만 18세 이상 성인 학습자 확인 여부
+  isWithdrawn?: boolean; // 연구 참여 동의 철회(Opt-out) 여부
+  withdrawnAt?: string;
+
+  // PC + 모바일 최대 2기기 동시 세션 관리 (Companion OCR)
+  activeDevices?: {
+    deviceType: 'desktop' | 'mobile';
+    deviceName: string;
+    lastActiveAt: string;
+    ipMasked?: string;
+  }[];
 
   // 크로스 혜택 및 숙제 생성 크레딧
   hasSoriTutorSub?: boolean;
@@ -309,6 +320,33 @@ export interface InstructorFeedback {
   reviewedAt: string;
 }
 
+// ==========================================
+// 7.1. Academic Research Telemetry & Longitudinal Study Schema
+// ==========================================
+export type StudyPhase = 'pre_test' | 'regular_task' | 'immediate_revision' | 'delayed_post_test';
+export type RevisionMode = 'open_feedback' | 'blind_recall';
+
+export interface WritingSubmissionTelemetry {
+  pasteCount: number;
+  pastedChars: number;
+  pasteRatio: number; // pastedChars / totalChars (0.0 ~ 1.0)
+  cpm: number; // characters per minute
+  backspaceCount: number;
+  activeDurationMs: number;
+  isSuspectedExternalAi: boolean; // 외부 AI/번역기 붙여넣기 의심 여부
+  allowPasteLocked?: boolean;
+}
+
+export interface CompanionOcrBridge {
+  bridgeToken: string;
+  chapterId: string;
+  status: 'waiting' | 'uploaded' | 'completed';
+  extractedText?: string;
+  confidence?: number;
+  imageUrl?: string;
+  timestamp: number;
+}
+
 export interface WritingSubmission {
   submissionId: string;
   uid: string;
@@ -324,6 +362,11 @@ export interface WritingSubmission {
   rawOcrText?: string;
   researchConsent: boolean; // IRB 동의 여부
   consentedAt?: string;     // IRB 동의 일시
+  isAdultConfirmed?: boolean; // 만 18세 이상 성인 학습자 확인
+  isWithdrawn?: boolean;     // IRB 동의 철회(Opt-out) 여부
+  studyPhase?: StudyPhase;   // 종단 연구 4단계 실험 태그
+  revisionMode?: RevisionMode; // 피드백 참조(open_feedback) vs 블라인드 회상(blind_recall)
+  telemetry?: WritingSubmissionTelemetry; // 작문 진위 검증 키스트로크 텔레메트리
   aiFeedback: AiFeedback;
   instructorFeedback?: InstructorFeedback;
   revisedDraft?: string; // 학습자가 1, 2차 피드백 수용 후 다시 작성한 글

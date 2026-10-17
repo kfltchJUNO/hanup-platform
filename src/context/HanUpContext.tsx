@@ -19,6 +19,10 @@ import {
   UserNotificationSettings,
   BookCoverStyle,
   RubricBreakdown,
+  RevisionMode,
+  CompanionOcrBridge,
+  StudyPhase,
+  WritingSubmissionTelemetry,
 } from '../types/hanup';
 import {
   MOCK_USERS,
@@ -99,7 +103,23 @@ interface HanUpContextType {
     audioMemoUrl?: string,
     audioDurationSec?: number
   ) => void;
-  submitStudentRevision: (submissionId: string, revisedText: string) => void;
+  submitStudentRevision: (
+    submissionId: string,
+    revisedText: string,
+    revisionMode?: RevisionMode
+  ) => void;
+
+  // IRB Ethics: 1-Click Opt-out & Rejoin
+  optOutResearchConsent: () => void;
+  rejoinResearchConsent: () => void;
+
+  // PC + Mobile Dual Device Concurrent Sessions
+  registerDeviceSession: (deviceType: 'desktop' | 'mobile', deviceName?: string) => void;
+
+  // Companion Mobile OCR Bridge (PC + Mobile real-time beam)
+  companionOcrBridge: CompanionOcrBridge | null;
+  initCompanionOcr: (chapterId: string) => string;
+  receiveCompanionOcr: (bridgeToken: string, text: string, confidence?: number, imageUrl?: string) => void;
 
   // Homework Tasks & Lv.2/Lv.3 Credit Packs
   vettedTasks: HomeworkTask[];
@@ -817,8 +837,12 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  // Student Revision Submission (Corpus Final Stage)
-  const submitStudentRevision = (submissionId: string, revisedText: string) => {
+  // Student Revision Submission (Corpus Final Stage with Revision Mode)
+  const submitStudentRevision = (
+    submissionId: string,
+    revisedText: string,
+    revisionMode: RevisionMode = 'open_feedback'
+  ) => {
     setSubmissions((prev) =>
       prev.map((sub) => {
         if (sub.submissionId === submissionId) {
@@ -826,11 +850,110 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
             ...sub,
             revisedDraft: revisedText,
             revisedAt: new Date().toISOString(),
+            revisionMode,
+            studyPhase: 'immediate_revision',
           };
         }
         return sub;
       })
     );
+  };
+
+  // 🛡️ IRB Ethics: 1-Click Opt-out & Rejoin
+  const optOutResearchConsent = () => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      researchConsent: false,
+      isWithdrawn: true,
+      withdrawnAt: new Date().toISOString(),
+    }));
+    setSubmissions((prev) =>
+      prev.map((sub) =>
+        sub.uid === currentUser.uid
+          ? { ...sub, researchConsent: false, isWithdrawn: true }
+          : sub
+      )
+    );
+  };
+
+  const rejoinResearchConsent = () => {
+    setCurrentUser((prev) => ({
+      ...prev,
+      researchConsent: true,
+      isWithdrawn: false,
+      withdrawnAt: undefined,
+    }));
+    setSubmissions((prev) =>
+      prev.map((sub) =>
+        sub.uid === currentUser.uid
+          ? { ...sub, researchConsent: true, isWithdrawn: false }
+          : sub
+      )
+    );
+  };
+
+  // 📱 PC + Mobile Dual Device Concurrent Sessions
+  const registerDeviceSession = (
+    deviceType: 'desktop' | 'mobile',
+    deviceName?: string
+  ) => {
+    setCurrentUser((prev) => {
+      const existing = prev.activeDevices || [];
+      const filtered = existing.filter((d) => d.deviceType !== deviceType);
+      const updated = [
+        ...filtered,
+        {
+          deviceType,
+          deviceName:
+            deviceName ||
+            (deviceType === 'desktop'
+              ? 'PC 데스크톱 (Chrome)'
+              : '스마트폰 모바일 브라우저'),
+          lastActiveAt: new Date().toISOString(),
+          ipMasked: '211.***.***.12',
+        },
+      ];
+      return { ...prev, activeDevices: updated };
+    });
+  };
+
+  // 📷 Companion Mobile OCR Bridge State
+  const [companionOcrBridge, setCompanionOcrBridge] = useState<CompanionOcrBridge | null>(null);
+
+  const initCompanionOcr = (chapterId: string): string => {
+    const token = `bridge_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newBridge: CompanionOcrBridge = {
+      bridgeToken: token,
+      chapterId,
+      status: 'waiting',
+      timestamp: Date.now(),
+    };
+    setCompanionOcrBridge(newBridge);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`hanup_companion_${token}`, JSON.stringify(newBridge));
+    }
+    return token;
+  };
+
+  const receiveCompanionOcr = (
+    bridgeToken: string,
+    text: string,
+    confidence: number = 98.4,
+    imageUrl?: string
+  ) => {
+    const updatedBridge: CompanionOcrBridge = {
+      bridgeToken,
+      chapterId: companionOcrBridge?.chapterId || '',
+      status: 'completed',
+      extractedText: text,
+      confidence,
+      imageUrl,
+      timestamp: Date.now(),
+    };
+    setCompanionOcrBridge(updatedBridge);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`hanup_companion_${bridgeToken}`, JSON.stringify(updatedBridge));
+    }
   };
 
   // Paywall unlock mockup
@@ -971,6 +1094,12 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         addSubmission,
         updateInstructorReview,
         submitStudentRevision,
+        optOutResearchConsent,
+        rejoinResearchConsent,
+        registerDeviceSession,
+        companionOcrBridge,
+        initCompanionOcr,
+        receiveCompanionOcr,
         vettedTasks,
         homeworkCredits,
         creditPacks,

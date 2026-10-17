@@ -41,9 +41,19 @@ import {
   Bell,
   Lock,
   Calendar,
+  Smartphone,
+  ShieldAlert,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { useHanUp } from '../../../../context/HanUpContext';
-import { VocabAnnotation, WritingSubmission } from '../../../../types/hanup';
+import {
+  VocabAnnotation,
+  WritingSubmission,
+  StudyPhase,
+  RevisionMode,
+  WritingSubmissionTelemetry,
+} from '../../../../types/hanup';
 import {
   SUPPORTED_LANGUAGES,
   UI_TRANSLATIONS,
@@ -55,6 +65,8 @@ import { SyllabusDrawer } from '../../../../components/SyllabusDrawer';
 import { Hangul40BoardModal } from '../../../../components/Hangul40BoardModal';
 import { CampusTipModal } from '../../../../components/CampusTipModal';
 import { BookCover } from '../../../../components/BookCover';
+import { InAppBrowserBanner } from '../../../../components/InAppBrowserBanner';
+import { CompanionOcrModal } from '../../../../components/CompanionOcrModal';
 import { ALL_SYLLABUS_CHAPTERS } from '../../../../mock/syllabusData';
 import {
   maskEmail,
@@ -195,6 +207,24 @@ export default function SmartStudyViewerPage() {
   const [rawOcrText, setRawOcrText] = useState<string | undefined>(undefined);
   const [researchConsent, setResearchConsent] = useState<boolean>(true);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving'>('saved');
+
+  // 📱 Companion Mobile OCR Modal State (PC + Mobile 2-device concurrent session)
+  const [isCompanionModalOpen, setIsCompanionModalOpen] = useState<boolean>(false);
+
+  // ⚠️ Minimum Length Hard Gate State
+  const [hardGateError, setHardGateError] = useState<string | null>(null);
+
+  // ⌨️ Keystroke Telemetry Logging (Anti-External AI & Translator Verification)
+  const [pasteCount, setPasteCount] = useState<number>(0);
+  const [pastedChars, setPastedChars] = useState<number>(0);
+  const [backspaceCount, setBackspaceCount] = useState<number>(0);
+  const [activeTypingStart] = useState<number>(Date.now());
+  const [blockExternalPaste, setBlockExternalPaste] = useState<boolean>(false);
+
+  // 🔬 Longitudinal Study Phase & Blind Revision State
+  const [studyPhase, setStudyPhase] = useState<StudyPhase>('regular_task');
+  const [revisionMode, setRevisionMode] = useState<RevisionMode>('open_feedback');
+  const [isFeedbackMaskedInRecall, setIsFeedbackMaskedInRecall] = useState<boolean>(false);
 
   // Sori Tutor AI Pronunciation Integration
   const [isSoriModalOpen, setIsSoriModalOpen] = useState<boolean>(false);
@@ -439,9 +469,39 @@ export default function SmartStudyViewerPage() {
 
   // Submit Draft to AI (Call Real Next.js API Route `/api/ai/grade`)
   const handleAnalyzeWithAi = async () => {
-    // Check AI Grading daily quota
+    // 1. Minimum Length Hard Gate (Prevents AI API burn & garbage corpus)
+    const trimmedLen = draftText.trim().length;
+    const minRequired = taskMode === 'topik_54' ? 300 : 120;
+    if (trimmedLen < minRequired) {
+      setHardGateError(
+        taskMode === 'topik_54'
+          ? `⚠️ [최소 분량 하드 게이트 미달] TOPIK II 54번 찬반 논술은 최소 300자 이상 작성해야 AI 1차 공인 채점이 진행됩니다. (현재: ${trimmedLen}자 / 최소 기준: 300자)`
+          : `⚠️ [최소 분량 하드 게이트 미달] TOPIK II 53번 도표 분석은 최소 120자 이상 작성해야 AI 1차 공인 채점이 진행됩니다. (현재: ${trimmedLen}자 / 최소 기준: 120자)`
+      );
+      return;
+    }
+    setHardGateError(null);
+
+    // 2. Check AI Grading daily quota
     const allowed = consumeAiGradeQuota();
     if (!allowed) return;
+
+    // 3. Compute Keystroke Telemetry for Writing Authenticity
+    const activeDuration = Math.max(10000, Date.now() - activeTypingStart);
+    const cpm = Math.round((trimmedLen / (activeDuration / 60000)) || 1);
+    const pasteRatio = Math.min(1.0, Number((pastedChars / (trimmedLen || 1)).toFixed(2)));
+    const isSuspectedExternalAi = pasteRatio > 0.4 || (cpm > 550 && backspaceCount < 3);
+
+    const telemetry: WritingSubmissionTelemetry = {
+      pasteCount,
+      pastedChars,
+      pasteRatio,
+      cpm,
+      backspaceCount,
+      activeDurationMs: activeDuration,
+      isSuspectedExternalAi,
+      allowPasteLocked: blockExternalPaste,
+    };
 
     setIsSubmittingAi(true);
     try {
@@ -474,6 +534,11 @@ export default function SmartStudyViewerPage() {
         rawOcrText: inputMethod === 'handwriting_ocr' ? rawOcrText || draftText : undefined,
         researchConsent,
         consentedAt: new Date().toISOString(),
+        isAdultConfirmed: currentUser.isAdultConfirmed ?? true,
+        isWithdrawn: currentUser.isWithdrawn ?? false,
+        studyPhase,
+        revisionMode,
+        telemetry,
         aiFeedback: {
           estimatedScore: taskMode === 'topik_54'
             ? (aiData.estimatedScore || 38)
@@ -505,10 +570,10 @@ export default function SmartStudyViewerPage() {
     }
   };
 
-  // Submit Student Revision
+  // Submit Student Revision (with Open Feedback vs Blind Recall Mode)
   const handleSaveRevision = () => {
     if (!existingSubmission) return;
-    submitStudentRevision(existingSubmission.submissionId, revisionText);
+    submitStudentRevision(existingSubmission.submissionId, revisionText, revisionMode);
     setRevisionSavedNotice(true);
     setTimeout(() => setRevisionSavedNotice(false), 3000);
   };
@@ -606,6 +671,9 @@ export default function SmartStudyViewerPage() {
 
       {/* Study Materials Screen (Strictly Hidden during Print) */}
       <div className="space-y-6 print:hidden">
+
+        {/* ⚠️ WeChat / Xiaohongshu In-App Browser Defense Banner */}
+        <InAppBrowserBanner />
 
       {/* 10-Second Academic Background Intake Banner (7 Research Variables) */}
       {(!currentUser.studyDuration || !currentUser.studyMethod) && (
@@ -1974,13 +2042,22 @@ export default function SmartStudyViewerPage() {
                     </label>
                     <button
                       type="button"
+                      onClick={() => setIsCompanionModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-xs transition-all hover:scale-105"
+                      title="스마트폰 QR 코드로 손글씨 원고지 바로 찍어 올리기"
+                    >
+                      <Smartphone className="w-3.5 h-3.5 text-amber-300" />
+                      <span>QR 스마트폰 직송 (Companion)</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleSimulateOcr}
                       disabled={isOcrScanning}
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-bold shadow-xs transition-colors"
                       title="실제 스마트폰 사진 촬영 시뮬레이션"
                     >
                       <ScanLine className="w-3.5 h-3.5" />
-                      <span>모의 촬영 테스트</span>
+                      <span>모의 촬영</span>
                     </button>
                   </div>
                 </div>
@@ -2008,6 +2085,45 @@ export default function SmartStudyViewerPage() {
                 )}
               </div>
 
+              {/* ⌨️ Keystroke Telemetry Live Monitor & Anti-External AI Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100/90 border border-slate-200 text-[11px]">
+                <div className="flex flex-wrap items-center gap-3 text-slate-700">
+                  <span className="font-bold flex items-center gap-1 text-slate-900">
+                    <PenTool className="w-3.5 h-3.5 text-blue-600" />
+                    <span>작문 진위 텔레메트리:</span>
+                  </span>
+                  <span>
+                    붙여넣기: <strong className="font-mono text-slate-900">{pasteCount}회</strong> ({Math.round((pastedChars / (draftText.length || 1)) * 100)}%)
+                  </span>
+                  <span>
+                    백스페이스 수정: <strong className="font-mono text-slate-900">{backspaceCount}회</strong>
+                  </span>
+                  <span>
+                    타속: <strong className="font-mono text-slate-900">{Math.round((draftText.length / (Math.max(1000, Date.now() - activeTypingStart) / 60000)) || 1)} CPM</strong>
+                  </span>
+                  {(pastedChars / (draftText.length || 1) > 0.4 || (draftText.length > 300 && backspaceCount < 2)) && (
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-300">
+                      <AlertCircle className="w-3 h-3 text-amber-600" />
+                      외부 번역기/AI 의심 플래그
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setBlockExternalPaste(!blockExternalPaste)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 ${
+                    blockExternalPaste
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                  title="외부 번역기 복사-붙여넣기 방지 토글"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>외부 붙여넣기 차단: {blockExternalPaste ? '🔒 ON' : '🔓 OFF'}</span>
+                </button>
+              </div>
+
               {/* Editor View: Normal Textarea vs Manuscript Grid */}
               {editorMode === 'normal' ? (
                 <div className="space-y-1">
@@ -2018,7 +2134,22 @@ export default function SmartStudyViewerPage() {
                     rows={10}
                     value={draftText}
                     onChange={(e) => setDraftText(e.target.value)}
-                    placeholder="여기에 답안을 작성하십시오. (200자 이상 작성 시 실시간 AI 첨삭이 가능합니다)"
+                    onPaste={(e) => {
+                      if (blockExternalPaste) {
+                        e.preventDefault();
+                        alert('외부 붙여넣기가 차단되었습니다. 직접 타이핑하여 작문해 주십시오.');
+                        return;
+                      }
+                      const pasted = e.clipboardData.getData('text');
+                      setPasteCount((prev) => prev + 1);
+                      setPastedChars((prev) => prev + pasted.length);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' || e.key === 'Delete') {
+                        setBackspaceCount((prev) => prev + 1);
+                      }
+                    }}
+                    placeholder="여기에 답안을 작성하십시오. (53번은 120자, 54번은 300자 이상 작성 시 실시간 AI 공인 채점이 진행됩니다)"
                     className="w-full p-4 rounded-2xl border border-slate-200 text-slate-900 text-xs sm:text-sm leading-relaxed font-sans focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
                   />
                 </div>
@@ -2028,12 +2159,27 @@ export default function SmartStudyViewerPage() {
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <label className="font-bold text-slate-700">실시간 원고지 동기화 입력창:</label>
-                      <span className="text-slate-400 text-[11px]">입력 즉시 아래 20칸 격자에 배치됩니다</span>
+                      <span className="text-slate-400 text-[11px]">단일 Virtual Grid로 한글 조합 깨짐(도깨비불) 방지</span>
                     </div>
                     <textarea
                       rows={4}
                       value={draftText}
                       onChange={(e) => setDraftText(e.target.value)}
+                      onPaste={(e) => {
+                        if (blockExternalPaste) {
+                          e.preventDefault();
+                          alert('외부 붙여넣기가 차단되었습니다. 직접 타이핑하여 작문해 주십시오.');
+                          return;
+                        }
+                        const pasted = e.clipboardData.getData('text');
+                        setPasteCount((prev) => prev + 1);
+                        setPastedChars((prev) => prev + pasted.length);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' || e.key === 'Delete') {
+                          setBackspaceCount((prev) => prev + 1);
+                        }
+                      }}
                       placeholder="원고지에 입력할 글을 작성하십시오..."
                       className="w-full p-3 rounded-xl border border-slate-200 text-slate-900 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner font-sans"
                     />
@@ -2136,6 +2282,45 @@ export default function SmartStudyViewerPage() {
                 </label>
               </div>
 
+              {/* ⚠️ Minimum Length Hard Gate Alert */}
+              {hardGateError && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-900 text-xs font-bold flex items-start gap-2.5 animate-in fade-in">
+                  <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <span className="font-black block">{hardGateError}</span>
+                    <span className="text-[11px] text-rose-700">
+                      불량 코퍼스 유입 방지 및 AI 토큰 낭비를 차단하기 위해 규정된 최소 글자수를 충족해야 채점이 활성화됩니다.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* 🔬 Longitudinal Study Experimental Phase Selector */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-bold text-slate-700">🔬 종단 연구 실험 단계 태그:</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[
+                    { id: 'pre_test', label: '1. 사전 검사' },
+                    { id: 'regular_task', label: '2. 정규 단원 과제' },
+                    { id: 'immediate_revision', label: '3. 직후 고쳐쓰기' },
+                    { id: 'delayed_post_test', label: '4. 지연 사후 검사' },
+                  ].map((phase) => (
+                    <button
+                      key={phase.id}
+                      type="button"
+                      onClick={() => setStudyPhase(phase.id as StudyPhase)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                        studyPhase === phase.id
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {phase.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center justify-between pt-1">
                 <span className="text-xs text-slate-400">자동 로컬 백업 활성화됨</span>
                 <button
@@ -2150,7 +2335,7 @@ export default function SmartStudyViewerPage() {
 
             {/* Student Revision Section (고쳐쓰기 제출 - 연구 데이터 파이프라인의 핵심) */}
             <div className="pt-6 border-t border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <h4 className="text-xs font-black text-slate-900">
@@ -2163,8 +2348,44 @@ export default function SmartStudyViewerPage() {
                   </span>
                 )}
               </div>
+
+              {/* Revision Mode Selector (Open Feedback vs Blind Recall) */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs">
+                <span className="font-bold text-emerald-950">고쳐쓰기 방식 선택 (실험 조건):</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRevisionMode('open_feedback');
+                      setIsFeedbackMaskedInRecall(false);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      revisionMode === 'open_feedback'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    📖 피드백 참조 고쳐쓰기 (Open)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRevisionMode('blind_recall');
+                      setIsFeedbackMaskedInRecall(true);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      revisionMode === 'blind_recall'
+                        ? 'bg-purple-700 text-white shadow-xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    🧠 블라인드 회상 고쳐쓰기 (Blind)
+                  </button>
+                </div>
+              </div>
+
               <p className="text-[11px] text-slate-500">
-                AI 1차 첨삭과 교사 2차 코멘트를 모두 반영하여 고쳐 쓴 글입니다. 한국어교육학 연구 코퍼스에 종단 수집됩니다.
+                AI 1차 첨삭과 교사 2차 코멘트를 바탕으로 고쳐 쓴 글입니다. 한국어교육학 연구 코퍼스에 종단 수집됩니다.
               </p>
               <textarea
                 rows={8}
@@ -2185,8 +2406,58 @@ export default function SmartStudyViewerPage() {
 
           {/* Right: AI Feedback + Instructor Feedback Display (6 cols) */}
           <div className="lg:col-span-6 space-y-4">
-            {existingSubmission ? (
+            {revisionMode === 'blind_recall' && isFeedbackMaskedInRecall ? (
+              <div className="bg-gradient-to-br from-purple-900/90 to-indigo-950/95 backdrop-blur-md text-white rounded-3xl p-8 border border-purple-500/40 shadow-xl text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-3xl shadow-inner">
+                  🧠
+                </div>
+                <div>
+                  <span className="px-3 py-1 rounded-full bg-purple-500/30 text-purple-200 font-black text-xs border border-purple-400/40">
+                    실험 조건: 블라인드 회상 고쳐쓰기 (Blind Recall Active)
+                  </span>
+                  <h3 className="text-lg font-black text-white mt-3">
+                    피드백 창이 블라인드 마스킹되었습니다
+                  </h3>
+                  <p className="text-xs text-purple-200/90 max-w-md mx-auto mt-2 leading-relaxed">
+                    AI 1차 첨삭과 교사 코멘트를 회상하여 스스로 고쳐쓰기(v2)를 완성해 보세요. 단순 복사 수정을 방지하고 장기 기억 및 문법 내재화 효과를 측정합니다.
+                  </p>
+                </div>
+                <div className="pt-2 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsFeedbackMaskedInRecall(false)}
+                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <span>👁️ 피드백 일시 열람 (Unmask Feedback)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRevisionMode('open_feedback');
+                      setIsFeedbackMaskedInRecall(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-purple-200 font-bold text-xs border border-white/20 transition-all"
+                  >
+                    <span>📖 참조 모드로 전환</span>
+                  </button>
+                </div>
+              </div>
+            ) : existingSubmission ? (
               <>
+                {revisionMode === 'blind_recall' && !isFeedbackMaskedInRecall && (
+                  <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-2xl text-xs text-purple-900">
+                    <span className="font-bold flex items-center gap-1.5">
+                      <span>🧠</span> 블라인드 모드에서 피드백을 임시 열람 중입니다.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsFeedbackMaskedInRecall(true)}
+                      className="px-3 py-1 rounded-lg bg-purple-700 text-white font-bold text-[11px] shadow-xs hover:bg-purple-600"
+                    >
+                      다시 가리기 (Mask)
+                    </button>
+                  </div>
+                )}
                 {/* 1. AI 1st Feedback Card */}
                 <div className="bg-white rounded-3xl p-6 border border-blue-200/90 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -2771,6 +3042,19 @@ export default function SmartStudyViewerPage() {
         isOpen={isSoriModalOpen}
         onClose={() => setIsSoriModalOpen(false)}
         targetSentence={soriTargetSentence}
+      />
+
+      {/* Companion Mobile Bridge OCR Modal (PC + Mobile 2-device concurrent session) */}
+      <CompanionOcrModal
+        isOpen={isCompanionModalOpen}
+        onClose={() => setIsCompanionModalOpen(false)}
+        chapterId={chapterId}
+        onTextReceived={(text) => {
+          setDraftText(text);
+          setInputMethod('handwriting_ocr');
+          setRawOcrText(text);
+          setOcrNotice('스마트폰 사진으로 촬영된 답안이 성공적으로 반영되었습니다.');
+        }}
       />
 
       {/* Syllabus Tree Drawer */}

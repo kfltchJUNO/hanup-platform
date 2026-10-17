@@ -22,6 +22,7 @@ export default function LearnerBackgroundModal() {
     targetTopikLevel: currentUser.targetTopikLevel ?? 5,
     learningPurpose: currentUser.learningPurpose || 'grad_school',
     researchConsent: currentUser.researchConsent ?? true,
+    isAdultConfirmed: currentUser.isAdultConfirmed ?? true,
   });
 
   if (!isBackgroundModalOpen) return null;
@@ -207,9 +208,26 @@ export default function LearnerBackgroundModal() {
             </select>
           </div>
 
-          {/* 7. IRB Consent */}
-          <div className="pt-2">
+          {/* 7. IRB Consent & Adult Confirmation */}
+          <div className="pt-2 space-y-2">
+            {/* Adult Confirmation */}
             <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isAdultConfirmed}
+                onChange={(e) => setForm({ ...form, isAdultConfirmed: e.target.checked })}
+                className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <div className="text-[11px] text-slate-700 leading-relaxed">
+                <span className="font-bold text-slate-900 block mb-0.5">
+                  7-1. [필수 확인] 만 18세 이상 성인 학습자 확인
+                </span>
+                본인은 만 18세 이상의 성인 학습자이며, 연구 참여 안내 사항을 충분히 이해하였습니다.
+              </div>
+            </label>
+
+            {/* Voluntary Research Consent */}
+            <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/50 border border-emerald-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.researchConsent}
@@ -218,10 +236,13 @@ export default function LearnerBackgroundModal() {
               />
               <div className="text-[11px] text-slate-600 leading-relaxed">
                 <span className="font-bold text-slate-800 block mb-0.5">
-                  7. 한국어교육학 학술 연구(IRB) 익명 데이터 활용 필수 동의
+                  7-2. 한국어교육학 학술 연구(IRB) 비식별 데이터 활용 동의 (선택)
                 </span>
                 본 답안과 학습 이력은 개인정보가 완전히 비식별화(SHA-256 해시/마스킹)된 상태로 학술
                 연구 및 AI 모델 성능 개선에 활용되는 것에 동의합니다.
+                <span className="block text-[10px] text-emerald-700 font-bold mt-1">
+                  ※ 본 연구 참여 동의는 자발적 선택 사항이며, 비동의 또는 추후 철회 시에도 한업의 모든 기본 학습 서비스 이용에 어떠한 불이익도 없습니다.
+                </span>
               </div>
             </label>
           </div>
