@@ -200,6 +200,59 @@ export interface OsmuExport {
   shortFormScript40s: string;  // 빌리빌리/더우인/릴스용 40초 숏폼 스크립트
 }
 
+// ==========================================
+// 5.1. YouTube & Short-form Lecture Video Studio (Lv.4 OSMU Video Suite)
+// ==========================================
+export type VideoLectureDuration = 'short_60s' | 'micro_3m' | 'in_depth_8m';
+export type VideoLectureTone = 'friendly_tutor' | 'charisma_star' | 'calm_shadowing';
+
+export interface VideoScene {
+  sceneId: string;
+  sceneIndex: number; // 1, 2, 3...
+  sceneRole: string; // e.g., "Scene 1: 오프닝 & 3초 훅(Hook)"
+  startTimeSec: number;
+  endTimeSec: number;
+  timecodeDisplay: string; // e.g., "00:00 - 00:15"
+  narrationKo: string; // 친근한 강사 구어체 대본
+  subtitleKo: string;  // 화면 표출 자막 텍스트
+  bRollType: 'highlighter_3s' | 'template_54' | 'manuscript_grid' | 'book_cover_3d' | 'sori_f0_pitch' | 'rubric_scorecard';
+  bRollLabel: string; // e.g., "3초 스키밍 형광펜 그래픽", "54번 서론-본론 템플릿 카드"
+  bRollDescription: string; // B-Roll 연출 및 그래픽 시각 지침
+  sfxCue: string; // e.g., "띵동(정답음)", "찰칵(캡처)", "경쾌한 Lo-Fi BGM"
+  multilingualSubtitles?: {
+    ko: string;
+    en: string;
+    ja: string;
+    zh: string;
+    vi: string;
+    my: string;
+  };
+}
+
+export interface VideoSeoKit {
+  title: string;
+  description: string;
+  hashtags: string[];
+  tags: string[];
+}
+
+export interface VideoLectureProject {
+  blockId: string;
+  durationMode: VideoLectureDuration;
+  instructorTone: VideoLectureTone;
+  spokenScript: string;
+  scenes: VideoScene[];
+  seoKits: {
+    ko: VideoSeoKit;
+    en: VideoSeoKit;
+    ja: VideoSeoKit;
+    zh: VideoSeoKit;
+    vi: VideoSeoKit;
+    my: VideoSeoKit;
+  };
+  updatedAt: string;
+}
+
 export interface AuthoringBlock {
   blockId: string;
   seriesId: string; // e.g., "hanup_topik_writing", "hanup_talk_basic", "hanup_vocab_hanja"
@@ -224,6 +277,7 @@ export interface AuthoringBlock {
   writingRubric?: WritingRubric;
   qrBridgeUrl: string; // PDF 인쇄 시 상단에 배치될 웹앱 딥링크
   osmuExport?: OsmuExport;
+  videoLectureProject?: VideoLectureProject;
   updatedAt: string;
 }
 

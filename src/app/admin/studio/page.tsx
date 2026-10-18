@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   Search,
   AlertTriangle,
+  Video,
+  Tv,
 } from 'lucide-react';
 import { useHanUp, isMasterEmail } from '../../../context/HanUpContext';
 import { AuthoringBlock, VocabAnnotation } from '../../../types/hanup';
@@ -33,6 +35,7 @@ import { SyllabusDrawer } from '../../../components/SyllabusDrawer';
 import { Hangul40BoardModal } from '../../../components/Hangul40BoardModal';
 import { CampusTipModal } from '../../../components/CampusTipModal';
 import { BookCover } from '../../../components/BookCover';
+import { YouTubeVideoStudio } from '../../../components/YouTubeVideoStudio';
 import { MOCK_SERIES } from '../../../mock/mockData';
 import { BookCoverStyle } from '../../../types/hanup';
 import {
@@ -106,7 +109,7 @@ export default function AuthoringStudioPage() {
 
   // Studio OSMU Execution States
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic' | 'promo' | 'cover'>('cover');
+  const [osmuTab, setOsmuTab] = useState<'xiaohongshu' | 'shortform' | 'pdf_qr' | 'quiz' | 'illustration' | 'forensic' | 'promo' | 'cover' | 'video_lecture'>('cover');
   const [osmuLang, setOsmuLang] = useState<'zh' | 'en' | 'ja' | 'vi' | 'my'>('zh');
   const [copiedText, setCopiedText] = useState(false);
   const [saveNotice, setSaveNotice] = useState(false);
@@ -416,51 +419,63 @@ export default function AuthoringStudioPage() {
         </div>
       </div>
 
-      {/* 1.0 Lv.4 Studio Master 3-Tab Navigation Bar */}
-      <div className="bg-slate-900 p-2.5 rounded-3xl shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-white">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full md:w-auto">
+      {/* 1.0 Lv.4 Studio Master 4-Tab Navigation Bar */}
+      <div className="bg-slate-900 p-2.5 rounded-3xl shadow-lg flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 text-white">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 w-full xl:w-auto">
           <button
             onClick={() => setOsmuTab('cover')}
-            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all ${
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-black text-xs transition-all ${
               osmuTab === 'cover'
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/40'
                 : 'bg-white/10 text-slate-300 hover:text-white hover:bg-white/15'
             }`}
           >
             <BookOpen className="w-4 h-4 text-blue-300" />
-            <span>📘 3D 도서 표지 & ISBN 디자이너</span>
+            <span>📘 3D 도서 표지 &amp; ISBN</span>
           </button>
 
           <button
             onClick={() => setOsmuTab('illustration')}
-            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all ${
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-black text-xs transition-all ${
               osmuTab === 'illustration'
                 ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-400/40'
                 : 'bg-white/10 text-slate-300 hover:text-white hover:bg-white/15'
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>🎨 본문 AI 삽화 프롬프트 & 에셋</span>
+            <span>🎨 AI 삽화 프롬프트 &amp; 에셋</span>
           </button>
 
           <button
             onClick={() => {
-              if (osmuTab === 'cover' || osmuTab === 'illustration') {
+              if (osmuTab === 'cover' || osmuTab === 'illustration' || osmuTab === 'video_lecture') {
                 setOsmuTab('xiaohongshu');
               }
             }}
-            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-black text-xs transition-all ${
-              osmuTab !== 'cover' && osmuTab !== 'illustration'
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-black text-xs transition-all ${
+              osmuTab !== 'cover' && osmuTab !== 'illustration' && osmuTab !== 'video_lecture'
                 ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40'
                 : 'bg-white/10 text-slate-300 hover:text-white hover:bg-white/15'
             }`}
           >
             <Share2 className="w-4 h-4 text-emerald-300" />
-            <span>📱 글로벌 5대 언어 SNS(OSMU) 추출기</span>
+            <span>📱 5대 언어 SNS 카드뉴스</span>
+          </button>
+
+          <button
+            onClick={() => setOsmuTab('video_lecture')}
+            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-black text-xs transition-all ${
+              osmuTab === 'video_lecture'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/30 ring-2 ring-rose-400/40'
+                : 'bg-white/10 text-slate-300 hover:text-white hover:bg-white/15'
+            }`}
+          >
+            <Tv className="w-4 h-4 text-rose-300" />
+            <span>🎥 유튜브/숏폼 강의 비디오 제작소</span>
           </button>
         </div>
 
-        <div className="text-[11px] text-slate-300 font-bold px-3 py-1 hidden lg:flex items-center gap-2 shrink-0">
+        <div className="text-[11px] text-slate-300 font-bold px-3 py-1 hidden xl:flex items-center gap-2 shrink-0">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           <span>선택 모드:</span>
           <span className="text-white font-extrabold">
@@ -468,6 +483,8 @@ export default function AuthoringStudioPage() {
               ? '3D 실물 도서 표지 조판 & ISBN 바코드 발행'
               : osmuTab === 'illustration'
               ? '챕터별 AI 비주얼 삽화 프롬프트 자동화'
+              : osmuTab === 'video_lecture'
+              ? '유튜브 1타 강사 구어체 대본 & 스토리보드 & 6개 국어 SRT/SEO'
               : '샤오홍슈·인스타·틱톡 5대 언어 카드뉴스 & 숏폼 대본'}
           </span>
         </div>
@@ -538,10 +555,16 @@ export default function AuthoringStudioPage() {
         </div>
       </div>
 
-      {/* 2. Main Grid: Left Notion Editor & Right OSMU Live Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Notion-style Block Editor (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
+      {/* 2. Main Grid: Left Notion Editor & Right OSMU Live Inspector OR Full-Width Video Studio */}
+      {osmuTab === 'video_lecture' ? (
+        <YouTubeVideoStudio
+          activeBlock={activeBlock}
+          onSaveBlock={saveAuthoringBlock}
+        />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Notion-style Block Editor (7 cols) */}
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <span className="text-xs font-black text-slate-500 uppercase tracking-wider">
               원고 블록 에디터 (Block ID: {activeBlock.blockId})
@@ -1490,6 +1513,7 @@ export default function AuthoringStudioPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* 3. Printable Book Layout Modal (A4 Publishing Simulation) */}
       {isPdfModalOpen && (
