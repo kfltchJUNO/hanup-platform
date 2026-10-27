@@ -69,6 +69,7 @@ export const HeaderNavbar: React.FC = () => {
     // 1. Visitor / Unauthenticated Mode: Public learning & guide links
     if (!isLoggedIn) {
       return [
+        { href: '/onboarding', label: '학습 트랙(A/B)', icon: Compass },
         { href: '/#guide', label: '학습 가이드', icon: Compass },
         { href: '/#features', label: '핵심 기능', icon: Sparkles },
         { href: '/#curriculum', label: '교재 라인업', icon: BookOpen },
@@ -82,6 +83,7 @@ export const HeaderNavbar: React.FC = () => {
       case 'student':
         return [
           { href: '/dashboard', label: t.dashboard, icon: GraduationCap },
+          { href: '/track-b/1/1', label: 'Track B 논증', icon: Compass },
           { href: '/clinic', label: t.clinic, icon: Stethoscope },
           { href: '/study/hanup_topik_prep/ch_prep_01', label: t.studyViewer, icon: BookOpen },
         ];
