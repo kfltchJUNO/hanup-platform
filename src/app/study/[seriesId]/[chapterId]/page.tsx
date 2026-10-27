@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -67,6 +67,7 @@ import { CampusTipModal } from '../../../../components/CampusTipModal';
 import { BookCover } from '../../../../components/BookCover';
 import { InAppBrowserBanner } from '../../../../components/InAppBrowserBanner';
 import { CompanionOcrModal } from '../../../../components/CompanionOcrModal';
+import { EBookReaderSpread } from '../../../../components/EBookReaderSpread';
 import { ALL_SYLLABUS_CHAPTERS } from '../../../../mock/syllabusData';
 import {
   maskEmail,
@@ -75,6 +76,7 @@ import {
 } from '../../../../lib/security';
 
 export default function SmartStudyViewerPage() {
+  const router = useRouter();
   const params = useParams();
   const seriesId = (params.seriesId as string) || 'hanup_topik_master';
   const chapterId = (params.chapterId as string) || 'ch_writing_04';
@@ -863,7 +865,7 @@ export default function SmartStudyViewerPage() {
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>{UI_TRANSLATIONS[lang]?.conceptTab || 'Tab 1. 개념 & 읽기'}</span>
+              <span>{UI_TRANSLATIONS[lang]?.conceptTab ? `${UI_TRANSLATIONS[lang]?.conceptTab} (전자책 뷰어)` : 'Tab 1. 전자책 양면 뷰어'}</span>
             </button>
             <button
               onClick={() => setActiveTab('listening')}
@@ -971,361 +973,107 @@ export default function SmartStudyViewerPage() {
       ) : (
         <>
           {/* =========================================================================
-              TAB 1: CONCEPT & MULTI-LINGUAL VOCAB TOOLTIP (INTERACTIVE WEB-BOOK)
+              TAB 1: 3D E-BOOK READER SPREAD & AUTHENTIC BOOK PASSAGE
           ========================================================================= */}
       {activeTab === 'concept' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main Reading Passage (8 cols) */}
-          <div className="lg:col-span-8 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                인터랙티브 웹북 본문 (Interactive Reader)
-              </span>
-              <button
-                onClick={() => setShowFullZhTranslation(!showFullZhTranslation)}
-                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
-              >
-                <Languages className="w-3.5 h-3.5" />
-                <span>
-                  {showFullZhTranslation
-                    ? (lang === 'en' ? 'Hide English Guide' : lang === 'ja' ? '解説を閉じる' : lang === 'vi' ? 'Đóng hướng dẫn' : lang === 'my' ? 'ရှင်းလင်းချက် ပိတ်ရန်' : lang === 'zh' ? '收起中文解析' : '모국어 해설 접기')
-                    : (lang === 'en' ? 'Show English Guide' : lang === 'ja' ? '解説を開く' : lang === 'vi' ? 'Mở hướng dẫn' : lang === 'my' ? 'ရှင်းလင်းချက် ကြည့်ရန်' : lang === 'zh' ? '展开中文解析' : '모국어 대비 해설 펼치기')}
-                </span>
-              </button>
-            </div>
+        <div className="space-y-6">
+          <EBookReaderSpread
+            currentBlock={currentBlock}
+            seriesTitle={currentSeries.titleKo}
+            chapterTitle={currentSyllabusChapter?.titleKo || currentBlock.title}
+            chapterNumber={chapterIndex + 1}
+            totalChapters={seriesChapters.length}
+            lang={lang}
+            licenseToken={licenseToken}
+            onOpenSoriTutor={openSoriTutor}
+            onJumpToWritingTab={() => setActiveTab('writing')}
+            onPrevChapter={() => {
+              if (prevChapter) router.push(`/study/${seriesId}/${prevChapter.chapterId}`);
+            }}
+            onNextChapter={() => {
+              if (nextChapter) router.push(`/study/${seriesId}/${nextChapter.chapterId}`);
+            }}
+            hasPrevChapter={Boolean(prevChapter)}
+            hasNextChapter={Boolean(nextChapter)}
+          />
 
-            {/* Interactive Passage with Clickable Keywords & Invisible Steganography Fingerprint */}
-            {currentBlock.blockId === 'blk_writing_04' ? (
-              <div className="text-slate-900 text-sm sm:text-base leading-loose whitespace-pre-line font-sans">
-                {injectZeroWidthWatermark('현대 사회에서 인공지능(AI) 기술은 산업 전반뿐만 아니라 일상생활에까지 깊숙이 자리 잡았습니다. 이에 따라 생산성이 ', licenseToken)}
-                <button
-                  onClick={() =>
-                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('비약적')) || null)
-                  }
-                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-                >
-                  비약적(飛躍的)
-                </button>
-                {injectZeroWidthWatermark('으로 증가하고 삶의 편의성이 향상된 반면, 일자리 감소와 개인정보 침해, 알고리즘 ', licenseToken)}
-                <button
-                  onClick={() =>
-                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('편향성')) || null)
-                  }
-                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-                >
-                  편향성(偏向性)
-                </button>
-                {injectZeroWidthWatermark('과 같은 윤리적 문제 또한 끊임없이 제기되고 있습니다.\n\n이러한 기술의 부작용을 극복하고 인간과의 조화로운 공존을 이룩하기 위해서는 제도적 가이드라인 마련과 윤리 의식 함양이 무엇보다도 시급한 ', licenseToken)}
-                <button
-                  onClick={() =>
-                    setActiveVocab(currentBlock.vocabAnnotations.find((v) => v.word.includes('선결 과제')) || null)
-                  }
-                  className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold hover:bg-blue-200 transition-colors underline decoration-blue-500 decoration-2 underline-offset-2"
-                >
-                  선결 과제(先決課題)
-                </button>
-                {injectZeroWidthWatermark('라 할 수 있습니다.', licenseToken)}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base leading-relaxed whitespace-pre-line font-sans">
-                  {injectZeroWidthWatermark(currentBlock.koContent, licenseToken)}
-                </div>
-                {/* Clickable Vocab Tags */}
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="text-xs font-bold text-slate-500">💡 본문 핵심 어휘 태그:</span>
-                  {currentBlock.vocabAnnotations.map((v, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveVocab(v)}
-                      className="px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 transition-all flex items-center gap-1 shadow-2xs hover:scale-105"
-                    >
-                      <span>🏷️</span>
-                      <span>{v.word}</span>
-                      <span className="text-[10px] text-blue-600 font-medium">({v.zhMeaning})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Multilingual Explanation Box */}
-            {showFullZhTranslation && (
-              <div className="p-5 rounded-2xl bg-blue-50/70 border border-blue-200/80 text-xs text-slate-800 space-y-2 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between border-b border-blue-200/60 pb-2">
-                  <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs sm:text-sm">
-                    <span>{SUPPORTED_LANGUAGES[lang]?.flag}</span>
-                    <span>
-                      {lang === 'en' && '【TOPIK 54 Essay Analysis & Contrastive Guide】'}
-                      {lang === 'ja' && '【TOPIK54番 論述課題の徹底解説と対照学習ガイド】'}
-                      {lang === 'zh' && '【第54题大作文真题深度解析与中韩语言对比指南】'}
-                      {lang === 'vi' && '【Phân tích đề thi viết TOPIK câu 54 & Hướng dẫn đối chiếu】'}
-                      {lang === 'my' && '【TOPIK အမှတ် ၅၄ စာစီစာကုံး သရုပ်ခွဲလေ့လာချက်နှင့် လမ်းညွှန်】'}
-                      {lang === 'ko' && '【TOPIK 54번 실전 논술 3단 구성 심층 가이드】'}
-                    </span>
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                    {SUPPORTED_LANGUAGES[lang]?.nativeLabel}
-                  </span>
-                </div>
-                <p className="leading-relaxed text-slate-800 text-xs sm:text-sm font-sans whitespace-pre-line">
-                  {currentBlock.multilingualExplanations?.[lang] || currentBlock.zhExplanation}
-                </p>
-              </div>
-            )}
-
-            {/* Model Answer Showcase */}
-            {currentBlock.writingRubric && (
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800">
-                    🏆 54번 650자 만점 모범 답안 (Model Answer)
-                  </span>
-                  <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold border border-amber-200">
-                    6급 수사 구조
-                  </span>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-800 whitespace-pre-line leading-relaxed font-sans">
-                  {injectZeroWidthWatermark(currentBlock.writingRubric.modelAnswer, licenseToken)}
-                </div>
-              </div>
-            )}
-            {/* Multilingual L1 Typology & Contrastive Interference Guide Card */}
-            {L1_PROFILES[lang] && L1_PROFILES[lang].majorInterferenceErrors.length > 0 && (
-              <div className="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-950 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-indigo-200/70 pb-2">
-                  <div className="flex items-center gap-2 font-bold text-indigo-900">
-                    <span className="text-base">{L1_PROFILES[lang].flag}</span>
-                    <span>{L1_PROFILES[lang].nativeName} 화자를 위한 한국어 대조언어학 핵심 가이드</span>
-                  </div>
-                  <span className="text-[10px] font-mono bg-indigo-200/60 px-2 py-0.5 rounded font-bold text-indigo-800 self-start sm:self-auto">
-                    {L1_PROFILES[lang].wordOrder}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {L1_PROFILES[lang].majorInterferenceErrors.map((item, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-white border border-indigo-100 shadow-2xs space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <div className="font-extrabold text-indigo-900 text-[11px] leading-tight">{item.type}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">{item.descriptionNative}</div>
-                      </div>
-                      <div className="space-y-1 pt-1">
-                        <div className="text-[10px] bg-rose-50 text-rose-800 px-1.5 py-0.5 rounded line-through">
-                          ❌ {item.exampleWrong}
-                        </div>
-                        <div className="text-[10px] bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold">
-                          ⭕ {item.exampleCorrect}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Reading Questions Assessment */}
-            {readingQuestions.length > 0 && (
-              <div className="pt-6 border-t border-slate-200/80 space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                    <FileCheck className="w-4 h-4 text-emerald-600" />
-                    <span>📖 TOPIK 준비편 실전 읽기 평가 ({readingQuestions.length}문항)</span>
-                  </h3>
-                  <span className="text-[11px] text-slate-500 font-medium">정답을 클릭하면 즉시 해설과 피드백이 제공됩니다.</span>
-                </div>
-
-                <div className="space-y-4">
-                  {readingQuestions.map((q) => {
-                    const isSelected = selectedAnswers[q.itemId] !== undefined;
-                    const selectedIdx = selectedAnswers[q.itemId];
-                    const isCorrect = selectedIdx === q.correctIndex;
-                    const showFb = showAnswerFeedback[q.itemId];
-
-                    return (
-                      <div key={q.itemId} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-xs font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-md">
-                            [문항 {q.questionNumber}번]
-                          </span>
-                          <span className="text-xs text-slate-500 font-semibold">{q.directionKo}</span>
-                        </div>
-
-                        {q.passage && (
-                          <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line">
-                            {q.passage}
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                          {q.options.map((opt, oIdx) => {
-                            const isChosen = selectedIdx === oIdx;
-                            return (
-                              <button
-                                key={oIdx}
-                                onClick={() => {
-                                  setSelectedAnswers((prev) => ({ ...prev, [q.itemId]: oIdx }));
-                                  setShowAnswerFeedback((prev) => ({ ...prev, [q.itemId]: true }));
-                                }}
-                                className={`p-2.5 rounded-xl text-xs text-left font-bold border transition-all ${
-                                  isChosen
-                                    ? isChosen && oIdx === q.correctIndex
-                                      ? 'bg-emerald-100 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/30'
-                                      : 'bg-rose-100 border-rose-500 text-rose-950 ring-2 ring-rose-400/30'
-                                    : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50'
-                                }`}
-                              >
-                                <span className="mr-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-[10px] text-slate-600 font-mono">
-                                  {oIdx + 1}
-                                </span>
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {showFb && (
-                          <div className={`p-3 rounded-xl text-xs space-y-1 ${isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'}`}>
-                            <div className="font-extrabold flex items-center gap-1.5">
-                              {isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다.'}
-                              <span className="text-[11px] font-normal text-slate-600">
-                                (정답: {q.correctIndex + 1}번 {q.options[q.correctIndex]})
-                              </span>
-                            </div>
-                            <p className="text-[11px] leading-relaxed text-slate-700">{q.explanation}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Vocab Inspector & Bookmarking (4 cols) */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          {/* Reading Questions Assessment (if prep chapter has questions) */}
+          {readingQuestions.length > 0 && (
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>핵심 어휘 다국어 툴팁 ({SUPPORTED_LANGUAGES[lang]?.flag} {SUPPORTED_LANGUAGES[lang]?.label})</span>
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-emerald-600" />
+                  <span>📖 TOPIK 준비편 권말 부록 실전 읽기 평가 ({readingQuestions.length}문항)</span>
                 </h3>
-                <span className="text-[11px] text-slate-400">단어를 클릭하세요</span>
+                <span className="text-[11px] text-slate-500 font-medium">정답을 클릭하면 즉시 해설과 피드백이 제공됩니다.</span>
               </div>
 
-              {/* Vocab Cards */}
-              <div className="space-y-3">
-                {currentBlock.vocabAnnotations.map((v, idx) => {
-                  const isSaved = isVocabSaved(v.word);
-                  const isSelected = activeVocab?.word === v.word;
+              <div className="space-y-4">
+                {readingQuestions.map((q) => {
+                  const isSelected = selectedAnswers[q.itemId] !== undefined;
+                  const selectedIdx = selectedAnswers[q.itemId];
+                  const isCorrect = selectedIdx === q.correctIndex;
+                  const showFb = showAnswerFeedback[q.itemId];
 
                   return (
-                    <div
-                      key={idx}
-                      onClick={() => setActiveVocab(v)}
-                      className={`p-4 rounded-2xl border text-left cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-blue-600 bg-blue-50/80 shadow-sm ring-2 ring-blue-500/20'
-                          : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50/70'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-slate-900 text-sm">{v.word}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-900">
-                            TOPIK {v.topikLevel}급
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSaveVocab(v.word);
-                            }}
-                            className={`p-1 rounded-md transition-colors ${
-                              isSaved ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-slate-500'
-                            }`}
-                            title="단어장에 저장"
-                          >
-                            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-amber-500' : ''}`} />
-                          </button>
-                        </div>
+                    <div key={q.itemId} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-md">
+                          [문항 {q.questionNumber}번]
+                        </span>
+                        <span className="text-xs text-slate-500 font-semibold">{q.directionKo}</span>
                       </div>
 
-                      {/* Multilingual Meaning based on selected language */}
-                      <div className="text-xs text-slate-700 mt-2 space-y-1">
-                        <div className="font-bold text-blue-900 bg-blue-50/80 px-2.5 py-1.5 rounded-lg border border-blue-200/60 flex items-center justify-between">
-                          <span>
-                            {lang === 'en' && `🇺🇸 English: ${v.enMeaning}`}
-                            {lang === 'ja' && `🇯🇵 日本語: ${v.jaMeaning || v.enMeaning}`}
-                            {lang === 'zh' && `🇨🇳 中文: ${v.zhMeaning}`}
-                            {lang === 'vi' && `🇻🇳 Tiếng Việt: ${v.viMeaning || v.enMeaning}`}
-                            {lang === 'my' && `🇲🇲 မြန်မာ: ${v.myMeaning || v.enMeaning}`}
-                            {lang === 'ko' && `🌐 다국어: 🇺🇸 ${v.enMeaning} | 🇨🇳 ${v.zhMeaning}`}
-                          </span>
-                          <span className="text-[10px] text-blue-600 font-mono uppercase">L1 Match</span>
-                        </div>
-
-                        {/* Collapsible 5-Language Cross-Reference */}
-                        <div className="text-[10px] text-slate-500 pt-1 space-y-0.5 border-t border-slate-100">
-                          <div className="flex flex-wrap gap-x-2 text-slate-600">
-                            <span>🇺🇸 {v.enMeaning}</span>
-                            <span>🇨🇳 {v.zhMeaning}</span>
-                            {v.jaMeaning && <span>🇯🇵 {v.jaMeaning}</span>}
-                            {v.viMeaning && <span>🇻🇳 {v.viMeaning}</span>}
-                            {v.myMeaning && <span>🇲🇲 {v.myMeaning}</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Tailored L1 Interference Warning Note */}
-                      {(v.l1ContrastiveNotes?.[lang] || v.commonChineseErrorNote) && (
-                        <div className="mt-2 text-[11px] text-rose-800 bg-rose-50 p-2.5 rounded-xl border border-rose-200/80 leading-relaxed space-y-0.5">
-                          <div className="font-bold flex items-center gap-1 text-rose-900">
-                            <span>⚠️ {SUPPORTED_LANGUAGES[lang]?.nativeLabel || '모국어'} 화자 감점 방지 팁:</span>
-                          </div>
-                          <div>{v.l1ContrastiveNotes?.[lang] || v.commonChineseErrorNote}</div>
+                      {q.passage && (
+                        <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line">
+                          {q.passage}
                         </div>
                       )}
 
-                      {/* Sori Tutor Pronunciation Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const sampleSentence = v.word.includes('비약적')
-                            ? '인공지능 기술은 생산성을 비약적으로 발전시켰다.'
-                            : v.word.includes('선결 과제')
-                            ? '이것이야말로 조화로운 공존을 위한 선결 과제라 할 수 있다.'
-                            : v.word.includes('편향성')
-                            ? '알고리즘 데이터 편향성 문제를 극복해야 한다.'
-                            : `${v.word}의 정확한 표준 발음과 연음을 연습합니다.`;
-                          openSoriTutor(sampleSentence);
-                        }}
-                        className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
-                      >
-                        <Mic className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>🎙️ 소리튜터 발음·연음 교정</span>
-                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {q.options.map((opt, oIdx) => {
+                          const isChosen = selectedIdx === oIdx;
+                          return (
+                            <button
+                              key={oIdx}
+                              onClick={() => {
+                                setSelectedAnswers((prev) => ({ ...prev, [q.itemId]: oIdx }));
+                                setShowAnswerFeedback((prev) => ({ ...prev, [q.itemId]: true }));
+                              }}
+                              className={`p-2.5 rounded-xl text-xs text-left font-bold border transition-all ${
+                                isChosen
+                                  ? isChosen && oIdx === q.correctIndex
+                                    ? 'bg-emerald-100 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/30'
+                                    : 'bg-rose-100 border-rose-500 text-rose-950 ring-2 ring-rose-400/30'
+                                  : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="mr-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-[10px] text-slate-600 font-mono">
+                                {oIdx + 1}
+                              </span>
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {showFb && (
+                        <div className={`p-3 rounded-xl text-xs space-y-1 ${isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'}`}>
+                          <div className="font-extrabold flex items-center gap-1.5">
+                            {isCorrect ? '✅ 정답입니다!' : '❌ 오답입니다.'}
+                            <span className="text-[11px] font-normal text-slate-600">
+                              (정답: {q.correctIndex + 1}번 {q.options[q.correctIndex]})
+                            </span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-slate-700">{q.explanation}</p>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
-
-            {/* Jump CTA to Writing */}
-            <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md space-y-2">
-              <span className="text-xs font-bold text-blue-200">개념 정리를 마쳤다면?</span>
-              <h4 className="font-extrabold text-sm">54번 700자 실전 쓰기에 도전하세요</h4>
-              <p className="text-[11px] text-blue-100">
-                학습한 '비약적', '선결 과제'를 직접 글에 녹여내면 AI가 즉시 어휘 점수를 매겨드립니다.
-              </p>
-              <button
-                onClick={() => setActiveTab('writing')}
-                className="w-full mt-2 py-2 rounded-xl bg-white text-blue-900 font-black text-xs hover:bg-blue-50 transition-colors shadow-sm"
-              >
-                쓰기 & AI 튜터 탭으로 이동 →
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
