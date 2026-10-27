@@ -46,6 +46,7 @@ import { ToulminRadarChart } from '../../../../components/track-b/ToulminRadarCh
 import { DevilsAdvocateModal } from '../../../../components/track-b/DevilsAdvocateModal';
 import { TutorCoachingBar } from '../../../../components/track-b/TutorCoachingBar';
 import { ManuscriptGridEditor } from '../../../../components/editor/ManuscriptGridEditor';
+import { PostExperienceSurveyModal } from '../../../../components/survey/PostExperienceSurveyModal';
 import { analyzeToulminStructure, generateDevilsAdvocate } from '../../../../lib/services/trackBService';
 
 type SessionStage = 1 | 2 | 3 | 4;
@@ -95,6 +96,7 @@ export default function TrackBUnitPage() {
   const [devilsResult, setDevilsResult] = useState<DevilsAdvocateResult | null>(null);
   const [counterRebuttalText, setCounterRebuttalText] = useState<string>('');
   const [hasCompletedStage4, setHasCompletedStage4] = useState<boolean>(false);
+  const [isPostSurveyOpen, setIsPostSurveyOpen] = useState<boolean>(false);
 
   // 1:1 Tutor Coaching Bar
   const [isInstructorMode, setIsInstructorMode] = useState<boolean>(false);
@@ -189,8 +191,13 @@ export default function TrackBUnitPage() {
     setCounterRebuttalText(counterText);
     setHasCompletedStage4(true);
 
-    // Append counter rebuttal to draft if desired
+    // Append counter rebuttal to draft
     setDraftText((prev) => `${prev}\n\n[재반박(Counter-Rebuttal)]\n${counterText}`);
+
+    // Prompt post-experience survey
+    setTimeout(() => {
+      setIsPostSurveyOpen(true);
+    }, 1500);
   };
 
   const handleAddComment = (commentData: {
@@ -838,6 +845,13 @@ export default function TrackBUnitPage() {
           handleOpenDevilsAdvocate();
         }}
         onSubmitCounterRebuttal={handleConfirmCounterRebuttal}
+      />
+
+      {/* 5. Post Experience Survey Modal */}
+      <PostExperienceSurveyModal
+        isOpen={isPostSurveyOpen}
+        onClose={() => setIsPostSurveyOpen(false)}
+        onComplete={() => setIsPostSurveyOpen(false)}
       />
     </div>
   );

@@ -33,27 +33,27 @@ export const ToulminHighlighter: React.FC<ToulminHighlighterProps> = ({
   const getElementStyle = (element: ToulminElement, isSelected: boolean) => {
     switch (element) {
       case 'C':
-        return `bg-blue-100 text-blue-900 border-b-2 border-blue-400 hover:bg-blue-200 ${
+        return `bg-blue-100 text-blue-900 border-b-2 border-blue-500 hover:bg-blue-200 ${
           isSelected ? 'ring-2 ring-blue-500 font-semibold' : ''
         }`;
       case 'D':
-        return `bg-green-100 text-green-900 border-b-2 border-green-400 hover:bg-green-200 ${
+        return `bg-green-100 text-green-900 border-b-2 border-green-500 hover:bg-green-200 ${
           isSelected ? 'ring-2 ring-green-500 font-semibold' : ''
         }`;
       case 'W':
-        return `bg-amber-100 text-amber-900 border-b-2 border-amber-400 hover:bg-amber-200 ${
+        return `bg-amber-100 text-amber-900 border-b-2 border-amber-500 hover:bg-amber-200 ${
           isSelected ? 'ring-2 ring-amber-500 font-semibold' : ''
         }`;
       case 'B':
-        return `bg-purple-100 text-purple-900 border-b-2 border-purple-400 hover:bg-purple-200 ${
+        return `bg-purple-100 text-purple-900 border-b-2 border-purple-500 hover:bg-purple-200 ${
           isSelected ? 'ring-2 ring-purple-500 font-semibold' : ''
         }`;
       case 'Q':
-        return `bg-slate-200 text-slate-800 border-b-2 border-slate-400 hover:bg-slate-300 ${
+        return `bg-slate-200 text-slate-800 border-b-2 border-slate-500 hover:bg-slate-300 ${
           isSelected ? 'ring-2 ring-slate-600 font-semibold' : ''
         }`;
       case 'R':
-        return `bg-rose-100 text-rose-900 border-b-2 border-rose-400 hover:bg-rose-200 ${
+        return `bg-rose-100 text-rose-900 border-b-2 border-rose-500 hover:bg-rose-200 ${
           isSelected ? 'ring-2 ring-rose-500 font-semibold' : ''
         }`;
       case 'NONE':

@@ -28,8 +28,7 @@ export async function analyzeToulminStructure(
     };
   }
 
-  const systemPrompt = `당신은 스티븐 툴민(Stephen Toulmin)의 논증 모형(Model of Argument)과 샤임 페렐만(Chaïm Perelman)의 신수사학(The New Rhetoric)을 전공한 수사학 및 학술 작문 수석 평가관입니다.
-학습자가 작성한 한국어 논술문을 문장 단위로 분절하고, 툴민의 6대 논증 요소(C, D, W, B, Q, R, NONE)로 엄격히 태깅 및 평가하십시오.
+  const systemPrompt = `당신은 페렐만의 신수사학과 툴민 논증 모델(C-D-W-B-Q-R)을 전문으로 하는 한국어 쓰기 교육 평가 전문가이다. 주어진 텍스트를 문장 단위로 분절하고 각각 Claim, Data, Warrant, Backing, Qualifier, Rebuttal, None 중 하나로 태깅하라. 또한 6요소 완비도(0-100점)와 선택된 청중의 가치관 부합도를 진단하라.
 
 [지정된 대상 청중 정보]:
 - 역할: ${selectedAudience.role}
@@ -108,7 +107,7 @@ export async function generateDevilsAdvocate(
   warrant: string,
   selectedAudience: AudiencePersona
 ): Promise<DevilsAdvocateResult> {
-  const systemPrompt = `당신은 지정된 청중(${selectedAudience.role})의 입장을 대변하는 가장 비판적이고 날카로운 반대 토론자이다.
+  const systemPrompt = `당신은 지정된 청중의 핵심 가치를 대변하는 가장 비판적인 반대 토론자이다. 학습자의 주장(C)과 연결 이유(W)의 취약점을 파고드는 150~200자 내외의 예상 반론(Rebuttal)과 질문을 한국어로 생성하라. 단순 감정적 비판이 아닌 페렐만식 '가치 충돌' 또는 '실행 비용' 관점에서 공박할 것.
 [청중 정보]:
 - 역할: ${selectedAudience.role}
 - 핵심 가치: ${selectedAudience.coreValue}

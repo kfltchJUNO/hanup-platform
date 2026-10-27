@@ -32,7 +32,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-blue-100',
       text: 'text-blue-900',
-      border: 'border-blue-400',
+      border: 'border-blue-500',
       badge: 'bg-blue-600 text-white',
       hover: 'hover:bg-blue-200',
     },
@@ -47,7 +47,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-green-100',
       text: 'text-green-900',
-      border: 'border-green-400',
+      border: 'border-green-500',
       badge: 'bg-green-600 text-white',
       hover: 'hover:bg-green-200',
     },
@@ -62,7 +62,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-amber-100',
       text: 'text-amber-900',
-      border: 'border-amber-400',
+      border: 'border-amber-500',
       badge: 'bg-amber-600 text-white',
       hover: 'hover:bg-amber-200',
     },
@@ -77,7 +77,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-purple-100',
       text: 'text-purple-900',
-      border: 'border-purple-400',
+      border: 'border-purple-500',
       badge: 'bg-purple-600 text-white',
       hover: 'hover:bg-purple-200',
     },
@@ -92,7 +92,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-slate-200',
       text: 'text-slate-800',
-      border: 'border-slate-400',
+      border: 'border-slate-500',
       badge: 'bg-slate-700 text-white',
       hover: 'hover:bg-slate-300',
     },
@@ -107,7 +107,7 @@ export const TOULMIN_ELEMENT_METAS: Record<ToulminElement, ToulminMeta> = {
     colorClass: {
       bg: 'bg-rose-100',
       text: 'text-rose-900',
-      border: 'border-rose-400',
+      border: 'border-rose-500',
       badge: 'bg-rose-600 text-white',
       hover: 'hover:bg-rose-200',
     },
@@ -284,3 +284,26 @@ export interface TrackBOnboardingSurvey {
   irbConsent: boolean;            // 학술 실증 연구 데이터 수집 및 분석 동의
   academicGoals: string[];
 }
+
+// ==========================================
+// 6. User Surveys & Trial Logging
+// ==========================================
+export interface UserSurveyEntry {
+  id?: string;
+  userId?: string | null;
+  sessionId: string;
+  surveyType: 'pre_onboarding' | 'post_experience';
+  selectedTrack?: 'track_a' | 'track_b' | 'general';
+  l1Language: string;
+  l1CustomText?: string;
+  targetTopikLevel?: string;
+  writingBottlenecks: string[];
+  writingBottlenecksCustom?: string;
+  irbConsent: boolean;
+  feedbackScore?: number;
+  neededSupports?: string[];
+  neededSupportsCustom?: string;
+  contactInfo?: string;
+  createdAt?: string;
+}
+

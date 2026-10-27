@@ -70,6 +70,7 @@ export const HeaderNavbar: React.FC = () => {
     if (!isLoggedIn) {
       return [
         { href: '/onboarding', label: '학습 트랙(A/B)', icon: Compass },
+        { href: '/track-b/trial', label: 'Track B 무료체험', icon: Sparkles },
         { href: '/#guide', label: '학습 가이드', icon: Compass },
         { href: '/#features', label: '핵심 기능', icon: Sparkles },
         { href: '/#curriculum', label: '교재 라인업', icon: BookOpen },
@@ -83,7 +84,8 @@ export const HeaderNavbar: React.FC = () => {
       case 'student':
         return [
           { href: '/dashboard', label: t.dashboard, icon: GraduationCap },
-          { href: '/track-b/1/1', label: 'Track B 논증', icon: Compass },
+          { href: '/track-b/trial', label: 'Track B 무료체험', icon: Sparkles },
+          { href: '/track-b/1/1', label: 'Track B 정규', icon: Compass },
           { href: '/clinic', label: t.clinic, icon: Stethoscope },
           { href: '/study/hanup_topik_prep/ch_prep_01', label: t.studyViewer, icon: BookOpen },
         ];
