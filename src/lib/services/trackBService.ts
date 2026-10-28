@@ -4,6 +4,8 @@ import {
   ToulminAnalysisResult,
   ToulminElement,
   DevilsAdvocateResult,
+  AiAuditResult,
+  GenreBridgeMode,
 } from '../../types/trackB';
 
 /**
@@ -303,3 +305,188 @@ function fallbackGenerateDevilsAdvocate(
     ],
   };
 }
+
+/**
+ * C. SFL 대인적 평가이론 & 장르 브릿지 AI 논리 감사 (auditAcademicArgument)
+ * Based on '논증텍스트작성 커리큘럼.md'
+ */
+export async function auditAcademicArgument(
+  text: string,
+  selectedAudience?: AudiencePersona,
+  genreMode: GenreBridgeMode = 'essay'
+): Promise<AiAuditResult> {
+  const cleanedText = text.trim();
+  const defaultAudience: AudiencePersona = {
+    id: 'aud_grad_reviewers',
+    role: '학술 논증 심사위원 및 지도교수',
+    coreValue: '논리적 엄밀성 및 실증 근거',
+    frictionFactor: '비약 및 한정어 결여',
+    biasTendency: '보편 청중 설득 지향',
+  };
+  const audience = selectedAudience || defaultAudience;
+
+  const systemPrompt = `[역할]
+당신은 한국 대학원의 엄격하지만 교육적인 '학술 논증 심사위원 및 악마의 대변인(Devil's Advocate)'입니다.
+페렐만의 신수사학과 툴민 논증 6요소(C-D-W-B-Q-R), SFL 대인적 평가이론(Appraisal: Modality, Engagement)을 기반으로 학습자의 한국어 논증 텍스트를 정밀 분석합니다.
+현재 장르 모드: ${genreMode} (essay: 학술에세이, thesis_intro: 소논문서론, critical_review: 비판적서평)
+
+[분석 및 반론 원칙]
+1. 단순 맞춤법 교정이나 표현 첨삭을 하지 마십시오.
+2. 텍스트를 문장 단위로 분절하여 툴민 6요소(C: Claim, D: Data, W: Warrant, B: Backing, Q: Qualifier, R: Rebuttal, NONE)를 판별하십시오.
+3. 각 문장의 SFL 양태성(Modality: HIGH, MEDIAN, LOW)과 개입성(Engagement: MONOGLOSS, EXPAND, CONTRACT)을 판별하십시오.
+4. 특히 '이유(Warrant)'의 가치 연결 비약과 '한정어(Qualifier)'의 성급한 일반화를 엄격히 진단하십시오.
+5. '악마의 대변인'으로서, 학습자의 주장에서 가장 취약한 가치 충돌(예: 비용 vs 복지, 자율 vs 안전)을 짚는 반론 1문장을 생성하십시오.
+6. 학습자가 페렐만식 '개념 분리(Dissociation: 현상 vs 본질, 단기 vs 장기)'를 통해 재반박(Rebuttal)할 수 있도록 유도 질문을 던지십시오.
+
+[응답 포맷: STRICT JSON]
+{
+  "sentences": [
+    {
+      "text": "문장 본문",
+      "toulmin_tag": "C" | "D" | "W" | "B" | "Q" | "R" | "NONE",
+      "sfl_modality": "HIGH" | "MEDIAN" | "LOW",
+      "sfl_engagement": "MONOGLOSS" | "EXPAND" | "CONTRACT",
+      "feedback": "해당 문장의 수사적 조언 (필요 시)",
+      "rationale": "판별 이유"
+    }
+  ],
+  "radar_scores": {
+    "claim": number (0~100),
+    "data": number (0~100),
+    "warrant": number (0~100),
+    "backing": number (0~100),
+    "qualifier": number (0~100),
+    "rebuttal": number (0~100)
+  },
+  "devils_advocate": {
+    "counter_argument": "AI의 비판적 반론 문장",
+    "target_element": "W" | "C" | "Q",
+    "suggested_dissociation": "단기적 비용 vs 장기적 인적자본 투자"
+  }
+}`;
+
+  const userPrompt = `[학습자 논증문 (${genreMode})]:\n${cleanedText}`;
+
+  try {
+    const relayRes = await executeGeminiRelay({
+      task: 'writing',
+      systemPrompt,
+      userPrompt,
+      responseJson: true,
+    });
+
+    if (relayRes && relayRes.content) {
+      let rawJson = relayRes.content.trim();
+      if (rawJson.startsWith('```json')) {
+        rawJson = rawJson.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (rawJson.startsWith('```')) {
+        rawJson = rawJson.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsed: AiAuditResult = JSON.parse(rawJson);
+      if (parsed.sentences && parsed.radar_scores && parsed.devils_advocate) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('[Track B Service] Gemini audit relay error:', err);
+  }
+
+  // Fallback Rule-Based SFL Audit Engine
+  return fallbackAuditAcademicArgument(cleanedText, audience, genreMode);
+}
+
+function fallbackAuditAcademicArgument(
+  text: string,
+  selectedAudience: AudiencePersona,
+  genreMode: GenreBridgeMode
+): AiAuditResult {
+  const rawSentences = text
+    .split(/(?<=[.!?\n])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  let claimFound = false;
+  let dataFound = false;
+  let warrantFound = false;
+  let backingFound = false;
+  let qualifierFound = false;
+  let rebuttalFound = false;
+
+  const sentences = rawSentences.map((s) => {
+    let toulmin_tag: ToulminElement = 'NONE';
+    let sfl_modality: 'HIGH' | 'MEDIAN' | 'LOW' = 'MEDIAN';
+    let sfl_engagement: 'MONOGLOSS' | 'EXPAND' | 'CONTRACT' = 'EXPAND';
+    let feedback = '';
+    let rationale = '';
+
+    if (s.includes('마땅하다') || s.includes('타당하다') || s.includes('해야 한다') || s.includes('본 연구는')) {
+      toulmin_tag = 'C';
+      sfl_modality = 'HIGH';
+      sfl_engagement = 'CONTRACT';
+      feedback = '주장이 확고하며 청중의 수용을 단호히 요청합니다.';
+      rationale = '결론적 당위 명제 제시';
+      claimFound = true;
+    } else if (s.includes('통계') || s.includes('조사') || s.includes('%') || s.includes('연구 결과')) {
+      toulmin_tag = 'D';
+      sfl_modality = 'MEDIAN';
+      sfl_engagement = 'MONOGLOSS';
+      feedback = '객관적 통계 수치가 주장의 신뢰도를 지탱합니다.';
+      rationale = '실증적 통계 데이터 인용';
+      dataFound = true;
+    } else if (s.includes('때문이다') || s.includes('기인한다') || s.includes('원리에 의해')) {
+      toulmin_tag = 'W';
+      sfl_modality = 'MEDIAN';
+      sfl_engagement = 'EXPAND';
+      feedback = '자료로부터 주장으로 건너가는 인과적 다리를 구축했습니다.';
+      rationale = '가치 연합 및 정당화 원리';
+      warrantFound = true;
+    } else if (s.includes('헌법') || s.includes('법') || s.includes('이론') || s.includes('규정')) {
+      toulmin_tag = 'B';
+      sfl_modality = 'HIGH';
+      sfl_engagement = 'CONTRACT';
+      feedback = '공인된 법령 및 학술 이론으로 정당화의 권위를 보강했습니다.';
+      rationale = '이론적·법적 뒷받침';
+      backingFound = true;
+    } else if (s.includes('한하여') || s.includes('조건') || s.includes('범위') || s.includes('제한적')) {
+      toulmin_tag = 'Q';
+      sfl_modality = 'LOW';
+      sfl_engagement = 'EXPAND';
+      feedback = '성급한 일반화를 피하고 적용 범위를 신중하게 한정했습니다.';
+      rationale = '유효 범위 및 예외 조건 설정';
+      qualifierFound = true;
+    } else if (s.includes('비록') || s.includes('우려가') || s.includes('반론에도') || s.includes('불구하고')) {
+      toulmin_tag = 'R';
+      sfl_modality = 'MEDIAN';
+      sfl_engagement = 'CONTRACT';
+      feedback = '반대 측의 예상 반론을 선제 인정하여 수사적 양보를 달성했습니다.';
+      rationale = '반대 청중의 예상 논점 방어';
+      rebuttalFound = true;
+    } else {
+      toulmin_tag = 'NONE';
+      rationale = '일반적 배경 및 도입 서술';
+    }
+
+    return { text: s, toulmin_tag, sfl_modality, sfl_engagement, feedback, rationale };
+  });
+
+  const radar_scores = {
+    claim: claimFound ? 85 : 35,
+    data: dataFound ? 85 : 40,
+    warrant: warrantFound ? 75 : 45,
+    backing: backingFound ? 70 : 30,
+    qualifier: qualifierFound ? 75 : 30,
+    rebuttal: rebuttalFound ? 80 : 25,
+  };
+
+  return {
+    sentences,
+    radar_scores,
+    devils_advocate: {
+      counter_argument: `귀하의 주장("${(text.slice(0, 30) || '논증').trim()}...")은 이상적이나, 현장의 즉각적인 '${selectedAudience.frictionFactor}'이라는 막대한 실현 비용을 경시하고 있습니다.`,
+      target_element: warrantFound ? 'W' : 'C',
+      suggested_dissociation: '단기적 시행 비용(현상) vs 장기적 인적자본 축적(본질)',
+    },
+  };
+}
+

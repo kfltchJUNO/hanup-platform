@@ -183,6 +183,8 @@ export interface ToulminSentence {
   rationale: string;
   startIndex?: number;
   endIndex?: number;
+  sfl_modality?: SflModality;
+  sfl_engagement?: SflEngagement;
 }
 
 export interface ToulminScores {
@@ -306,4 +308,78 @@ export interface UserSurveyEntry {
   contactInfo?: string;
   createdAt?: string;
 }
+
+// ==========================================
+// 7. Genre Bridge & Academic Discourse Modes
+// ==========================================
+export type GenreBridgeMode = 'essay' | 'thesis_intro' | 'critical_review';
+
+export interface GenreMappingItem {
+  element: ToulminElement;
+  genreLabel: string;
+  genreDescription: string;
+  guidingQuestion: string;
+  discourseStarters: string[];
+}
+
+export interface GenreDefinition {
+  mode: GenreBridgeMode;
+  nameKo: string;
+  badgeKo: string;
+  descriptionKo: string;
+  targetAudienceType: string;
+  mappings: Record<ToulminElement, GenreMappingItem>;
+}
+
+// SFL (Systemic Functional Linguistics) Metadatas
+export type SflModality = 'HIGH' | 'MEDIAN' | 'LOW';
+export type SflEngagement = 'MONOGLOSS' | 'EXPAND' | 'CONTRACT';
+
+export interface SflSentenceAnnotation {
+  text: string;
+  toulmin_tag: ToulminElement;
+  sfl_modality: SflModality;
+  sfl_engagement: SflEngagement;
+  feedback?: string;
+  rationale?: string;
+}
+
+export interface AiAuditResult {
+  sentences: SflSentenceAnnotation[];
+  radar_scores: ToulminScores;
+  devils_advocate: {
+    counter_argument: string;
+    target_element: string;
+    suggested_dissociation: string;
+  };
+}
+
+export interface AiInteractionLog {
+  id?: string;
+  revisionId?: string;
+  userId?: string;
+  aiCounterArgument: string;
+  suggestedTarget: string;
+  userAction: 'ACCEPTED' | 'REJECTED' | 'IGNORED';
+  userRevisionNote: string;
+  timeSpentSeconds: number;
+  createdAt?: string;
+}
+
+export interface UserWritingRevision {
+  id?: string;
+  userId?: string;
+  sessionId: number; // 1 to 16
+  trackType: 'CORE' | 'ADVANCED';
+  draftNumber: 1 | 2;
+  content: string;
+  wordCount: number;
+  toulminScores?: ToulminScores;
+  sflMetadata?: {
+    modalityDistribution: Record<SflModality, number>;
+    engagementDistribution: Record<SflEngagement, number>;
+  };
+  createdAt?: string;
+}
+
 

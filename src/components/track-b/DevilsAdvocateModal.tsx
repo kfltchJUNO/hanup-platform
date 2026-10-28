@@ -15,7 +15,17 @@ import {
   CheckCircle,
   ShieldCheck,
   RefreshCw,
+  Split,
+  ThumbsUp,
+  ShieldAlert,
+  FileEdit,
 } from 'lucide-react';
+
+export interface DevilsAdvocateSubmitData {
+  counterRebuttalText: string;
+  userAction: 'ACCEPTED' | 'REJECTED';
+  userRevisionNote: string;
+}
 
 interface DevilsAdvocateModalProps {
   isOpen: boolean;
@@ -24,9 +34,10 @@ interface DevilsAdvocateModalProps {
   claim: string;
   warrant: string;
   devilsResult: DevilsAdvocateResult | null;
+  suggestedDissociation?: string;
   isLoading: boolean;
   onRegenerate?: () => void;
-  onSubmitCounterRebuttal: (counterRebuttalText: string) => void;
+  onSubmitCounterRebuttal: (data: DevilsAdvocateSubmitData | string) => void;
 }
 
 export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
@@ -36,16 +47,19 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
   claim,
   warrant,
   devilsResult,
+  suggestedDissociation,
   isLoading,
   onRegenerate,
   onSubmitCounterRebuttal,
 }) => {
+  const [userAction, setUserAction] = useState<'ACCEPTED' | 'REJECTED'>('REJECTED');
+  const [revisionNote, setRevisionNote] = useState('');
   const [counterText, setCounterText] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const minChars = 80;
+  const minChars = 50;
   const currentChars = counterText.trim().length;
 
   const handleConfirmSubmit = () => {
@@ -53,14 +67,25 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
       setErrorMsg(`재반박문은 최소 ${minChars}자 이상 작성해야 합니다. (현재: ${currentChars}자)`);
       return;
     }
+    if (!revisionNote.trim()) {
+      setErrorMsg('수정/대응 의도 메모(학습자 성찰)를 간단히 입력해 주십시오.');
+      return;
+    }
     setErrorMsg(null);
-    onSubmitCounterRebuttal(counterText.trim());
+
+    const submitData: DevilsAdvocateSubmitData = {
+      counterRebuttalText: counterText.trim(),
+      userAction,
+      userRevisionNote: revisionNote.trim(),
+    };
+
+    onSubmitCounterRebuttal(submitData);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-gradient-to-r from-rose-900 via-rose-800 to-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -69,7 +94,7 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-black text-base">악마의 대변인 (Devil&apos;s Advocate) 반론 공박</h3>
+                <h3 className="font-black text-base">악마의 대변인 (Devil&apos;s Advocate) 비판 공박</h3>
                 <span className="px-2 py-0.5 rounded-full bg-rose-500/30 text-rose-200 text-[10px] font-bold uppercase tracking-wider">
                   Step 4 관문
                 </span>
@@ -102,7 +127,7 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
           ) : devilsResult ? (
             <>
               {/* 1. Rhetorical Conflict Banner */}
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs">
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 text-amber-900 font-bold">
                   <AlertOctagon className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>{devilsResult.rhetoricalConflict}</span>
@@ -118,7 +143,25 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
                 )}
               </div>
 
-              {/* 2. Critical Rebuttal Box */}
+              {/* 2. Suggested Perelman Dissociation Banner */}
+              {(suggestedDissociation || devilsResult.rhetoricalConflict) && (
+                <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-start gap-2.5 text-xs">
+                  <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg shrink-0 mt-0.5">
+                    <Split className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <span className="font-black text-indigo-950 block">
+                      페렐만식 개념 분리(Dissociation) 처방 가이드:
+                    </span>
+                    <p className="text-indigo-900 mt-0.5 leading-relaxed">
+                      {suggestedDissociation ||
+                        '외형적 현상 vs 본질적 가치, 또는 단기적 예산 지출 vs 장기적 인적 자본 형성으로 층위를 분리하여 반박하십시오.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Critical Rebuttal Box */}
               <div className="p-5 bg-rose-50/80 rounded-2xl border-2 border-rose-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-rose-950 flex items-center gap-1.5 uppercase tracking-wider">
@@ -145,11 +188,11 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
                 </div>
               </div>
 
-              {/* 3. Suggested Counter-Rebuttal Strategies */}
+              {/* 4. Suggested Counter-Rebuttal Strategies */}
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <Lightbulb className="w-4 h-4 text-amber-500" />
-                  수사학적 재반박(Counter-Rebuttal) 처방 가이드:
+                  수사학적 재반박(Counter-Rebuttal) 각도 제안:
                 </span>
                 <ul className="space-y-1.5 text-xs text-slate-600">
                   {devilsResult.suggestedCounterAngles.map((angle, i) => (
@@ -161,19 +204,85 @@ export const DevilsAdvocateModal: React.FC<DevilsAdvocateModalProps> = ({
                 </ul>
               </div>
 
-              {/* 4. Mandatory Counter-Rebuttal Input */}
+              {/* 5. User Decision: Accept or Reject? */}
               <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-purple-600" />
+                  AI 비판에 대한 학습자의 수사적 대응 입장 선택:
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setUserAction('ACCEPTED')}
+                    className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                      userAction === 'ACCEPTED'
+                        ? 'border-indigo-600 bg-indigo-50/70 shadow-xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-black text-xs text-indigo-950">
+                      <ThumbsUp className="w-4 h-4 text-indigo-600" />
+                      <span>수용 및 양보 (Accept &amp; Concede)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      청중의 지적을 타당하다고 인정하고 한정 조건(Q)을 부여하여 주장을 보완합니다.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setUserAction('REJECTED')}
+                    className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                      userAction === 'REJECTED'
+                        ? 'border-rose-600 bg-rose-50/70 shadow-xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-black text-xs text-rose-950">
+                      <ShieldCheck className="w-4 h-4 text-rose-600" />
+                      <span>비판 논파 및 정면 반박 (Reject &amp; Defend)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      청중의 전제가 가진 맹점을 페렐만식 개념 분리와 새로운 자료(D)로 논파합니다.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* 6. Mandatory Revision Intent Note */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-slate-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileEdit className="w-4 h-4 text-blue-600" />
+                    수정/대응 의도 메모 (학습자 성찰 기록 - 필수):
+                  </span>
+                  <span className="text-[11px] text-slate-400">연구 텔레메트리 반영</span>
+                </label>
+                <input
+                  type="text"
+                  value={revisionNote}
+                  onChange={(e) => {
+                    setRevisionNote(e.target.value);
+                    if (errorMsg) setErrorMsg(null);
+                  }}
+                  placeholder="예: 청중의 재정 부담 우려를 인정하되, 장기적 생산성 제고 가치로 방어하고자 함"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* 7. Mandatory Counter-Rebuttal Input */}
+              <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-blue-600" />
-                    학습자 재반박문 작성 (필수 과제):
+                    학습자 최종 재반박문 작성:
                   </label>
                   <span
                     className={`text-xs font-mono font-bold ${
                       currentChars >= minChars ? 'text-emerald-600' : 'text-slate-400'
                     }`}
                   >
-                    {currentChars} / {minChars}자
+                    {currentChars} / {minChars}자 (최소)
                   </span>
                 </div>
 

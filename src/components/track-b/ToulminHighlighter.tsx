@@ -207,6 +207,20 @@ export const ToulminHighlighter: React.FC<ToulminHighlighterProps> = ({
                 {TOULMIN_ELEMENT_METAS[activeSentence.element]?.perelmanConcept}
               </span>
             </div>
+            {(activeSentence.sfl_modality || activeSentence.sfl_engagement) && (
+              <div className="pt-2 border-t border-slate-800 flex items-center gap-2 text-[11px]">
+                {activeSentence.sfl_modality && (
+                  <span className="px-2 py-0.5 rounded-md bg-sky-950 text-sky-300 border border-sky-800 font-mono">
+                    Modality: <strong>{activeSentence.sfl_modality}</strong>
+                  </span>
+                )}
+                {activeSentence.sfl_engagement && (
+                  <span className="px-2 py-0.5 rounded-md bg-purple-950 text-purple-300 border border-purple-800 font-mono">
+                    Engagement: <strong>{activeSentence.sfl_engagement}</strong>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
