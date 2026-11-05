@@ -82,7 +82,15 @@ export default function ResearchDataCenterPage() {
     );
   }
 
-  const [activeMainTab, setActiveMainTab] = useState<'writing_corpus' | 'multimodal_suite' | 'ai_wtp_survey'>('writing_corpus');
+  const [activeMainTab, setActiveMainTab] = useState<'qr_promo_links' | 'writing_corpus' | 'multimodal_suite' | 'ai_wtp_survey'>('qr_promo_links');
+  const [copiedPromoUrl, setCopiedPromoUrl] = useState<string | null>(null);
+  const [selectedQrItem, setSelectedQrItem] = useState<{
+    id: string;
+    title: string;
+    subtitle: string;
+    url: string;
+    badge: string;
+  } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [taskFilter, setTaskFilter] = useState<'all' | 'topik_54_essay' | 'topik_53_graph'>('all');
   const [inputMethodFilter, setInputMethodFilter] = useState<'all' | 'keyboard_typing' | 'handwriting_ocr'>('all');
@@ -645,8 +653,19 @@ export default function ResearchDataCenterPage() {
         </div>
       </div>
 
-      {/* 1.5. Top Tab Switcher: 3 Tabs (Writing Corpus vs 3-App Multimodal Suite vs AI WTP Survey) */}
+      {/* 1.5. Top Tab Switcher: 4 Tabs (QR & Promo Links vs Writing Corpus vs 3-App Multimodal Suite vs AI WTP Survey) */}
       <div className="flex flex-wrap border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-xs gap-2">
+        <button
+          onClick={() => setActiveMainTab('qr_promo_links')}
+          className={`flex items-center gap-2 py-2.5 px-4 sm:px-5 rounded-xl text-xs font-bold transition-all ${
+            activeMainTab === 'qr_promo_links'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Share2 className="w-4 h-4 text-amber-400" />
+          <span>🔗 학생 홍보 QR 생성 · 링크 복사 & 비공개 등급 허브</span>
+        </button>
         <button
           onClick={() => setActiveMainTab('writing_corpus')}
           className={`flex items-center gap-2 py-2.5 px-4 sm:px-5 rounded-xl text-xs font-bold transition-all ${
@@ -689,6 +708,331 @@ export default function ResearchDataCenterPage() {
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-sm">
           <CheckCircle className="w-5 h-5 text-emerald-600" />
           <span>{downloadNotice}</span>
+        </div>
+      )}
+
+      {/* View 0: Researcher QR Code & Student Recruitment Promo Links + Hidden Non-Student Pages Hub */}
+      {activeMainTab === 'qr_promo_links' && (
+        <div className="space-y-8 animate-in fade-in duration-200">
+          {/* Section A: Student Curriculum Onboarding QR & Link Cards */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-black mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  학생 홍보 집중 모드 • 연구자 전용 배포 센터
+                </span>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900">
+                  커리큘럼별 학생 온보딩 QR 코드 생성 및 직행 링크 복사
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  학생이 QR을 스캔하거나 링크를 클릭하면 해당 커리큘럼 전용 <strong>온보딩 모달(구글 로그인 ➔ 설문·레벨테스트 ➔ 건조한 정오답 요약 ➔ 무료 1차시 체험 ➔ 이탈방지 쿠폰 안내)</strong>이 즉시 열립니다.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                {
+                  id: 'promo_topik',
+                  badge: 'Track 1 • 시험 대비',
+                  title: 'TOPIK (읽기 · 듣기 · 쓰기) 온보딩 직행 링크',
+                  subtitle: '중급 3·4급 돌파 및 54번 논술 대비 학생 모집용 (모달 자동 오픈)',
+                  path: '/?track=topik',
+                  color: 'blue',
+                },
+                {
+                  id: 'promo_academic',
+                  badge: 'Track 2 • 학문목적 한국어',
+                  title: '논증 글쓰기 (학문목적 학습자) 온보딩 직행 링크',
+                  subtitle: '대학·대학원 유학생 레포트 및 학위논문 12차시 모집용 (모달 자동 오픈)',
+                  path: '/?track=academic',
+                  color: 'purple',
+                },
+                {
+                  id: 'promo_life',
+                  badge: 'Track 3 • 소리튜터 연동 (추가예정)',
+                  title: '프리토킹 · 회화 (생활한국어) 온보딩 직행 링크',
+                  subtitle: '교재는 한업에서 표출하고 발화 훈련은 소리튜터로 유입 (모달 자동 오픈)',
+                  path: '/?track=life',
+                  color: 'emerald',
+                },
+                {
+                  id: 'promo_main',
+                  badge: '통합 메인 서재',
+                  title: '한업(HanUp) 3대 커리큘럼 메인 서재 링크',
+                  subtitle: '학생이 직접 3가지 부채꼴 교재 중 하나를 선택하도록 유도하는 기본 홈',
+                  path: '/',
+                  color: 'slate',
+                },
+              ].map((item) => {
+                const origin =
+                  typeof window !== 'undefined' ? window.location.origin : 'https://hanup-platform.vercel.app';
+                const fullUrl = `${origin}${item.path}`;
+                const isCopied = copiedPromoUrl === item.id;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 hover:border-slate-300 transition-all flex flex-col justify-between gap-4"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-900 text-white">
+                          {item.badge}
+                        </span>
+                        <Link
+                          href={item.path}
+                          target="_blank"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:underline"
+                        >
+                          <span>미리보기</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-black text-slate-900">{item.title}</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed">{item.subtitle}</p>
+                    </div>
+
+                    <div className="space-y-2.5 pt-2 border-t border-slate-200/70">
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200">
+                        <span className="font-mono text-[11px] text-slate-700 font-bold truncate flex-1">
+                          {fullUrl}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(fullUrl);
+                            setCopiedPromoUrl(item.id);
+                            setTimeout(() => setCopiedPromoUrl(null), 2000);
+                          }}
+                          className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all ${
+                            isCopied
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+                          }`}
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>홍보 링크 복사 완료!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>링크 복사하기</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedQrItem({
+                              id: item.id,
+                              title: item.title,
+                              subtitle: item.subtitle,
+                              url: fullUrl,
+                              badge: item.badge,
+                            })
+                          }
+                          className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center gap-1.5 transition-all"
+                        >
+                          <Share2 className="w-3.5 h-3.5 text-amber-400" />
+                          <span>QR 코드 생성</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section B: Hidden Non-Student Tiers & Researcher Internal Pages Directory */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-lg space-y-5">
+            <div className="space-y-1 border-b border-slate-800 pb-4">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-[11px] font-black">
+                <Lock className="w-3 h-3" />
+                <span>메인 페이지 숨김 처리됨 • 연구자 전용 내부 이동 콘솔</span>
+              </div>
+              <h3 className="text-lg font-black text-white">
+                비학생 등급(교사 · 기관장 · B2B 데모 · 우리반) 비공개 페이지 바로가기 및 링크 복사
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                학생 홍보 집중을 위해 메인 페이지와 상단/하단 공용 메뉴에서 아래 페이지들의 진입점을 모두 감추었습니다. 연구자(마스터)는 이곳에서 바로 이동하거나 기관/교사용 초대 링크를 복사할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {[
+                {
+                  id: 'hidden_demo',
+                  role: 'B2B 기관/심사위원 시연',
+                  title: '종합 B2B 데모 쇼케이스 (/demo)',
+                  desc: '교사·기관장·연구자 전체 기능 안내 및 투어 페이지',
+                  href: '/demo',
+                },
+                {
+                  id: 'hidden_teacher_classes',
+                  role: 'Lv.2 담당 교사 (우리반)',
+                  title: '우리반 클래스 & 초대코드 관리',
+                  desc: '교사용 반 개설 및 학급별 전용 링크/초대코드 관리',
+                  href: '/teacher/classes',
+                },
+                {
+                  id: 'hidden_teacher_grading',
+                  role: 'Lv.2 담당 교사',
+                  title: 'AI 1차 채점 · 교사 2차 검수 워크스테이션',
+                  desc: '학생 제출 답안 검수 및 오류 태그 부여 화면',
+                  href: '/teacher/grading',
+                },
+                {
+                  id: 'hidden_org_admin',
+                  role: 'Lv.3 기관 관리자',
+                  title: '대학/어학당 기관 라이선스 콘솔',
+                  desc: '기관 소속 교사 및 학생 계정·좌석 통계 관리',
+                  href: '/admin/orgs',
+                },
+                {
+                  id: 'hidden_studio',
+                  role: 'Lv.4 본사 마스터',
+                  title: '전자책 집필 & 출판 스튜디오',
+                  desc: '교재 챕터 편집 및 소리튜터 3계층 에셋 연동 관리',
+                  href: '/admin/studio',
+                },
+                {
+                  id: 'hidden_dashboard',
+                  role: 'Lv.1 학생 대시보드',
+                  title: '기존 학생 통합 학습 대시보드',
+                  desc: '구매/배정 완료 학생용 전체 진도 및 오답노트 화면',
+                  href: '/dashboard',
+                },
+              ].map((nav) => {
+                const origin =
+                  typeof window !== 'undefined' ? window.location.origin : 'https://hanup-platform.vercel.app';
+                const fullUrl = `${origin}${nav.href}`;
+                const isCopied = copiedPromoUrl === nav.id;
+
+                return (
+                  <div
+                    key={nav.id}
+                    className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700/80 flex flex-col justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">
+                        {nav.role}
+                      </span>
+                      <h4 className="text-sm font-black text-white">{nav.title}</h4>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">{nav.desc}</p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-700/60">
+                      <Link
+                        href={nav.href}
+                        className="flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs text-center transition-colors flex items-center justify-center gap-1"
+                      >
+                        <span>페이지 열기</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(fullUrl);
+                          setCopiedPromoUrl(nav.id);
+                          setTimeout(() => setCopiedPromoUrl(null), 2000);
+                        }}
+                        className="py-2 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs transition-colors flex items-center gap-1"
+                        title="비공개 링크 복사"
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{isCopied ? '복사됨' : '링크 복사'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedQrItem({
+                            id: nav.id,
+                            title: nav.title,
+                            subtitle: nav.desc,
+                            url: fullUrl,
+                            badge: nav.role,
+                          })
+                        }
+                        className="py-2 px-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition-colors"
+                        title="QR 생성"
+                      >
+                        QR
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* QR Code Modal for Selected Promotional / Internal Link */}
+          {selectedQrItem && (
+            <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5 relative text-center">
+                <button
+                  type="button"
+                  onClick={() => setSelectedQrItem(null)}
+                  className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="space-y-1">
+                  <span className="inline-block px-3 py-0.5 rounded-full bg-slate-900 text-amber-400 text-[10px] font-black">
+                    {selectedQrItem.badge}
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 pt-1">{selectedQrItem.title}</h3>
+                  <p className="text-xs text-slate-500">{selectedQrItem.subtitle}</p>
+                </div>
+
+                {/* High-contrast QR Code Image (via standard QR API + deterministic SVG fallback grid) */}
+                <div className="mx-auto w-56 h-56 rounded-2xl bg-white border-2 border-slate-900 p-3 shadow-inner flex items-center justify-center">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                      selectedQrItem.url
+                    )}`}
+                    alt="Promotional QR Code"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left space-y-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase block">연결 URL</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-blue-700 font-bold truncate flex-1">
+                      {selectedQrItem.url}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedQrItem.url);
+                        setCopiedPromoUrl(selectedQrItem.id);
+                        setTimeout(() => setCopiedPromoUrl(null), 2000);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 flex items-center gap-1 shrink-0"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedPromoUrl === selectedQrItem.id ? '복사됨!' : '복사'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedQrItem(null)}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

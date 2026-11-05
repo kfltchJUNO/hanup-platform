@@ -39,16 +39,13 @@ export function Footer() {
 
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-blue-400 border border-slate-700/80 font-bold">
-              한업 TOPIK
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-emerald-400 border border-slate-700/80 font-bold">
-              생활한국어
+              TOPIK (읽기·듣기·쓰기)
             </span>
             <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-purple-400 border border-slate-700/80 font-bold">
-              소리튜터 (발음)
+              논증 글쓰기 (학문목적)
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-amber-400 border border-slate-700/80 font-bold">
-              우리반 (Wooriban)
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-emerald-400 border border-slate-700/80 font-bold">
+              프리토킹·회화 (소리튜터 연동)
             </span>
           </div>
         </div>

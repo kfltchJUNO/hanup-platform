@@ -66,20 +66,25 @@ export const HeaderNavbar: React.FC = () => {
   const getNavLinks = () => {
     const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.ko;
 
-    // 1. Visitor / Unauthenticated Mode: Public learning & guide links
+    // 1. Visitor / Unauthenticated Mode: Clean Student Curriculum Links Only
     if (!isLoggedIn) {
       return [
-        { href: '/onboarding', label: '학습 트랙(A/B)', icon: Compass },
-        { href: '/track-b/trial', label: 'Track B 무료체험', icon: Sparkles },
-        { href: '/#guide', label: '학습 가이드', icon: Compass },
-        { href: '/#features', label: '핵심 기능', icon: Sparkles },
-        { href: '/#curriculum', label: '교재 라인업', icon: BookOpen },
-        { href: '/study/hanup_topik_prep/ch_prep_01', label: '1~2급 무료 체험', icon: Zap },
-        { href: '/#contact', label: '고객지원·문의', icon: Mail },
+        { href: '/#curriculum', label: '커리큘럼(교재) 선택', icon: BookOpen },
+        { href: '/study/hanup_topik_prep/ch_prep_01', label: 'TOPIK 1차시 무료체험', icon: Zap },
+        { href: '/track-b/trial', label: '논증 글쓰기 무료체험', icon: Sparkles },
       ];
     }
 
-    // 2. Authenticated Mode: Role-specific workspace links
+    // 2. Authenticated Mode: Only Master Researcher can see non-student roles
+    if (!isMasterEmail(currentUser.email)) {
+      return [
+        { href: '/#curriculum', label: '커리큘럼(교재)', icon: BookOpen },
+        { href: '/dashboard', label: t.dashboard, icon: GraduationCap },
+        { href: '/study/hanup_topik_prep/ch_prep_01', label: t.studyViewer, icon: BookOpen },
+        { href: '/track-b/trial', label: '논증 글쓰기 체험', icon: Sparkles },
+      ];
+    }
+
     switch (currentRole) {
       case 'student':
         return [
@@ -119,22 +124,20 @@ export const HeaderNavbar: React.FC = () => {
       {/* 1. Top RBAC Switcher Banner (Multi-tenancy & Testing Hub) - Shown on /demo or for Master Admin */}
       <div className="bg-slate-900 text-slate-200 px-3 sm:px-4 py-1.5 text-xs flex items-center justify-between gap-2 border-b border-slate-800">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {pathname.startsWith('/demo') || isMasterEmail(currentUser.email) ? (
+          {isMasterEmail(currentUser.email) ? (
             <>
               <span className="flex items-center gap-1 font-semibold text-blue-400 shrink-0 text-[11px] sm:text-xs">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">[RBAC 모드]:</span>
+                <span className="hidden sm:inline">[연구자/마스터 모드]:</span>
               </span>
               <div className="inline-flex rounded-lg p-0.5 bg-slate-800 border border-slate-700 shrink-0">
-                {((isMasterEmail(currentUser.email)
-                  ? ['student', 'instructor', 'org_admin', 'super_admin']
-                  : ['student', 'instructor', 'org_admin']) as UserRole[]).map((r) => {
+                {(['student', 'instructor', 'org_admin', 'super_admin'] as UserRole[]).map((r) => {
                   const isActive = currentRole === r;
                   const shortLabels: Record<UserRole, string> = {
                     student: '학생',
                     instructor: '교사',
                     org_admin: '기관',
-                    super_admin: '본사',
+                    super_admin: '연구자(본사)',
                   };
                   return (
                     <button
@@ -153,15 +156,18 @@ export const HeaderNavbar: React.FC = () => {
                   );
                 })}
               </div>
+              <Link
+                href="/admin/research"
+                className="ml-2 px-2.5 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] shrink-0"
+              >
+                🔗 연구자 QR · 링크 생성
+              </Link>
             </>
           ) : (
-            <Link
-              href="/demo"
-              className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-indigo-300 transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-              <span>교육기관·강사용 B2B 통합 솔루션 시연 둘러보기 →</span>
-            </Link>
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>한업(HanUp) 한국어 표준 디지털 커리큘럼 & 소리튜터 연동 학습</span>
+            </div>
           )}
         </div>
 
@@ -381,55 +387,54 @@ export const HeaderNavbar: React.FC = () => {
                     </div>
                   </a>
 
-                  {/* App 3: Wooriban */}
-                  <a
-                    href={APP_CONFIG.wooribanUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setIsAppLauncherOpen(false)}
-                    className="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50/40 transition-colors group"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <School className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 group-hover:text-purple-700">
-                          우리반 (Wooriban | 我们班)
-                        </span>
-                        <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600" />
-                      </div>
-                      <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
-                        학급 LMS & 작문 행동 로그(작성시간·복사시도) 통합 관리
-                      </p>
-                      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-purple-700 font-mono">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                        <span className="truncate">{APP_CONFIG.wooribanUrl}</span>
-                      </div>
-                    </div>
-                  </a>
+                  {/* Master Researcher Only: Wooriban & Research QR Center */}
+                  {isMasterEmail(currentUser.email) && (
+                    <>
+                      <a
+                        href={APP_CONFIG.wooribanUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsAppLauncherOpen(false)}
+                        className="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50/40 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <School className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 group-hover:text-purple-700">
+                              우리반 (Wooriban | 我们班)
+                            </span>
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600" />
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                            학급 LMS & 작문 행동 로그(작성시간·복사시도) 통합 관리
+                          </p>
+                        </div>
+                      </a>
 
-                  {/* B2B Solution Demo Link */}
-                  <Link
-                    href="/demo"
-                    onClick={() => setIsAppLauncherOpen(false)}
-                    className="flex items-start gap-3 p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 transition-colors group"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">
-                          B2B 기관·강사 솔루션 시연
-                        </span>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600" />
-                      </div>
-                      <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
-                        4단계 RBAC 권한 전환 & Human-in-the-Loop 검수 큐 체험
-                      </p>
-                    </div>
-                  </Link>
+                      <Link
+                        href="/admin/research"
+                        onClick={() => setIsAppLauncherOpen(false)}
+                        className="flex items-start gap-3 p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 transition-colors group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <Database className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-700">
+                              연구자 전용 QR 생성 & 코퍼스 센터
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600" />
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                            학생 모집용 트랙별 QR 코드 생성, 링크 복사 및 연구 데이터 관리
+                          </p>
+                        </div>
+                      </Link>
+                    </>
+                  )}
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-slate-400 leading-snug px-1">
@@ -674,22 +679,23 @@ export const HeaderNavbar: React.FC = () => {
             >
               <span className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-emerald-600" />
-                소리튜터 (발음·음운 클리닉)
+                소리튜터 (발음·프리토킹 클리닉)
               </span>
               <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
             </a>
-            <a
-              href={APP_CONFIG.wooribanUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-800 border border-slate-200 text-xs font-semibold transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <School className="w-4 h-4 text-purple-600" />
-                우리반 (Wooriban 학급 LMS & 코퍼스)
-              </span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-            </a>
+            {isMasterEmail(currentUser.email) && (
+              <Link
+                href="/admin/research"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-800 border border-slate-200 text-xs font-semibold transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-indigo-600" />
+                  연구자 전용 QR 생성 & 코퍼스 센터
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+              </Link>
+            )}
           </div>
         </div>
       )}
