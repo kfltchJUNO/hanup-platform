@@ -95,6 +95,18 @@ export default function AuthoringStudioPage() {
   const [isCampusTipOpen, setIsCampusTipOpen] = useState(false);
   const [campusTipChapter, setCampusTipChapter] = useState(1);
 
+  // 4 Design Themes & Illustration States
+  const [selectedTheme, setSelectedTheme] = useState<'mint' | 'blue' | 'indigo' | 'coral'>('indigo');
+  const [illustrationRatio, setIllustrationRatio] = useState<'16:9' | '4:3' | '1:1'>('4:3');
+  const [illustrationStyle, setIllustrationStyle] = useState<
+    'modern_vector_illustration' | 'korean_webtoon_clean' | 'academic_flat_art'
+  >('korean_webtoon_clean');
+  const [isSavedAsset, setIsSavedAsset] = useState<boolean>(false);
+  const [assetPathNotice, setAssetPathNotice] = useState<string | null>(null);
+
+  // PDF Book Layout Preview Modal
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+
   if (!isMaster) {
     return (
       <div className="max-w-xl mx-auto my-16 p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-center space-y-4">
@@ -262,18 +274,6 @@ export default function AuthoringStudioPage() {
       script: `[${langLabel} 40s Script] ${block.osmuExport?.shortFormScript40s || ''}`,
     };
   };
-
-  // 4 Design Themes & Illustration States
-  const [selectedTheme, setSelectedTheme] = useState<'mint' | 'blue' | 'indigo' | 'coral'>('indigo');
-  const [illustrationRatio, setIllustrationRatio] = useState<'16:9' | '4:3' | '1:1'>('4:3');
-  const [illustrationStyle, setIllustrationStyle] = useState<
-    'modern_vector_illustration' | 'korean_webtoon_clean' | 'academic_flat_art'
-  >('korean_webtoon_clean');
-  const [isSavedAsset, setIsSavedAsset] = useState<boolean>(false);
-  const [assetPathNotice, setAssetPathNotice] = useState<string | null>(null);
-
-  // PDF Book Layout Preview Modal
-  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Handle Add New Vocab Annotation
   const handleAddVocab = () => {
