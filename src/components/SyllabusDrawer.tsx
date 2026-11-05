@@ -44,11 +44,12 @@ export function SyllabusDrawer({
   onOpenCampusTip,
 }: SyllabusDrawerProps) {
   const router = useRouter();
-  const [activeTrack, setActiveTrack] = useState<'all' | 'topik' | 'life'>('all');
+  const [activeTrack, setActiveTrack] = useState<'all' | 'topik' | 'academic' | 'life'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({
     [currentSeriesId || 'hanup_topik_prep']: true,
     hanup_topik_master: true,
+    track_b_step1: true,
     hanup_life_step1: true,
   });
 
@@ -69,6 +70,7 @@ export function SyllabusDrawer({
   // Filter series
   const displayedSeries = SYLLABUS_SERIES_METADATA.filter((s) => {
     if (activeTrack === 'topik') return s.category === 'topik';
+    if (activeTrack === 'academic') return s.category === 'academic';
     if (activeTrack === 'life') return s.category === 'life';
     return true;
   });
@@ -101,14 +103,14 @@ export function SyllabusDrawer({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-black text-base sm:text-lg tracking-tight">
-                  전체 8종 시리즈 표준 커리큘럼 (82개 단원)
+                  전체 12종 시리즈 표준 커리큘럼 ({ALL_SYLLABUS_CHAPTERS.length}개 단원)
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/40 text-indigo-200 border border-indigo-400/30">
-                  SYLLABUS v2.0
+                  SYLLABUS v2.5
                 </span>
               </div>
               <p className="text-xs text-indigo-200/80 mt-0.5">
-                TOPIK 4종 (36강) + 생활한국어 4단계 (48강) 마스터 단원 목록
+                TOPIK 4종 (46강) + 학문목적 논증 4권 (16강) + 생활한국어 4단계 (48강)
               </p>
             </div>
           </div>
@@ -173,7 +175,7 @@ export function SyllabusDrawer({
           </div>
 
           {/* Track Filter Tabs */}
-          <div className="flex items-center gap-1.5 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
             <button
               onClick={() => setActiveTrack('all')}
               className={`px-3 py-1 rounded-xl transition-all ${
@@ -182,7 +184,7 @@ export function SyllabusDrawer({
                   : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              전체 (8종 시리즈)
+              전체 (12종 · {ALL_SYLLABUS_CHAPTERS.length}강)
             </button>
             <button
               onClick={() => setActiveTrack('topik')}
@@ -192,7 +194,17 @@ export function SyllabusDrawer({
                   : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              한업 TOPIK 4종 (36강)
+              한업 TOPIK 4종 (46강)
+            </button>
+            <button
+              onClick={() => setActiveTrack('academic')}
+              className={`px-3 py-1 rounded-xl transition-all ${
+                activeTrack === 'academic'
+                  ? 'bg-indigo-600 text-white font-black shadow-2xs'
+                  : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+              }`}
+            >
+              학문목적 논증 4종 (16강)
             </button>
             <button
               onClick={() => setActiveTrack('life')}
@@ -370,7 +382,7 @@ export function SyllabusDrawer({
 
         {/* 4. Footer */}
         <div className="p-3.5 border-t border-slate-200 bg-white flex items-center justify-between text-xs text-slate-500 shrink-0">
-          <span>총 8개 시리즈 • 82개 표준 단원 체계</span>
+          <span>총 12개 시리즈 • {ALL_SYLLABUS_CHAPTERS.length}개 표준 단원 체계</span>
           <button
             onClick={onClose}
             className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors"
