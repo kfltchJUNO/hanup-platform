@@ -577,6 +577,33 @@ export default function ResearchDataCenterPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* 0. Researcher Top Menu Switcher (Separating Textbook Editor vs Marketing Tool vs Research QR Hub) */}
+      <div className="bg-slate-900 text-white p-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-md">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/textbook-editor"
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <BookOpen className="w-4 h-4 text-amber-300" />
+            <span>📚 교재 편집기 (AI 커리큘럼·본문 집필)</span>
+          </Link>
+          <Link
+            href="/admin/studio"
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <Share2 className="w-4 h-4 text-emerald-400" />
+            <span>📣 마케팅 추출 도구 (OSMU · 표지 · 카드뉴스)</span>
+          </Link>
+          <Link
+            href="/admin/research"
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm"
+          >
+            <Database className="w-4 h-4 text-purple-300" />
+            <span>🔗 연구자 QR · 코퍼스 센터</span>
+          </Link>
+        </div>
+      </div>
+
       {/* 1. Header */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -896,10 +923,17 @@ export default function ResearchDataCenterPage() {
                   href: '/admin/orgs',
                 },
                 {
+                  id: 'hidden_textbook_editor',
+                  role: 'Lv.4 본사 마스터 (집필)',
+                  title: '📚 AI 교재 집필 & 커리큘럼 편집기',
+                  desc: '기본 틀·목표 문법·대화 주제 지정 기반 84개 단원 본문 AI 생성 및 편집',
+                  href: '/admin/textbook-editor',
+                },
+                {
                   id: 'hidden_studio',
-                  role: 'Lv.4 본사 마스터',
-                  title: '전자책 집필 & 출판 스튜디오',
-                  desc: '교재 챕터 편집 및 소리튜터 3계층 에셋 연동 관리',
+                  role: 'Lv.4 본사 마스터 (마케팅)',
+                  title: '📣 마케팅 추출 도구 (OSMU 스튜디오)',
+                  desc: '3D 표지 디자인, 5개 국어 샤오홍슈/SNS 카드뉴스 및 유튜브 대본 추출',
                   href: '/admin/studio',
                 },
                 {

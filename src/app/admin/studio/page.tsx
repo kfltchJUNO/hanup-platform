@@ -373,18 +373,52 @@ export default function AuthoringStudioPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* 0. Researcher Top Menu Switcher (Separating Textbook Editor vs Marketing Tool vs Research QR Hub) */}
+      <div className="bg-slate-900 text-white p-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-md">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/textbook-editor"
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <BookOpen className="w-4 h-4 text-amber-300" />
+            <span>📚 교재 편집기 (AI 커리큘럼·본문 집필)</span>
+          </Link>
+          <Link
+            href="/admin/studio"
+            className="px-4 py-2 rounded-xl bg-purple-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm"
+          >
+            <Share2 className="w-4 h-4 text-emerald-300" />
+            <span>📣 마케팅 추출 도구 (OSMU · 표지 · 카드뉴스)</span>
+          </Link>
+          <Link
+            href="/admin/research"
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <Layers className="w-4 h-4 text-blue-300" />
+            <span>🔗 연구자 QR · 코퍼스 센터</span>
+          </Link>
+        </div>
+
+        <Link
+          href="/admin/textbook-editor"
+          className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all"
+        >
+          <span>교재 단원 본문 AI 편집기로 이동 ➔</span>
+        </Link>
+      </div>
+
       {/* 1. Header */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-100 text-purple-800 text-xs font-black mb-1">
-            <Layers className="w-3.5 h-3.5 text-purple-600" />
-            <span>Lv.4 저작 스튜디오 (HanUp Studio & OSMU 엔진)</span>
+            <Share2 className="w-3.5 h-3.5 text-purple-600" />
+            <span>Lv.4 마케팅 추출 도구 (OSMU 카드뉴스 · 숏폼 · 3D 표지 스튜디오)</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-            원고 하나로 PDF 조판·AI 음원·샤오홍슈 카드뉴스 원클릭 추출
+            교재 원고에서 3D 표지 · AI 삽화 · 5대 언어 SNS 카드뉴스 · 유튜브 대본 원클릭 추출
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            노션 스타일 블록에 한국어 교재 원고를 입력하면 어휘 태깅, 딕테이션 빈칸, 3:4 카드뉴스 CSV, 40초 숏폼 대본이 자동 생성됩니다.
+            ※ 차시별 교재 본문(대화문·문법·어휘·확인문제)을 AI로 구성하고 편집하려면 상단 <strong>[📚 교재 편집기]</strong> 메뉴를 이용해 주세요.
           </p>
         </div>
 
@@ -750,7 +784,7 @@ export default function AuthoringStudioPage() {
               spineText: '한업 교재 • 표준',
               authorText: '한업 한국어교육연구소 기획·집필',
               publisherText: '도서출판 한업 (HanUp Publishing)',
-              isbnCode: 'ISBN 979-11-98765-01-2',
+              isbnCode: '',
               barcodePrice: '₩14,000 / $12.00',
               finishType: 'matte' as const,
               showQrCode: true,
@@ -976,7 +1010,7 @@ export default function AuthoringStudioPage() {
                       </div>
                       <div>
                         <label className="text-[11px] font-bold text-slate-700 block mb-0.5">
-                          ISBN 등록 코드
+                          정식 ISBN 등록 번호 (발급 전에는 비워두세요)
                         </label>
                         <input
                           type="text"
@@ -986,6 +1020,7 @@ export default function AuthoringStudioPage() {
                               isbnCode: e.target.value,
                             })
                           }
+                          placeholder="국립중앙도서관 정식 발급 후 입력 (미입력 시 '디지털 스마트 에디션' 표출)"
                           className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 text-xs font-mono"
                         />
                       </div>

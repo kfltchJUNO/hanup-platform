@@ -147,11 +147,65 @@ export default function SmartStudyViewerPage() {
   // Active Tab
   const [activeTab, setActiveTab] = useState<'concept' | 'listening' | 'writing'>('concept');
 
-  // Find block data
+  // Find block data (match exact chapterId first; if not yet authored, synthesize from currentSyllabusChapter metadata)
+  const matchedBlock = authoringBlocks.find(
+    (b) => b.chapterId === chapterId || b.blockId === chapterId
+  );
+
   const currentBlock =
-    authoringBlocks.find((b) => b.chapterId === chapterId || b.blockId === chapterId) ||
-    authoringBlocks.find((b) => b.seriesId === seriesId) ||
-    authoringBlocks[0];
+    matchedBlock ||
+    (currentSyllabusChapter
+      ? {
+          blockId: `blk_${currentSyllabusChapter.chapterId}`,
+          seriesId: currentSyllabusChapter.seriesId,
+          chapterId: currentSyllabusChapter.chapterId,
+          chapterTitle: currentSyllabusChapter.titleKo,
+          orderIndex: currentSyllabusChapter.chapterNumber,
+          blockType: 'reading_passage' as const,
+          title: `${currentSyllabusChapter.titleKo} — 핵심 담화 & 문법 마스터`,
+          koContent: `[${currentSyllabusChapter.titleKo} 핵심 담화]\n\n본 단원에서는 ${(
+            currentSyllabusChapter.grammarPoints || ['핵심 문법']
+          ).join(', ')} 문형과 ${(
+            currentSyllabusChapter.vocabPoints || ['핵심 어휘']
+          ).join(', ')} 표현을 중심으로 실전 한국어 의사소통 및 시험 대비 훈련을 진행합니다.\n\n• 대표 발화/예문: "${
+            currentSyllabusChapter.soriFocus || '오늘 배운 핵심 표현을 소리 내어 읽어 봅시다.'
+          }"\n• 핵심 과제: ${
+            currentSyllabusChapter.taskType || '문맥 파악 및 핵심 문형 활용 연습'
+          }\n\n(※ 연구자 전용 [교재 편집기]에서 이 단원의 AI 상세 지문과 대화문을 생성·편집할 수 있습니다.)`,
+          zhExplanation: `【${currentSyllabusChapter.titleKo} 课程重点解析】\n• 目标语法：${(
+            currentSyllabusChapter.grammarPoints || []
+          ).join(' / ')}\n• 核心词汇：${(currentSyllabusChapter.vocabPoints || []).join(
+            '、'
+          )}\n• 实战任务：${currentSyllabusChapter.taskType || '综合练习'}`,
+          vocabAnnotations: (currentSyllabusChapter.vocabPoints || []).map((v, idx) => ({
+            word: v,
+            zhMeaning: `${v} (核心表达 #${idx + 1})`,
+            enMeaning: `Key expression: ${v}`,
+            topikLevel: currentSeries.category === 'life' ? 2 : 4,
+            commonChineseErrorNote: `‘${v}’ 표현의 자연스러운 연어(Collocation) 결합과 조사 사용에 유의하세요.`,
+          })),
+          audioConfig: {
+            voiceId: 'eleven_ko_pro_kr',
+            mp3Url: '',
+            dictationBlanks: (currentSyllabusChapter.vocabPoints || []).slice(0, 2),
+            durationSec: 30,
+          },
+          writingRubric: {
+            targetChars: [200, 300] as [number, number],
+            requiredKeywords: currentSyllabusChapter.vocabPoints || [],
+            rhetoricStructureGuide: `도입(상황 제시) ➔ 전개(${(
+              currentSyllabusChapter.grammarPoints || []
+            ).join(', ')} 활용) ➔ 마무리`,
+            modelAnswer: `${
+              currentSyllabusChapter.soriFocus || ''
+            } 본 단원의 핵심 어휘인 ${(currentSyllabusChapter.vocabPoints || []).join(
+              ', '
+            )} 등을 활용하여 문맥에 맞게 문장을 구성합니다.`,
+          },
+          qrBridgeUrl: `https://hanup.ai/study/${seriesId}/${chapterId}`,
+          updatedAt: new Date().toISOString(),
+        }
+      : authoringBlocks.find((b) => b.seriesId === seriesId) || authoringBlocks[0]);
 
   // Prep Questions Filtering
   const readingQuestions = itemBank.filter((item) =>

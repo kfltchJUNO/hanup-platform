@@ -42,11 +42,15 @@ export const BookCover: React.FC<BookCoverProps> = ({
     spineText,
     authorText = '한업 한국어교육연구소 기획·집필',
     publisherText = '도서출판 한업 (HanUp Publishing)',
-    isbnCode = 'ISBN 979-11-98765-01-2',
+    isbnCode = '',
     barcodePrice = '₩14,000 / $12.00',
-    finishType = 'matte',
+    finishType = 'glossy',
     showQrCode = true,
   } = styleData;
+
+  // Hide arbitrary/unissued mock ISBNs (979-11-98765-*)
+  const validIsbnCode =
+    isbnCode && !isbnCode.includes('979-11-98765') ? isbnCode.trim() : '';
 
   const getAlignmentClasses = () => {
     switch (layoutStyle) {
@@ -206,7 +210,7 @@ export const BookCover: React.FC<BookCoverProps> = ({
                     {publisherText}
                   </span>
                   <span className="font-mono text-[8px] text-white/60 block mt-0.5 truncate">
-                    {isbnCode}
+                    {validIsbnCode || '디지털 스마트 에디션'}
                   </span>
                 </div>
               </div>

@@ -200,7 +200,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '한업 TOPIK 준비편 (1~2급) • 기초',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-01-2',
+    isbnCode: '',
     barcodePrice: '₩12,000 / $10.00',
     finishType: 'matte',
     showQrCode: true,
@@ -216,7 +216,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '한업 TOPIK 도전편 (3~4급) • 유형',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-02-9',
+    isbnCode: '',
     barcodePrice: '₩18,000 / $16.00',
     finishType: 'glossy',
     showQrCode: true,
@@ -232,7 +232,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '한업 TOPIK 완성편 (4~6급) • 심화',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-03-6',
+    isbnCode: '',
     barcodePrice: '₩24,000 / $21.00',
     finishType: 'leather',
     showQrCode: true,
@@ -248,7 +248,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '쓰기 53번 만능 공식집 & 120제',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-04-3',
+    isbnCode: '',
     barcodePrice: '₩11,000 / $9.90',
     finishType: 'matte',
     showQrCode: true,
@@ -264,7 +264,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '생활한국어 Step 1: 첫걸음 • 자모 40자',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-05-0',
+    isbnCode: '',
     barcodePrice: '₩10,000 / $8.00',
     finishType: 'matte',
     showQrCode: true,
@@ -280,7 +280,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '생활한국어 Step 2: 동네 한 바퀴 • 일상',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-06-7',
+    isbnCode: '',
     barcodePrice: '₩15,000 / $13.00',
     finishType: 'glossy',
     showQrCode: true,
@@ -296,7 +296,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '생활한국어 Step 3: 단짝 친구 • 교우',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-07-4',
+    isbnCode: '',
     barcodePrice: '₩16,000 / $14.00',
     finishType: 'matte',
     showQrCode: true,
@@ -312,7 +312,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '생활한국어 Step 4: 프로 한국살이 • 비즈니스',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-08-1',
+    isbnCode: '',
     barcodePrice: '₩20,000 / $17.50',
     finishType: 'leather',
     showQrCode: true,
@@ -328,7 +328,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '아카데믹 논증 1: 가치 위계와 청중론',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-09-8',
+    isbnCode: '',
     barcodePrice: '₩22,000 / $19.00',
     finishType: 'matte',
     showQrCode: true,
@@ -344,7 +344,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '아카데믹 논증 2: 툴민 3요소 C-D-W 체화',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-10-4',
+    isbnCode: '',
     barcodePrice: '₩22,000 / $19.00',
     finishType: 'glossy',
     showQrCode: true,
@@ -360,7 +360,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '아카데믹 논증 3: 악마의 대변인 비판 공박',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-11-1',
+    isbnCode: '',
     barcodePrice: '₩25,000 / $22.00',
     finishType: 'matte',
     showQrCode: true,
@@ -376,7 +376,7 @@ export const INITIAL_BOOK_COVERS: Record<string, BookCoverStyle> = {
     spineText: '아카데믹 논증 4: 소논문 서론 & 비판적 서평',
     authorText: '한업 한국어교육연구소 기획·집필',
     publisherText: '도서출판 한업 (HanUp Publishing)',
-    isbnCode: 'ISBN 979-11-98765-12-8',
+    isbnCode: '',
     barcodePrice: '₩28,000 / $25.00',
     finishType: 'leather',
     showQrCode: true,
@@ -417,7 +417,7 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
         targetLevelText: '',
         authorText: '한업 한국어교육연구소',
         publisherText: '도서출판 한업',
-        isbnCode: 'ISBN 979-11-98765-00-5',
+        isbnCode: '',
         barcodePrice: '₩14,000',
         finishType: 'matte' as const,
         showQrCode: true,
@@ -443,7 +443,7 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
       targetLevelText: '',
       authorText: '한업 한국어교육연구소',
       publisherText: '도서출판 한업',
-      isbnCode: 'ISBN 979-11-98765-00-5',
+      isbnCode: '',
       barcodePrice: '₩14,000',
       finishType: 'matte',
       showQrCode: true,
@@ -657,6 +657,26 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const [submissions, setSubmissions] = useState<WritingSubmission[]>(MOCK_SUBMISSIONS);
   const [phonologyLogs, setPhonologyLogs] = useState<PhonologyErrorLog[]>(MOCK_PHONOLOGY_LOGS);
 
+  // Hydrate custom authored textbook chapters from localStorage on client mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('hanup_authoring_blocks_v2');
+      if (saved) {
+        const parsed: AuthoringBlock[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAuthoringBlocks((prev) => {
+            const map = new Map<string, AuthoringBlock>();
+            prev.forEach((b) => map.set(b.blockId, b));
+            parsed.forEach((b) => map.set(b.blockId, b));
+            return Array.from(map.values());
+          });
+        }
+      }
+    } catch {
+      // ignore storage parse error
+    }
+  }, []);
+
   // Background Onboarding Modal State
   const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
   const openBackgroundModal = () => setIsBackgroundModalOpen(true);
@@ -841,16 +861,25 @@ export function HanUpProvider({ children }: { children: React.ReactNode }) {
   const currentOrg =
     organizations.find((org) => org.orgId === currentUser.orgId) || organizations[0];
 
-  // Save/Update authoring block (Lv.4 Studio)
+  // Save/Update authoring block (Lv.4 Textbook Editor & Studio) and persist to localStorage
   const saveAuthoringBlock = (block: AuthoringBlock) => {
     setAuthoringBlocks((prev) => {
-      const existsIndex = prev.findIndex((b) => b.blockId === block.blockId);
+      const existsIndex = prev.findIndex(
+        (b) => b.blockId === block.blockId || (block.chapterId && b.chapterId === block.chapterId)
+      );
+      let nextList: AuthoringBlock[];
       if (existsIndex >= 0) {
-        const updated = [...prev];
-        updated[existsIndex] = block;
-        return updated;
+        nextList = [...prev];
+        nextList[existsIndex] = block;
+      } else {
+        nextList = [block, ...prev];
       }
-      return [block, ...prev];
+      try {
+        localStorage.setItem('hanup_authoring_blocks_v2', JSON.stringify(nextList));
+      } catch {
+        // ignore storage quota errors
+      }
+      return nextList;
     });
   };
 

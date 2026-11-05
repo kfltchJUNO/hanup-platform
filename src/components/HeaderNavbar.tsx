@@ -108,11 +108,11 @@ export const HeaderNavbar: React.FC = () => {
         ];
       case 'super_admin':
         return [
-          { href: '/admin/studio', label: t.studio, icon: Layers },
+          { href: '/admin/textbook-editor', label: '교재 편집기 (AI 집필)', icon: BookOpen },
+          { href: '/admin/studio', label: '마케팅 추출 도구 (OSMU)', icon: Layers },
           { href: '/admin/research', label: t.research, icon: Database },
           { href: '/admin/orgs', label: t.partnerAdmin, icon: Building2 },
           { href: '/teacher/grading', label: t.teacherGrading, icon: CheckCircle2 },
-          { href: '/dashboard', label: t.studentView, icon: GraduationCap },
         ];
     }
   };
@@ -157,8 +157,20 @@ export const HeaderNavbar: React.FC = () => {
                 })}
               </div>
               <Link
+                href="/admin/textbook-editor"
+                className="ml-2 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shrink-0"
+              >
+                📚 교재 편집기
+              </Link>
+              <Link
+                href="/admin/studio"
+                className="px-2.5 py-0.5 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] shrink-0"
+              >
+                📣 마케팅 추출 도구
+              </Link>
+              <Link
                 href="/admin/research"
-                className="ml-2 px-2.5 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] shrink-0"
+                className="px-2.5 py-0.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] shrink-0"
               >
                 🔗 연구자 QR · 링크 생성
               </Link>
