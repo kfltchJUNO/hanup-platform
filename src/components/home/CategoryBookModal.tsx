@@ -389,8 +389,8 @@ export const CategoryBookModal: React.FC<CategoryBookModalProps> = ({
             </button>
           </div>
 
-          {/* 6-Step Progress Bar */}
-          <div className="grid grid-cols-6 gap-1.5 pt-1">
+          {/* 6-Step Progress Bar (3x2 on mobile, 6x1 on desktop) */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-1">
             {stepBadges.map((s, idx) => {
               const isCurrent = idx === currentStepIndex;
               const isDone = idx < currentStepIndex;
@@ -499,9 +499,9 @@ export const CategoryBookModal: React.FC<CategoryBookModalProps> = ({
 
               {/* Curriculum Textbooks List */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <h4 className="text-xs sm:text-sm font-black text-slate-800 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <BookOpen className="w-4 h-4 text-indigo-600 shrink-0" />
                     <span>[{category.titleKo}] 수록 교재 라인업 (총 {category.books.length}권)</span>
                   </h4>
                   <span className="text-[11px] text-slate-500">
@@ -513,13 +513,13 @@ export const CategoryBookModal: React.FC<CategoryBookModalProps> = ({
                   {category.books.map((book, index) => (
                     <div
                       key={book.id}
-                      className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs flex gap-4 items-center"
+                      className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs flex gap-4 items-center overflow-hidden"
                     >
                       <div className="shrink-0">
                         <BookCover styleData={book.coverStyle} size="xs" interactive={false} />
                       </div>
                       <div className="space-y-1.5 min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-black text-[10px]">
                             {book.targetLevelText}
                           </span>
@@ -527,17 +527,17 @@ export const CategoryBookModal: React.FC<CategoryBookModalProps> = ({
                             Vol.{index + 1}
                           </span>
                         </div>
-                        <h5 className="font-black text-sm text-slate-900 truncate">
+                        <h5 className="font-black text-sm sm:text-base text-slate-900 break-keep leading-snug">
                           {book.titleKo}
                         </h5>
-                        <p className="text-[11px] text-slate-500 line-clamp-2 leading-snug">
+                        <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed">
                           {book.subtitleKo}
                         </p>
-                        <div className="pt-1 flex flex-wrap gap-1">
+                        <div className="pt-1 flex flex-col gap-1">
                           {book.highlights.slice(0, 2).map((h, i) => (
                             <span
                               key={i}
-                              className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-600 truncate max-w-full"
+                              className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-600 truncate max-w-full"
                             >
                               • {h}
                             </span>
