@@ -52,6 +52,32 @@ export default function ResearchDataCenterPage() {
   const { submissions, currentUser, phonologyLogs, surveyResponses, openAuthModal } = useHanUp();
   const isMaster = isMasterEmail(currentUser.email);
 
+  const [activeMainTab, setActiveMainTab] = useState<'qr_promo_links' | 'writing_corpus' | 'multimodal_suite' | 'ai_wtp_survey'>('qr_promo_links');
+  const [copiedPromoUrl, setCopiedPromoUrl] = useState<string | null>(null);
+  const [selectedQrItem, setSelectedQrItem] = useState<{
+    id: string;
+    title: string;
+    subtitle: string;
+    url: string;
+    badge: string;
+  } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [taskFilter, setTaskFilter] = useState<'all' | 'topik_54_essay' | 'topik_53_graph'>('all');
+  const [inputMethodFilter, setInputMethodFilter] = useState<'all' | 'keyboard_typing' | 'handwriting_ocr'>('all');
+  const [filterPureAuthenticOnly, setFilterPureAuthenticOnly] = useState<boolean>(false);
+  const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
+
+  // Anonymization & Permanent Snapshot Share States
+  const [isSha256Masked, setIsSha256Masked] = useState(true);
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+  const [copiedSnapshot, setCopiedSnapshot] = useState(false);
+  const [copiedCitation, setCopiedCitation] = useState(false);
+  const snapshotId = 'snap_202610_irb_corpus01';
+
+  // Selected Submission Modal for Deep Linguistic Corpus Inspection
+  const [inspectedSub, setInspectedSub] = useState<WritingSubmission | null>(null);
+  const [selectedL1Corpus, setSelectedL1Corpus] = useState<'all' | 'zh' | 'vi' | 'my' | 'en' | 'ja'>('all');
+
   if (!isMaster) {
     return (
       <div className="max-w-xl mx-auto my-16 p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-center space-y-4">
@@ -82,28 +108,6 @@ export default function ResearchDataCenterPage() {
     );
   }
 
-  const [activeMainTab, setActiveMainTab] = useState<'qr_promo_links' | 'writing_corpus' | 'multimodal_suite' | 'ai_wtp_survey'>('qr_promo_links');
-  const [copiedPromoUrl, setCopiedPromoUrl] = useState<string | null>(null);
-  const [selectedQrItem, setSelectedQrItem] = useState<{
-    id: string;
-    title: string;
-    subtitle: string;
-    url: string;
-    badge: string;
-  } | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [taskFilter, setTaskFilter] = useState<'all' | 'topik_54_essay' | 'topik_53_graph'>('all');
-  const [inputMethodFilter, setInputMethodFilter] = useState<'all' | 'keyboard_typing' | 'handwriting_ocr'>('all');
-  const [filterPureAuthenticOnly, setFilterPureAuthenticOnly] = useState<boolean>(false);
-  const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
-
-  // Anonymization & Permanent Snapshot Share States
-  const [isSha256Masked, setIsSha256Masked] = useState(true);
-  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
-  const [copiedSnapshot, setCopiedSnapshot] = useState(false);
-  const [copiedCitation, setCopiedCitation] = useState(false);
-  const snapshotId = 'snap_202610_irb_corpus01';
-
   const maskName = (name: string) => {
     if (!isSha256Masked) return name;
     if (name.length <= 2) return `${name.charAt(0)}*`;
@@ -118,10 +122,6 @@ export default function ResearchDataCenterPage() {
     const maskedUser = user.length > 2 ? `${user.charAt(0)}***${user.charAt(user.length - 1)}` : `${user.charAt(0)}***`;
     return `${maskedUser}@${parts[1]}`;
   };
-
-  // Selected Submission Modal for Deep Linguistic Corpus Inspection
-  const [inspectedSub, setInspectedSub] = useState<WritingSubmission | null>(null);
-  const [selectedL1Corpus, setSelectedL1Corpus] = useState<'all' | 'zh' | 'vi' | 'my' | 'en' | 'ja'>('all');
 
   // Multilingual L1 Interference Error Datasets (5 Language Groups)
   const MULTILINGUAL_ERROR_DATA: Record<string, { title: string; sampleSize: string; data: any[] }> = {
